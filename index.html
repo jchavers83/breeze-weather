@@ -554,11 +554,11 @@ $$('.nav-tab').forEach(btn=>{
     const tab=btn.dataset.tab;
     if(tab==='radar'){
       $('#content').style.display='none';
-      $('#radarView').style.display='';
+      $('#radarView').style.display='block';
       initRadar();
     }else{
       $('#radarView').style.display='none';
-      $('#content').style.display='';
+      $('#content').style.display='block';
       if(tab==='forecast'){
         const fs=$('.forecast-section');
         if(fs)fs.scrollIntoView({behavior:'smooth',block:'start'});
@@ -1344,7 +1344,7 @@ async function initRadar(){
       radarCityMarker=L.marker([state.lat,state.lon],{icon,zIndexOffset:1000}).addTo(radarMap);
       radarCityMarker.bindTooltip(state.name||'Current Location',{permanent:false,direction:'top',offset:[0,-8]});
     }
-    setTimeout(()=>radarMap.invalidateSize(),100);
+    setTimeout(()=>radarMap.invalidateSize(),200);
   }catch(e){
     console.error('Radar init error:',e);
     document.getElementById('radarTimeLabel').textContent='Radar unavailable';
