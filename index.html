@@ -1467,7 +1467,7 @@ function windySrc(overlay){
   const lat=state.lat||39,lon=state.lon||-98,zoom=state.lat?7:4;
   const tUnit=state.unit==='F'?encodeURIComponent('°F'):encodeURIComponent('°C');
   const wUnit=state.unit==='F'?'mph':encodeURIComponent('km/h');
-  return `https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=${zoom}&level=surface&overlay=${overlay}&product=ecmwf&menu=&message=true&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=${wUnit}&metricTemp=${tUnit}&radarRange=-1`;
+  return `https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=${zoom}&level=surface&overlay=${overlay}&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=${wUnit}&metricTemp=${tUnit}&radarRange=-1`;
 }
 
 function initRadar(){
