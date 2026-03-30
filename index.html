@@ -396,17 +396,27 @@ $('#searchInput').addEventListener('input',e=>{
 
 async function searchCity(q){
   try{
-    const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=5&language=en&format=json');
+    // Photon (OpenStreetMap) handles typos and fuzzy matching far better than Open-Meteo geocoding
+    const r=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(q)+'&limit=6&lang=en');
     const d=await r.json();
     const sg=$('#suggestions');
-    if(!d.results||!d.results.length){sg.classList.remove('show');return}
-    sg.innerHTML=d.results.map((r,i)=>`<div class="suggestion-item" data-i="${i}"><strong>${r.name}</strong><small>${[r.admin1,r.country].filter(Boolean).join(', ')}</small></div>`).join('');
+    const results=(d.features||[]).filter(f=>f.properties&&f.geometry);
+    if(!results.length){sg.classList.remove('show');return}
+    sg.innerHTML=results.map((f,i)=>{
+      const p=f.properties;
+      const name=p.name||p.city||p.town||p.village||'';
+      const parts=[p.state||p.county,p.country].filter(Boolean);
+      return `<div class="suggestion-item" data-i="${i}"><strong>${name}</strong><small>${parts.join(', ')}</small></div>`;
+    }).join('');
     sg.classList.add('show');
     sg.querySelectorAll('.suggestion-item').forEach((el,i)=>{
       el.addEventListener('click',()=>{
-        const loc=d.results[i];
-        state.lat=loc.latitude;state.lon=loc.longitude;
-        state.name=loc.name;state.region=[loc.admin1,loc.country].filter(Boolean).join(', ');
+        const f=results[i];
+        const p=f.properties;
+        const [lon,lat]=f.geometry.coordinates;
+        state.lat=lat;state.lon=lon;
+        state.name=p.name||p.city||p.town||p.village||'Unknown';
+        state.region=[p.state||p.county,p.country].filter(Boolean).join(', ');
         sg.classList.remove('show');
         $('#searchInput').value='';
         fetchWeather();
