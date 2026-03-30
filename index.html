@@ -84,13 +84,17 @@
      [lp(81),lp(35),lp(75),lp(29)],[lp(135),lp(89),lp(141),lp(95)],
      [lp(135),lp(35),lp(141),lp(29)],[lp(81),lp(89),lp(75),lp(95)]]
     .forEach(([x1,y1,x2,y2])=>{lx.beginPath();lx.moveTo(x1,y1);lx.lineTo(x2,y2);lx.stroke();});
-    // Cloud — subtle shadow so it reads as a distinct shape
+    // Cloud — single closed path: bumps on top, clean curved base, no fillRect box
     lx.shadowColor='rgba(0,90,150,0.22)';lx.shadowBlur=lp(7);lx.shadowOffsetY=lp(4);
     lx.fillStyle='white';
-    lx.beginPath();lx.arc(lp(54),lp(108),lp(17),Math.PI,0);lx.fill();
-    lx.beginPath();lx.arc(lp(74),lp(98),lp(23),Math.PI,0);lx.fill();
-    lx.beginPath();lx.arc(lp(100),lp(106),lp(19),Math.PI,0);lx.fill();
-    lx.fillRect(lp(54),lp(98),lp(65),lp(27));
+    lx.beginPath();
+    lx.moveTo(lp(37),lp(125));                              // bottom-left
+    lx.arc(lp(54),lp(108),lp(17),Math.PI,0);               // left bump
+    lx.arc(lp(74),lp(98),lp(23),Math.PI,0);                // middle bump (tallest)
+    lx.arc(lp(100),lp(106),lp(19),Math.PI,0);              // right bump
+    lx.lineTo(lp(119),lp(125));                             // bottom-right
+    lx.closePath();
+    lx.fill();
     lx.shadowColor='transparent';lx.shadowBlur=0;lx.shadowOffsetY=0;
     // Wind lines — shifted down so they sit clearly below the cloud (cloud base ~lp(125))
     lx.lineCap='round';
