@@ -267,7 +267,8 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Summary card */
 .summary-card{padding:18px 20px;margin-bottom:16px}
-.summary-card .summary-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+.summary-card .summary-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.summary-card .vibe-tag{font-size:16px;font-weight:800;color:var(--text);margin-bottom:10px;letter-spacing:-0.3px;line-height:1.2}
 .summary-card .summary-text{font-size:14px;line-height:1.55;font-weight:500;color:var(--text)}
 
 /* Refresh indicator */
@@ -516,6 +517,7 @@ function render(){
 
   const visibility=(c.visibility!=null?c.visibility/1000:10); // API returns meters, convert to km
   const summary=generateSummary(hourly,daily,c.weather_code,now.getHours());
+  const vibeTag=getVibeTag(hourly,daily,c.weather_code,now);
 
   const html=`
     <div class="location-bar">
@@ -549,6 +551,7 @@ function render(){
         </div>
         <div class="summary-card glass">
           <div class="summary-label">Next 12 Hours</div>
+          <div class="vibe-tag">${vibeTag}</div>
           <div class="summary-text">${summary}</div>
         </div>
       </div>
@@ -685,6 +688,53 @@ function rainNextHour(hourly,now){
 function dewComfort(cDew){
   const f=toF(cDew);
   if(f<50)return 'Dry';if(f<55)return 'Comfortable';if(f<60)return 'Pleasant';if(f<65)return 'Sticky';if(f<70)return 'Muggy';return 'Oppressive';
+}
+
+function getVibeTag(hourly,daily,currentCode,now){
+  const nowHour=now.getHours();
+  const today=daily.time[0];
+  const hours=[];
+  hourly.time.forEach((t,i)=>{
+    if(t.startsWith(today)){const h=new Date(t).getHours();if(h>=nowHour&&h<nowHour+12)hours.push({h,temp:hourly.temperature_2m[i],code:hourly.weather_code[i],precip:hourly.precipitation_probability[i],wind:hourly.wind_speed_10m[i]});}
+  });
+  if(!hours.length)return '';
+  const temps=hours.map(h=>toF(h.temp));
+  const maxT=Math.round(Math.max(...temps));
+  const minT=Math.round(Math.min(...temps));
+  const rainCount=hours.filter(h=>h.precip>30).length;
+  const snowCount=hours.filter(h=>[71,73,75,77,85,86].includes(h.code)).length;
+  const stormCount=hours.filter(h=>[95,96,99].includes(h.code)).length;
+  const clearCount=hours.filter(h=>[0,1].includes(h.code)).length;
+  const cloudyCount=hours.filter(h=>[2,3].includes(h.code)).length;
+  const windyCount=hours.filter(h=>h.wind>30).length;
+  const dayHours=hours.filter(h=>h.h>=6&&h.h<20).length;
+  const isPredomNight=dayHours<hours.length*0.35;
+  const niceOutdoor=maxT>=62&&maxT<=92&&rainCount===0&&stormCount===0&&!isPredomNight;
+  const isNight=nowHour>=20||nowHour<5;
+
+  if(stormCount>0)return '\u26A1 Stay inside.';
+  if(snowCount>2&&maxT<32)return '\u2744\uFE0F Full winter mode.';
+  if(snowCount>0)return '\u2744\uFE0F Snow day energy.';
+  if(rainCount>4)return '\uD83C\uDF27\uFE0F Indoor day. No debate.';
+  if(rainCount>2)return '\uD83C\uDF26\uFE0F Umbrella weather.';
+  if(isPredomNight||isNight){
+    if(minT>65)return '\uD83C\uDF19 Good sleeping weather.';
+    if(minT<32)return '\uD83E\uDD76 Cold night. Stay warm.';
+    if(clearCount>3)return '\u2728 Clear and quiet tonight.';
+    return '\uD83C\uDF19 Quiet night ahead.';
+  }
+  if(maxT>98)return '\uD83D\uDD25 Dangerous heat. Seriously.';
+  if(maxT>92)return '\uD83D\uDD25 Heat wave. Stay hydrated.';
+  if(niceOutdoor&&maxT>=70&&maxT<=80)return '\u2728 Absolutely perfect out there.';
+  if(niceOutdoor&&maxT>80)return '\u2600\uFE0F Beautiful and warm.';
+  if(niceOutdoor&&maxT<70)return '\uD83C\uDF24\uFE0F Pretty great, honestly.';
+  if(maxT<28)return '\uD83E\uDD76 Genuinely cold. Not joking.';
+  if(maxT<42)return '\uD83E\uDDE5 Bundle up weather.';
+  if(maxT<55)return '\uD83E\uDDE5 Jacket required. No debate.';
+  if(windyCount>4)return '\uD83D\uDCA8 Breezy and a little unhinged.';
+  if(cloudyCount>7&&rainCount===0)return '\u2601\uFE0F Gray but fine.';
+  if(clearCount>5)return '\u2600\uFE0F Nice out there.';
+  return '\uD83C\uDF24\uFE0F Nothing wild. Just decent.';
 }
 
 function generateSummary(hourly,daily,currentCode,nowHour){
@@ -850,9 +900,20 @@ function getMoonPhase(date){
 
 function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,isNight,hour,isPredomNight,outdoorWorthy,niceOutdoor){
   const moon=getMoonPhase(new Date());
+  const now=new Date();
   const quips=[];
   const morning=hour>=5&&hour<12;
   const afternoon=hour>=12&&hour<17;
+  // Day of week
+  const dow=now.getDay();
+  const isMon=dow===1,isFri=dow===5,isSat=dow===6,isSun=dow===0;
+  const isWeekend=isSat||isSun;
+  // Season / month context
+  const month=now.getMonth();
+  const isWinter=month===11||month<2;
+  const isSpring=month>=2&&month<5;
+  const isSummer=month>=5&&month<8;
+  const isFall=month>=8&&month<11;
   const evening=hour>=17&&hour<21;
   const lateNight=hour>=21||hour<5;
 
@@ -930,7 +991,43 @@ function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,is
   if(niceOutdoor&&(morning||afternoon)){
     quips.push('\uD83C\uDFC3 The weather is literally begging you to go outside right now.');
     quips.push('\uD83D\uDE80 The couch will be there when you get back. Go enjoy this.');
+    quips.push('\uD83D\uDC40 Imagine explaining to someone that you stayed inside on a day like this.');
   }
+
+  // === Day-of-week flavor ===
+  if(isFri&&niceOutdoor)quips.push('\uD83C\uDF89 Happy Friday\u2014the weather is celebrating with you.');
+  if(isFri&&rainCount>2)quips.push('\uD83C\uDF27\uFE0F Rain on a Friday. The audacity.');
+  if(isFri&&(morning||afternoon))quips.push('\uD83C\uDF89 It\'s Friday. Whatever the weather, you\'re going to be fine.');
+  if(isMon&&!niceOutdoor)quips.push('\uD83D\uDCC5 Classic Monday behavior from the weather.');
+  if(isMon&&niceOutdoor)quips.push('\uD83D\uDE4C Even Mondays can\'t ruin weather like this. Remarkable.');
+  if(isWeekend&&niceOutdoor)quips.push('\uD83C\uDF1F Weekend delivered. Go get it.');
+  if(isSat&&niceOutdoor&&(morning||afternoon))quips.push('\uD83C\uDF1F Saturday and beautiful out. The universe is aligned today.');
+  if(isSun&&afternoon&&niceOutdoor)quips.push('\uD83C\uDF05 Make the most of Sunday before it quietly becomes Monday.');
+  if(isSun&&evening)quips.push('\uD83D\uDE0C Sunday evening. Wind down. You did good this week.');
+  if(isWeekend&&rainCount>3)quips.push('\u2614 The weekend had one job.');
+
+  // === Seasonal / unusual weather callouts ===
+  if(isWinter&&maxT>68)quips.push('\uD83E\uDD14 Winter has no business being this nice. Not complaining though.');
+  if(isWinter&&maxT>75)quips.push('\uD83D\uDE2F This is not normal winter weather and absolutely nobody is upset about it.');
+  if(isWinter&&maxT>78)quips.push('\uD83C\uDF1E Winter said "not today." We are so here for it.');
+  if(isSummer&&maxT<58)quips.push('\uD83E\uDD37 Summer forgot what it\'s supposed to be doing out there.');
+  if(isSummer&&maxT<52)quips.push('\uD83E\uDD76 It is summer on the calendar. Someone should tell the weather.');
+  if(isSpring&&maxT>82&&month<4)quips.push('\uD83C\uDF38 Spring came in absolutely hot. We are not complaining.');
+  if(isSpring&&minT<32&&month>2)quips.push('\u2744\uFE0F March is being difficult again. Classic. Very on brand.');
+  if(isFall&&maxT>85)quips.push('\uD83C\uDF42 Summer is not ready to leave and honestly we respect the commitment.');
+  if(isFall&&maxT<42&&month<10)quips.push('\uD83C\uDF42 Fall wasted absolutely no time. Coats out already.');
+
+  // === Extra general quips (more variety) ===
+  if(niceOutdoor&&maxT>=68&&maxT<=78)quips.push('\uD83D\uDCAC If the weather could talk, it would just say "you\'re welcome."');
+  if(niceOutdoor)quips.push('\uD83C\uDFDE\uFE0F This is what people mean when they say they love where they live.');
+  if(maxT>90&&clearCount>3)quips.push('\uD83D\uDD76\uFE0F The sun is not playing around today. Respect it.');
+  if(rainCount>3&&cloudyCount>3)quips.push('\uD83D\uDCDA Outstanding day to finally read something.');
+  if(rainCount>3&&afternoon)quips.push('\uD83C\uDF75 Rainy afternoon. Tea, blanket, absolutely zero guilt.');
+  if(cloudyCount>6&&rainCount===0&&maxT>55)quips.push('\uD83C\uDFB5 Overcast but mild\u2014actually great for a walk if you\'re into not squinting.');
+  if(windyCount>3&&niceOutdoor)quips.push('\uD83E\uDE81 Beautiful but breezy\u2014kite weather if you happen to own one.');
+  if(minT<20)quips.push('\uD83E\uDD76 Actual cold. Not "chilly." Not "brisk." Cold.');
+  if(maxT>88&&rainCount===0)quips.push('\uD83C\uDF4A The cure for heat like this is something cold and something shaded.');
+  if(clearCount>6&&maxT>=65&&maxT<=75)quips.push('\uD83D\uDCF8 This kind of day doesn\'t come around that often. Make a memory.');
 
   // Fallback
   if(quips.length===0)quips.push('\uD83D\uDE0A Hope you have a great one out there today.');
