@@ -40,12 +40,16 @@
   ];
   rays.forEach(([x1,y1,x2,y2])=>{x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);x.stroke();});
 
-  // Cloud
+  // Cloud — single closed path for clean puffy shape, no fillRect box
   x.fillStyle='white';
-  x.beginPath();x.arc(p(54),p(108),p(17),Math.PI,0);x.fill();
-  x.beginPath();x.arc(p(74),p(98),p(23),Math.PI,0);x.fill();
-  x.beginPath();x.arc(p(100),p(106),p(19),Math.PI,0);x.fill();
-  x.fillRect(p(54),p(98),p(65),p(27));
+  x.beginPath();
+  x.moveTo(p(37),p(125));
+  x.arc(p(54),p(108),p(17),Math.PI,0);
+  x.arc(p(74),p(98),p(23),Math.PI,0);
+  x.arc(p(100),p(106),p(19),Math.PI,0);
+  x.lineTo(p(119),p(125));
+  x.closePath();
+  x.fill();
 
   // Wind lines — tapered opacity
   x.lineCap='round';
