@@ -224,6 +224,9 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .saved-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;background:var(--card-bg);border:1px solid var(--card-border);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;color:var(--text);transition:all 0.2s;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0}
 .saved-chip:active{transform:scale(0.95)}
 .saved-chip .chip-remove{font-size:14px;color:var(--text-tertiary);margin-left:2px;line-height:1}
+.btn-unit{background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;padding:5px 8px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text-tertiary);display:flex;gap:2px;align-items:center;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);-webkit-tap-highlight-color:transparent}
+.btn-unit span{padding:3px 5px;border-radius:6px;transition:all 0.2s;color:var(--text-tertiary)}
+.btn-unit span.active{color:var(--accent);background:rgba(26,144,228,0.14)}
 .btn-save{background:none;border:none;cursor:pointer;font-size:22px;line-height:1;padding:4px;color:var(--text-secondary);transition:transform 0.2s,color 0.2s;-webkit-tap-highlight-color:transparent}
 .btn-save:active{transform:scale(1.3)}
 .btn-save.saved{color:#f5a623}
@@ -308,6 +311,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
     <button class="btn-icon" id="btnLocate" title="Use my location">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
     </button>
+    <button class="btn-unit" id="btnUnit" onclick="toggleUnit()" title="Toggle temperature unit">
+      <span id="unitF" class="active">°F</span>
+      <span id="unitC">°C</span>
+    </button>
     <button class="btn-icon" id="btnDark" title="Toggle dark mode">
       <svg id="iconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/></svg>
       <svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
@@ -377,15 +384,16 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 <script>
 const WMO_CODES={0:{desc:'Clear Sky',icon:'&#9728;&#65039;',night:'&#127769;'},1:{desc:'Mainly Clear',icon:'&#127780;&#65039;',night:'&#127769;'},2:{desc:'Partly Cloudy',icon:'&#9925;',night:'&#9925;'},3:{desc:'Overcast',icon:'&#9729;&#65039;',night:'&#9729;&#65039;'},45:{desc:'Fog',icon:'&#127787;&#65039;',night:'&#127787;&#65039;'},48:{desc:'Depositing Rime Fog',icon:'&#127787;&#65039;',night:'&#127787;&#65039;'},51:{desc:'Light Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},53:{desc:'Moderate Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},55:{desc:'Dense Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},56:{desc:'Freezing Drizzle',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},57:{desc:'Heavy Freezing Drizzle',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},61:{desc:'Slight Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},63:{desc:'Moderate Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},65:{desc:'Heavy Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},66:{desc:'Freezing Rain',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},67:{desc:'Heavy Freezing Rain',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},71:{desc:'Slight Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},73:{desc:'Moderate Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},75:{desc:'Heavy Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},77:{desc:'Snow Grains',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},80:{desc:'Slight Showers',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},81:{desc:'Moderate Showers',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},82:{desc:'Violent Showers',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},85:{desc:'Slight Snow Showers',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},86:{desc:'Heavy Snow Showers',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},95:{desc:'Thunderstorm',icon:'&#9889;',night:'&#9889;'},96:{desc:'Thunderstorm with Hail',icon:'&#9889;',night:'&#9889;'},99:{desc:'Thunderstorm Heavy Hail',icon:'&#9889;',night:'&#9889;'}};
 
-let state={lat:null,lon:null,name:'',region:'',dark:false,data:null,openDay:0,refreshTimer:null};
+let state={lat:null,lon:null,name:'',region:'',country:'',dark:false,unit:'F',data:null,openDay:0,refreshTimer:null};
 
 const $=s=>document.querySelector(s);
 const $$=s=>document.querySelectorAll(s);
 
 function toF(c){return c*9/5+32}
-function formatTemp(c){return Math.round(toF(c))}
-function windSpeed(kmh){return Math.round(kmh*0.621371)}
-function windUnit(){return 'mph'}
+function formatTemp(c){return state.unit==='F'?Math.round(toF(c)):Math.round(c)}
+function tempUnit(){return state.unit}
+function windSpeed(kmh){return state.unit==='F'?Math.round(kmh*0.621371):Math.round(kmh)}
+function windUnit(){return state.unit==='F'?'mph':'km/h'}
 function visUnit(km){return (km*0.621371).toFixed(1)+' mi'}
 function dirStr(deg){const dirs=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];return dirs[Math.round(deg/22.5)%16]}
 function formatTime(iso){const d=new Date(iso);let h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+ap}
@@ -454,6 +462,7 @@ async function searchCity(q){
         state.lat=lat;state.lon=lon;
         state.name=p.name||p.city||p.town||p.village||'Unknown';
         state.region=[p.state||p.county,p.country].filter(Boolean).join(', ');
+        autoUnit(p.country||'');
         sg.classList.remove('show');
         $('#searchInput').value='';
         fetchWeather();
@@ -477,6 +486,7 @@ $('#btnLocate').addEventListener('click',()=>{
       const rd=await rr.json();
       state.name=rd.address?.city||rd.address?.town||rd.address?.village||'Current Location';
       state.region=[rd.address?.state,rd.address?.country].filter(Boolean).join(', ');
+      autoUnit(rd.address&&rd.address.country?rd.address.country:'');
     }catch(e){state.name='Current Location';state.region=''}
     btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>';
     fetchWeather();
@@ -505,6 +515,24 @@ $$('.nav-tab').forEach(btn=>{
   });
 });
 
+// Unit toggle
+function autoUnit(country){
+  const fahr=['United States','Cayman Islands','Liberia'];
+  state.unit=fahr.includes(country)?'F':'C';
+  updateUnitBtn();
+}
+function toggleUnit(){
+  state.unit=state.unit==='F'?'C':'F';
+  updateUnitBtn();
+  if(state.data)render();
+}
+function updateUnitBtn(){
+  const b=$('#btnUnit');
+  if(!b)return;
+  b.querySelector('#unitF').classList.toggle('active',state.unit==='F');
+  b.querySelector('#unitC').classList.toggle('active',state.unit==='C');
+}
+
 // Dark mode
 $('#btnDark').addEventListener('click',()=>{
   state.dark=!state.dark;
@@ -512,6 +540,7 @@ $('#btnDark').addEventListener('click',()=>{
   $('#iconSun').style.display=state.dark?'none':'block';
   $('#iconMoon').style.display=state.dark?'block':'none';
   updateGradient();
+  updateUnitBtn();
 });
 
 // Fetch
@@ -573,7 +602,7 @@ function render(){
           <div class="hero-temp" id="heroTemp">${formatTemp(c.temperature_2m)}&deg;</div>
           <div class="hero-desc">${wi.desc}</div>
           <div class="hero-hilo">H:${formatTemp(daily.temperature_2m_max[0])}&deg; L:${formatTemp(daily.temperature_2m_min[0])}&deg;</div>
-          <div class="hero-feels">Feels like ${formatTemp(c.apparent_temperature)}&deg;F</div>
+          <div class="hero-feels">Feels like ${formatTemp(c.apparent_temperature)}&deg;${state.unit}</div>
         </div>
         <div class="sun-bar glass">
           <div class="sun-item">
@@ -799,9 +828,14 @@ function generateSummary(hourly,daily,currentCode,nowHour){
   }
   if(!hours.length)return 'Weather data loading...';
 
-  const temps=hours.map(h=>toF(h.temp));
-  const maxT=Math.round(Math.max(...temps));
-  const minT=Math.round(Math.min(...temps));
+  const tempsF=hours.map(h=>Math.round(toF(h.temp)));
+  const maxT=Math.round(Math.max(...tempsF));
+  const minT=Math.round(Math.min(...tempsF));
+  // Display values in current unit
+  const maxTDisp=state.unit==='C'?Math.round((maxT-32)*5/9):maxT;
+  const minTDisp=state.unit==='C'?Math.round((minT-32)*5/9):minT;
+  const maxWindDisp=state.unit==='F'?Math.round(Math.max(...hours.map(h=>h.wind))*0.621371):Math.round(Math.max(...hours.map(h=>h.wind)));
+  const windUnitStr=windUnit();
   const rainHours=hours.filter(h=>h.precip>30);
   const heavyRain=hours.filter(h=>h.precip>60);
   const snowCodes=[71,73,75,77,85,86];
@@ -833,7 +867,7 @@ function generateSummary(hourly,daily,currentCode,nowHour){
   if(stormHours.length>0){
     sentences.push(isNight?`\u26A1 Thunderstorms rolling through tonight\u2014not a great night to be a hero. Stay inside.`:`\u26A1 Thunderstorms in the mix ${timeframe}\u2014keep an eye on the sky and maybe don't be the person standing under a tree.`);
   }else if(snowHours.length>2){
-    sentences.push(isNight?`\u2744\uFE0F Snow moves in overnight with temps dropping to ${minT}\u00b0\u2014the morning commute is going to be a character-building experience.`:`\u2744\uFE0F Snow's coming with temps around ${minT}\u00b0. The roads are going to be interesting\u2014give yourself extra time and assume nobody else knows how to drive in this. They don't.`);
+    sentences.push(isNight?`\u2744\uFE0F Snow moves in overnight with temps dropping to ${minTDisp}\u00b0\u2014the morning commute is going to be a character-building experience.`:`\u2744\uFE0F Snow's coming with temps around ${minTDisp}\u00b0. The roads are going to be interesting\u2014give yourself extra time and assume nobody else knows how to drive in this. They don't.`);
   }else if(heavyRain.length>2){
     sentences.push(isNight?`\uD83C\uDF27\uFE0F Steady rain through the night\u2014crack a window, let it be your soundtrack.`:`\uD83C\uDF27\uFE0F Steady rain moving in\u2014this is an umbrella situation, not an "I'll just run for it" situation.`);
   }else if(rainHours.length>0){
@@ -844,19 +878,19 @@ function generateSummary(hourly,daily,currentCode,nowHour){
   }else if(clearHours.length>hours.length*0.7){
     if(isPredomNight){
       if(minT>65)sentences.push(`\uD83C\uDF19 Clear and mild tonight\u2014crack the windows, let the air in, and actually sleep well for once.`);
-      else if(minT>45)sentences.push(`\uD83C\uDF19 Clear skies and ${minT}\u00b0 tonight\u2014crisp, quiet, the good kind of still.`);
-      else sentences.push(`\uD83C\uDF19 Clear but cold tonight\u2014${minT}\u00b0 by the early hours. The kind of cold that makes your bed feel like a reward.`);
+      else if(minT>45)sentences.push(`\uD83C\uDF19 Clear skies and ${minTDisp}\u00b0 tonight\u2014crisp, quiet, the good kind of still.`);
+      else sentences.push(`\uD83C\uDF19 Clear but cold tonight\u2014${minTDisp}\u00b0 by the early hours. The kind of cold that makes your bed feel like a reward.`);
     }else if(maxT>90){
-      sentences.push(nowHour<16?`\uD83D\uDD25 ${maxT}\u00b0 and not a cloud in sight\u2014you didn't ask for an outdoor sauna, but here we are. Sunscreen and water, non-negotiable.`:`\uD83D\uDD25 It's been a scorcher at ${maxT}\u00b0\u2014at this point hydration is the only goal.`);
-    }else if(maxT>80)sentences.push(`\u2600\uFE0F Sunny with highs near ${maxT}\u00b0\u2014honestly, what did you do to deserve this? Enjoy it.`);
-    else if(maxT>65)sentences.push(`\u2600\uFE0F ${maxT}\u00b0 and clear skies\u2014this is the weather people move to new cities chasing.`);
-    else if(maxT>50)sentences.push(`\uD83C\uDF24\uFE0F ${maxT}\u00b0 and sunny\u2014crisp enough to feel alive, warm enough to not complain. That's a win.`);
-    else sentences.push(`\u2744\uFE0F Sunny and ${maxT}\u00b0\u2014technically beautiful, practically brutal. Everything you touch outside will remind you of that.`);
+      sentences.push(nowHour<16?`\uD83D\uDD25 ${maxTDisp}\u00b0 and not a cloud in sight\u2014you didn't ask for an outdoor sauna, but here we are. Sunscreen and water, non-negotiable.`:`\uD83D\uDD25 It's been a scorcher at ${maxTDisp}\u00b0\u2014at this point hydration is the only goal.`);
+    }else if(maxT>80)sentences.push(`\u2600\uFE0F Sunny with highs near ${maxTDisp}\u00b0\u2014honestly, what did you do to deserve this? Enjoy it.`);
+    else if(maxT>65)sentences.push(`\u2600\uFE0F ${maxTDisp}\u00b0 and clear skies\u2014this is the weather people move to new cities chasing.`);
+    else if(maxT>50)sentences.push(`\uD83C\uDF24\uFE0F ${maxTDisp}\u00b0 and sunny\u2014crisp enough to feel alive, warm enough to not complain. That's a win.`);
+    else sentences.push(`\u2744\uFE0F Sunny and ${maxTDisp}\u00b0\u2014technically beautiful, practically brutal. Everything you touch outside will remind you of that.`);
   }else if(cloudyHours.length>hours.length*0.5){
-    if(isPredomNight)sentences.push(`\u2601\uFE0F Cloudy and ${minT<40?'cold':'cool'} tonight\u2014${minT}\u00b0 by morning. Nothing dramatic, just gray.`);
-    else sentences.push(`\u2601\uFE0F Overcast and ${maxT}\u00b0\u2014not exactly a postcard, but it's not going to ruin your day either.`);
+    if(isPredomNight)sentences.push(`\u2601\uFE0F Cloudy and ${minT<40?'cold':'cool'} tonight\u2014${minTDisp}\u00b0 by morning. Nothing dramatic, just gray.`);
+    else sentences.push(`\u2601\uFE0F Overcast and ${maxTDisp}\u00b0\u2014not exactly a postcard, but it's not going to ruin your day either.`);
   }else{
-    sentences.push(`\uD83C\uDF24\uFE0F A bit of everything ${timeframe}\u2014${minT}\u00b0 to ${maxT}\u00b0 with skies that can't quite make up their mind.`);
+    sentences.push(`\uD83C\uDF24\uFE0F A bit of everything ${timeframe}\u2014${minTDisp}\u00b0 to ${maxTDisp}\u00b0 with skies that can't quite make up their mind.`);
   }
 
   // Sentence 2: What's shifting — still informative, little more personality
@@ -874,7 +908,7 @@ function generateSummary(hourly,daily,currentCode,nowHour){
     else if(firstRain===0&&secondRain>1)sentences.push(`Dry for now, but rain moves in ${laterRef}\u2014plan accordingly.`);
     else if(firstClear>4&&secondClear<2)sentences.push(`Clouds build in ${laterRef}\u2014enjoy the open skies while they last.`);
     else if(firstClear<2&&secondClear>4)sentences.push(laterRef==='by morning'?`Clears up by morning\u2014should be a solid start to the day.`:`Things brighten up ${laterRef}\u2014afternoon is looking much better.`);
-    else if(windyHours.length>2)sentences.push(`Breezy ${soonRef} with gusts up to ${maxWind} mph\u2014your hair will not cooperate.`);
+    else if(windyHours.length>2)sentences.push(`Breezy ${soonRef} with gusts up to ${maxWindDisp} ${windUnitStr}\u2014your hair will not cooperate.`);
     else if(maxT-minT>20)sentences.push(`Big temperature swing over the next few hours\u2014dress in layers and feel very smart about it later.`);
   }
 
@@ -897,7 +931,7 @@ function generateSummary(hourly,daily,currentCode,nowHour){
   if(sentences.length<5){
     if(maxWind>35)sentences.push(`Winds are going to be serious out there\u2014secure anything loose and brace yourself walking to the car.`);
     else if(maxWind>25)sentences.push(`Legit breezy out there\u2014the patio umbrella would not survive this.`);
-    else if(maxT>95)sentences.push(`At ${maxT}\u00b0, your body is working overtime\u2014shade, water, repeat.`);
+    else if(maxT>95)sentences.push(`At ${maxTDisp}\u00b0, your body is working overtime\u2014shade, water, repeat.`);
     else if(maxT>85&&cloudyHours.length<3&&!isPredomNight)sentences.push(`Warm and sunny\u2014shade is your best friend when the sun is this direct and this personal about it.`);
     else if(minT<32&&!isPredomNight)sentences.push(`Watch for icy spots, especially on bridges and overpasses\u2014they freeze first and they will absolutely get you.`);
     else if(minT<45&&maxT>65)sentences.push(`Cold start but it warms up nicely\u2014layers you can peel off are the move here.`);
