@@ -84,17 +84,19 @@
      [lp(81),lp(35),lp(75),lp(29)],[lp(135),lp(89),lp(141),lp(95)],
      [lp(135),lp(35),lp(141),lp(29)],[lp(81),lp(89),lp(75),lp(95)]]
     .forEach(([x1,y1,x2,y2])=>{lx.beginPath();lx.moveTo(x1,y1);lx.lineTo(x2,y2);lx.stroke();});
-    // Cloud
+    // Cloud — subtle shadow so it reads as a distinct shape
+    lx.shadowColor='rgba(0,90,150,0.22)';lx.shadowBlur=lp(7);lx.shadowOffsetY=lp(4);
     lx.fillStyle='white';
     lx.beginPath();lx.arc(lp(54),lp(108),lp(17),Math.PI,0);lx.fill();
     lx.beginPath();lx.arc(lp(74),lp(98),lp(23),Math.PI,0);lx.fill();
     lx.beginPath();lx.arc(lp(100),lp(106),lp(19),Math.PI,0);lx.fill();
     lx.fillRect(lp(54),lp(98),lp(65),lp(27));
-    // Wind lines
+    lx.shadowColor='transparent';lx.shadowBlur=0;lx.shadowOffsetY=0;
+    // Wind lines — shifted down so they sit clearly below the cloud (cloud base ~lp(125))
     lx.lineCap='round';
-    [{y1:lp(130),y2:lp(128),cpx:lp(72),cpy:lp(120),ep:lp(155),w:lp(5.5),op:0.70},
-     {y1:lp(145),y2:lp(143),cpx:lp(68),cpy:lp(135),ep:lp(148),w:lp(4.5),op:0.50},
-     {y1:lp(159),y2:lp(157),cpx:lp(70),cpy:lp(150),ep:lp(140),w:lp(3.5),op:0.32}]
+    [{y1:lp(142),y2:lp(140),cpx:lp(72),cpy:lp(132),ep:lp(155),w:lp(5.5),op:0.70},
+     {y1:lp(154),y2:lp(152),cpx:lp(68),cpy:lp(145),ep:lp(148),w:lp(4.5),op:0.50},
+     {y1:lp(165),y2:lp(163),cpx:lp(70),cpy:lp(156),ep:lp(140),w:lp(3.5),op:0.32}]
     .forEach(({y1,y2,cpx,cpy,ep,w,op})=>{
       lx.globalAlpha=op;lx.strokeStyle='white';lx.lineWidth=w;
       lx.beginPath();lx.moveTo(lp(28),y1);lx.quadraticCurveTo(cpx,cpy,ep,y2);lx.stroke();
