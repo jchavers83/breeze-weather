@@ -7,9 +7,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#4A90D9">
 <meta name="apple-mobile-web-app-title" content="Breeze">
-<title>Breeze — Your weather, at a glance</title>
+<title>Breeze — No ads. No articles. No agenda. Just the weather.</title>
 <meta property="og:title" content="Breeze">
-<meta property="og:description" content="Your weather, at a glance">
+<meta property="og:description" content="No ads. No articles. No agenda. Just the weather.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://jchavers83.github.io/breeze-weather/">
 <meta property="og:image" content="https://jchavers83.github.io/breeze-weather/icon.png">
@@ -17,7 +17,7 @@
 <meta property="og:image:height" content="512">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Breeze">
-<meta name="twitter:description" content="Your weather, at a glance">
+<meta name="twitter:description" content="No ads. No articles. No agenda. Just the weather.">
 <meta name="twitter:image" content="https://jchavers83.github.io/breeze-weather/icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -302,7 +302,8 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .landing-icon{width:130px;height:130px;margin:0 auto 20px}
 .landing-icon canvas{width:100%;height:100%;display:block}
 .landing-title{font-size:42px;font-weight:800;letter-spacing:6px;background:linear-gradient(135deg,var(--text),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
-.landing-tagline{font-size:16px;color:var(--text-secondary);font-weight:500;margin-bottom:28px}
+.landing-tagline{font-size:16px;color:var(--text-secondary);font-weight:500;margin-bottom:28px;line-height:1.7}
+.landing-tagline .tagline-punch{display:block;font-size:15px;font-weight:600;color:var(--text);margin-top:4px;opacity:0.85}
 .landing-cta{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:16px;background:var(--accent);color:#fff;font-size:15px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 16px rgba(26,144,228,0.35);margin-bottom:12px}
 .landing-cta:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(26,144,228,0.5)}
 .landing-cta:active{transform:scale(0.97)}
@@ -403,7 +404,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
     <div class="landing">
       <div class="landing-icon"><canvas id="landingIcon" width="260" height="260"></canvas></div>
       <div class="landing-title">BREEZE</div>
-      <div class="landing-tagline">Your weather, at a glance</div>
+      <div class="landing-tagline">No ads. No articles. No agenda.<span class="tagline-punch">Just the weather.</span></div>
       <button class="landing-cta" onclick="document.getElementById('btnLocate').click()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
         Use My Location
