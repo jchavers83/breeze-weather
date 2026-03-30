@@ -299,6 +299,16 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 /* Refresh indicator */
 .refresh-bar{text-align:center;font-size:11px;color:var(--text-tertiary);padding:4px 0 8px}
 
+/* Sparkline */
+.spark-card{padding:14px 16px 10px;margin-bottom:16px}
+.spark-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+
+/* Pull to refresh */
+#pullIndicator{position:fixed;top:72px;left:50%;transform:translateX(-50%) translateY(-56px);opacity:0;z-index:200;width:38px;height:38px;background:var(--card-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 16px rgba(0,0,0,0.15);pointer-events:none}
+#pullIndicator svg{color:var(--accent);transition:transform 0.1s}
+.pull-spin{animation:pullSpin 0.75s linear infinite}
+@keyframes pullSpin{to{transform:rotate(360deg)}}
+
 /* Radar */
 #radarView{display:none;position:fixed;inset:0;z-index:51;padding:env(safe-area-inset-top,0px) 0 0;box-sizing:border-box;flex-direction:column}
 #radarView.active{display:flex}
@@ -311,6 +321,9 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 </head>
 <body>
 <canvas id="weatherCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
+<div id="pullIndicator">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="pullIcon"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+</div>
 <div class="app" id="app">
   <header class="header">
     <div class="search-wrap">
@@ -644,6 +657,7 @@ function render(){
           <div class="hero-hilo">H:${formatTemp(daily.temperature_2m_max[0])}&deg; L:${formatTemp(daily.temperature_2m_min[0])}&deg;</div>
           <div class="hero-feels">Feels like ${formatTemp(c.apparent_temperature)}&deg;${state.unit}</div>
         </div>
+        ${buildSparkline(hourly,daily,now)}
         <div class="sun-bar glass">
           <div class="sun-item">
             <div class="sun-icon">&#127749;</div>
@@ -1290,6 +1304,125 @@ function toggleDay(i){
     else{mode='none';particles=[];}
     if(mode!=='none')draw();
   };
+})();
+
+// ===================== SPARKLINE =====================
+function fmtSparkHour(h){
+  if(h===0)return'12am';
+  if(h<12)return`${h}am`;
+  if(h===12)return'12pm';
+  return`${h-12}pm`;
+}
+
+function buildSparkline(hourly,daily,now){
+  const todayStr=daily.time[0];
+  const nowH=now.getHours();
+  let startIdx=-1;
+  for(let i=0;i<hourly.time.length;i++){
+    const t=hourly.time[i];
+    const tDate=t.split('T')[0];
+    const tH=parseInt(t.split('T')[1]);
+    if(tDate>todayStr||(tDate===todayStr&&tH>=nowH)){startIdx=i;break;}
+  }
+  if(startIdx===-1)return'';
+  const pts=[];
+  for(let i=0;i<13&&startIdx+i<hourly.time.length;i++){
+    const idx=startIdx+i;
+    const t=hourly.time[idx];
+    pts.push({
+      h:parseInt(t.split('T')[1]),
+      temp:formatTemp(hourly.temperature_2m[idx]),
+      precip:hourly.precipitation_probability[idx]||0,
+      isNow:i===0
+    });
+  }
+  if(pts.length<2)return'';
+  const minT=Math.min(...pts.map(p=>p.temp));
+  const maxT=Math.max(...pts.map(p=>p.temp));
+  const range=maxT-minT||2;
+  const W=320,H=62,padX=18,padY=22,innerW=W-padX*2,innerH=H-padY*2;
+  const sp=pts.map((p,i)=>({...p,
+    x:padX+(i/(pts.length-1))*innerW,
+    y:padY+(1-(p.temp-minT)/range)*innerH
+  }));
+  // Smooth bezier curve
+  let curve=`M${sp[0].x} ${sp[0].y}`;
+  for(let i=1;i<sp.length;i++){
+    const pr=sp[i-1],cu=sp[i],cpx=(pr.x+cu.x)/2;
+    curve+=` C${cpx} ${pr.y} ${cpx} ${cu.y} ${cu.x} ${cu.y}`;
+  }
+  const fill=curve+` L${sp[sp.length-1].x} ${H} L${sp[0].x} ${H} Z`;
+  // Labels every 3 pts
+  const hlbls=sp.filter((_,i)=>i%3===0).map(p=>`<text x="${p.x}" y="${H+14}" text-anchor="middle" font-size="10" fill="var(--text-tertiary)" font-weight="500">${p.isNow?'Now':fmtSparkHour(p.h)}</text>`).join('');
+  // Temp at first, mid, last
+  const tidxs=[0,Math.floor(sp.length/2),sp.length-1];
+  const tlbls=sp.filter((_,i)=>tidxs.includes(i)).map(p=>`<text x="${p.x}" y="${p.y-8}" text-anchor="middle" font-size="11" fill="var(--text)" font-weight="700">${p.temp}°</text>`).join('');
+  // Precip bars
+  const pbars=sp.map(p=>p.precip>=15?`<rect x="${p.x-2.5}" y="${H-(p.precip/100)*7}" width="5" height="${(p.precip/100)*7}" rx="2" fill="#60a5fa" opacity="0.55"/>`:'').join('');
+  // Dots
+  const dots=sp.slice(1).map(p=>`<circle cx="${p.x}" cy="${p.y}" r="2.5" fill="var(--accent)" opacity="0.45"/>`).join('');
+  const nowDot=`<circle cx="${sp[0].x}" cy="${sp[0].y}" r="5" fill="var(--accent)"/><circle cx="${sp[0].x}" cy="${sp[0].y}" r="2.5" fill="#fff"/>`;
+  return`<div class="spark-card glass">
+    <div class="spark-label">Temperature Next 12 Hours</div>
+    <svg viewBox="0 0 ${W} ${H+20}" width="100%" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block">
+      <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.28"/>
+        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"/>
+      </linearGradient></defs>
+      ${pbars}
+      <path d="${fill}" fill="url(#sg)"/>
+      <path d="${curve}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${dots}${nowDot}${tlbls}${hlbls}
+    </svg>
+  </div>`;
+}
+
+// ===================== PULL TO REFRESH =====================
+(function(){
+  let startY=0,pulling=false,triggered=false;
+  const threshold=68;
+  const el=()=>document.getElementById('pullIndicator');
+  const icon=()=>document.getElementById('pullIcon');
+  document.addEventListener('touchstart',e=>{
+    const rv=document.getElementById('radarView');
+    if(window.scrollY===0&&!(rv&&rv.classList.contains('active'))){
+      startY=e.touches[0].clientY;pulling=true;triggered=false;
+    }
+  },{passive:true});
+  document.addEventListener('touchmove',e=>{
+    if(!pulling)return;
+    const dy=e.touches[0].clientY-startY;
+    if(dy<=0){el().style.opacity=0;return;}
+    const prog=Math.min(dy/threshold,1);
+    const slide=Math.min(dy*0.38,28);
+    el().style.opacity=prog;
+    el().style.transform=`translateX(-50%) translateY(${slide-56}px)`;
+    // Rotate icon as hint
+    icon().style.transform=`rotate(${prog*180}deg)`;
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(!pulling)return;
+    pulling=false;
+    const dy=e.changedTouches[0].clientY-startY;
+    if(dy>threshold&&state.lat&&!triggered){
+      triggered=true;
+      // Lock into spinning state
+      el().style.opacity='1';
+      el().style.transform='translateX(-50%) translateY(-28px)';
+      icon().classList.add('pull-spin');
+      fetchWeather().finally(()=>{
+        icon().classList.remove('pull-spin');
+        el().style.opacity='0';
+        el().style.transform='translateX(-50%) translateY(-56px)';
+        icon().style.transform='';
+      });
+    }else{
+      el().style.transition='opacity 0.25s,transform 0.25s';
+      el().style.opacity='0';
+      el().style.transform='translateX(-50%) translateY(-56px)';
+      setTimeout(()=>el().style.transition='',300);
+    }
+  },{passive:true});
 })();
 
 // ===================== RADAR (Windy embed) =====================
