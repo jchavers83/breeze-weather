@@ -300,28 +300,13 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .refresh-bar{text-align:center;font-size:11px;color:var(--text-tertiary);padding:4px 0 8px}
 
 /* Radar */
-#radarView{display:none;position:fixed;inset:0;z-index:51;padding:72px 12px 68px;box-sizing:border-box;flex-direction:column;gap:0}
+#radarView{display:none;position:fixed;inset:0;z-index:51;padding:72px 0 68px;box-sizing:border-box;flex-direction:column}
 #radarView.active{display:flex}
-#radarMap{flex:1;min-height:0;border-radius:16px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.3)}
-.radar-controls{display:flex;align-items:center;gap:12px;padding:10px 4px 4px;flex-shrink:0}
-.radar-play-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:12px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;flex-shrink:0;transition:opacity 0.2s}
-.radar-play-btn:active{opacity:0.8}
-.radar-time-label{flex:1;text-align:center;font-size:13px;font-weight:600;color:var(--text-secondary)}
-.radar-legend{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-tertiary);font-weight:600;flex-shrink:0}
-.radar-legend-bar{width:56px;height:7px;border-radius:4px;background:linear-gradient(to right,#00d4ff,#00ff88,#ffe000,#ff8c00,#ff2200)}
-.radar-timeline{display:flex;align-items:center;gap:4px;padding:4px 4px 6px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
-.radar-timeline::-webkit-scrollbar{display:none}
-.radar-dot{width:9px;height:9px;border-radius:50%;background:rgba(128,128,128,0.3);cursor:pointer;transition:all 0.15s;flex-shrink:0;border:none;padding:0}
-.radar-dot.active{background:var(--accent);transform:scale(1.5)}
-.radar-dot.future{background:rgba(58,143,212,0.35)}
-.radar-dot.active.future{background:#7ec8ff}
-.radar-divider{width:1px;height:14px;background:var(--accent);opacity:0.5;flex-shrink:0;margin:0 2px}
-.radar-fcst-label{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:0.5px;flex-shrink:0;opacity:0.8}
-.leaflet-container{background:#1a2a3a!important}
-.leaflet-control-attribution{font-size:9px!important;background:rgba(0,0,0,0.5)!important;color:rgba(255,255,255,0.5)!important}
-.leaflet-control-attribution a{color:rgba(255,255,255,0.6)!important}
-.radar-city-pulse{width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(58,143,212,0.4);animation:radarPulse 2s infinite}
-@keyframes radarPulse{0%,100%{box-shadow:0 0 0 4px rgba(58,143,212,0.4)}50%{box-shadow:0 0 0 8px rgba(58,143,212,0.1)}}
+#windyFrame{flex:1;min-height:0;width:100%;border:none}
+.radar-overlay-bar{display:flex;gap:8px;padding:10px 14px 8px;flex-shrink:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.radar-overlay-bar::-webkit-scrollbar{display:none}
+.radar-overlay-btn{padding:7px 16px;border-radius:20px;border:1.5px solid var(--card-border);background:var(--card-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s;flex-shrink:0}
+.radar-overlay-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -396,20 +381,14 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 </div>
 
 <div id="radarView">
-  <div id="radarMap"></div>
-  <div class="radar-controls">
-    <button class="radar-play-btn" id="radarPlayBtn" onclick="toggleRadarPlay()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path id="radarPlayIcon" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-      <span id="radarPlayLabel">Pause</span>
-    </button>
-    <span class="radar-time-label" id="radarTimeLabel">Loading radar…</span>
-    <div class="radar-legend">
-      <span>Light</span>
-      <div class="radar-legend-bar"></div>
-      <span>Heavy</span>
-    </div>
+  <div class="radar-overlay-bar">
+    <button class="radar-overlay-btn active" onclick="setWindyOverlay('rain',this)">🌧 Rain</button>
+    <button class="radar-overlay-btn" onclick="setWindyOverlay('wind',this)">💨 Wind</button>
+    <button class="radar-overlay-btn" onclick="setWindyOverlay('temp',this)">🌡 Temp</button>
+    <button class="radar-overlay-btn" onclick="setWindyOverlay('clouds',this)">☁️ Clouds</button>
+    <button class="radar-overlay-btn" onclick="setWindyOverlay('snowcover',this)">❄️ Snow</button>
   </div>
-  <div class="radar-timeline" id="radarTimeline"></div>
+  <iframe id="windyFrame" frameborder="0" allowfullscreen></iframe>
 </div>
 
 <nav class="mobile-nav" id="mobileNav" style="display:none">
@@ -1307,144 +1286,26 @@ function toggleDay(i){
   };
 })();
 
-// ===================== RADAR =====================
-let radarMap=null,radarLayers=[],radarFrames=[],radarPastCount=0,radarIdx=0,radarPlaying=true,radarTimer=null,radarInited=false,radarCityMarker=null;
+// ===================== RADAR (Windy embed) =====================
+let windyOverlay='rain';
 
-function loadLeaflet(){
-  return new Promise(resolve=>{
-    if(window.L){resolve();return;}
-    const lc=document.createElement('link');
-    lc.rel='stylesheet';lc.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    document.head.appendChild(lc);
-    const ls=document.createElement('script');
-    ls.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    ls.onload=resolve;document.head.appendChild(ls);
-  });
+function windySrc(overlay){
+  const lat=state.lat||39,lon=state.lon||-98,zoom=state.lat?7:4;
+  const tUnit=state.unit==='F'?encodeURIComponent('°F'):encodeURIComponent('°C');
+  const wUnit=state.unit==='F'?'mph':encodeURIComponent('km/h');
+  return `https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=${zoom}&level=surface&overlay=${overlay}&product=ecmwf&menu=&message=true&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=${wUnit}&metricTemp=${tUnit}&radarRange=-1`;
 }
 
-async function initRadar(){
-  try{
-    await loadLeaflet();
-    if(!radarInited){
-      radarInited=true;
-      radarMap=L.map('radarMap',{zoomControl:true,attributionControl:false,maxZoom:18,minZoom:3});
-      L.control.attribution({prefix:false,position:'bottomright'}).addTo(radarMap);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-        attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-        subdomains:'abcd',maxZoom:18,minZoom:3
-      }).addTo(radarMap);
-      await fetchRadarFrames();
-    }
-    // Center on city
-    const lat=state.lat||39,lon=state.lon||-98,zoom=state.lat?7:4;
-    radarMap.setView([lat,lon],zoom);
-    // City pulse marker
-    if(radarCityMarker)radarMap.removeLayer(radarCityMarker);
-    if(state.lat){
-      const icon=L.divIcon({className:'',html:'<div class="radar-city-pulse"></div>',iconSize:[12,12],iconAnchor:[6,6]});
-      radarCityMarker=L.marker([state.lat,state.lon],{icon,zIndexOffset:1000}).addTo(radarMap);
-      radarCityMarker.bindTooltip(state.name||'Current Location',{permanent:false,direction:'top',offset:[0,-8]});
-    }
-    setTimeout(()=>radarMap.invalidateSize(),200);
-  }catch(e){
-    console.error('Radar init error:',e);
-    document.getElementById('radarTimeLabel').textContent='Radar unavailable';
-  }
+function initRadar(){
+  const frame=document.getElementById('windyFrame');
+  if(!frame.src||frame.src===window.location.href)frame.src=windySrc(windyOverlay);
 }
 
-async function fetchRadarFrames(){
-  try{
-    const res=await fetch('https://api.rainviewer.com/public/weather-maps.json');
-    const data=await res.json();
-    const past=data.radar.past||[];
-    const nowcast=data.radar.nowcast||[];
-    radarPastCount=past.length;
-    radarFrames=[...past,...nowcast];
-    radarLayers=radarFrames.map(f=>L.tileLayer(
-      `https://tilecache.rainviewer.com${f.path}/512/{z}/{x}/{y}/6/1_1.png`,
-      {opacity:0,zIndex:10,tileSize:512,detectRetina:false,maxNativeZoom:12,maxZoom:18}
-    ));
-    renderRadarTimeline();
-    showRadarFrame(radarPastCount>0?radarPastCount-1:0);
-    startRadarAnim();
-  }catch(e){
-    document.getElementById('radarTimeLabel').textContent='Radar data unavailable';
-  }
-}
-
-function renderRadarTimeline(){
-  const tl=document.getElementById('radarTimeline');
-  if(!tl)return;
-  let html='';
-  radarFrames.forEach((f,i)=>{
-    if(i===radarPastCount&&radarFrames.length>radarPastCount){
-      html+=`<div class="radar-divider"></div><span class="radar-fcst-label">FCST</span>`;
-    }
-    html+=`<button class="radar-dot${i>=radarPastCount?' future':''}" data-i="${i}" onclick="seekRadarFrame(${i})" title="${new Date(f.time*1000).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}"></button>`;
-  });
-  tl.innerHTML=html;
-}
-
-function showRadarFrame(idx){
-  const oldIdx=radarIdx;
-  radarIdx=idx;
-  const oldLayer=radarLayers[oldIdx];
-  const newLayer=radarLayers[radarIdx];
-  // Crossfade: bring new layer in, then remove old
-  if(newLayer){
-    newLayer.addTo(radarMap);
-    let op=0;
-    const target=0.72;
-    const step=()=>{
-      op=Math.min(op+0.08,target);
-      newLayer.setOpacity(op);
-      if(op<target)requestAnimationFrame(step);
-      else if(oldLayer&&oldIdx!==radarIdx)radarMap.removeLayer(oldLayer);
-    };
-    requestAnimationFrame(step);
-  }else if(oldLayer&&oldIdx!==radarIdx){
-    radarMap.removeLayer(oldLayer);
-  }
-  // Update timestamp label
-  const ts=radarFrames[radarIdx]?.time;
-  if(ts){
-    const d=new Date(ts*1000);
-    const diffMin=Math.round((ts*1000-Date.now())/60000);
-    let lbl=d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    if(diffMin>2)lbl+=` \u25b8 +${diffMin}m forecast`;
-    else if(diffMin>=-2)lbl+=' \u25cf Live';
-    else lbl+=' \u25b8 Past';
-    document.getElementById('radarTimeLabel').textContent=lbl;
-  }
-  // Update timeline dots
-  document.querySelectorAll('.radar-dot').forEach(dot=>{
-    dot.classList.toggle('active',parseInt(dot.dataset.i)===radarIdx);
-  });
-}
-
-function seekRadarFrame(i){
-  clearInterval(radarTimer);radarPlaying=false;
-  document.getElementById('radarPlayIcon').setAttribute('d','M8 5v14l11-7z');
-  document.getElementById('radarPlayLabel').textContent='Play';
-  showRadarFrame(i);
-}
-
-function startRadarAnim(){
-  clearInterval(radarTimer);
-  radarTimer=setInterval(()=>showRadarFrame((radarIdx+1)%radarLayers.length),900);
-  radarPlaying=true;
-  document.getElementById('radarPlayIcon').setAttribute('d','M6 19h4V5H6v14zm8-14v14h4V5h-4z');
-  document.getElementById('radarPlayLabel').textContent='Pause';
-}
-
-function toggleRadarPlay(){
-  if(radarPlaying){
-    clearInterval(radarTimer);radarPlaying=false;
-    document.getElementById('radarPlayIcon').setAttribute('d','M8 5v14l11-7z');
-    document.getElementById('radarPlayLabel').textContent='Play';
-  }else{
-    startRadarAnim();
-  }
+function setWindyOverlay(overlay,btn){
+  windyOverlay=overlay;
+  document.querySelectorAll('.radar-overlay-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  document.getElementById('windyFrame').src=windySrc(overlay);
 }
 </script>
 </body>
