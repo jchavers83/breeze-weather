@@ -300,7 +300,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .refresh-bar{text-align:center;font-size:11px;color:var(--text-tertiary);padding:4px 0 8px}
 
 /* Radar */
-#radarView{display:none;position:fixed;inset:0;z-index:51;padding:72px 0 0;box-sizing:border-box;flex-direction:column}
+#radarView{display:none;position:fixed;inset:0;z-index:51;padding:env(safe-area-inset-top,0px) 0 0;box-sizing:border-box;flex-direction:column}
 #radarView.active{display:flex}
 #windyFrame{flex:1;min-height:0;width:100%;border:none}
 .radar-overlay-bar{display:flex;gap:8px;padding:8px 14px calc(env(safe-area-inset-bottom,8px) + 68px);flex-shrink:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;background:var(--card-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--card-border)}
@@ -536,10 +536,14 @@ $$('.nav-tab').forEach(btn=>{
     const tab=btn.dataset.tab;
     if(tab==='radar'){
       $('#content').style.display='none';
+      $('.header').style.display='none';
+      $('#savedBar').style.display='none';
       $('#radarView').classList.add('active');
       initRadar();
     }else{
       $('#radarView').classList.remove('active');
+      $('.header').style.display='';
+      if(getSaved().length)$('#savedBar').style.display='';
       $('#content').style.display='block';
       if(tab==='forecast'){
         const fs=$('.forecast-section');
