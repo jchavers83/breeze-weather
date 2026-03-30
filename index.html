@@ -216,9 +216,26 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .nav-tab.active{color:var(--accent)}
 .nav-tab svg{width:22px;height:22px}
 
+/* Saved locations */
+.saved-bar{display:flex;gap:8px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-shrink:0}
+.saved-bar::-webkit-scrollbar{display:none}
+.saved-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;background:var(--card-bg);border:1px solid var(--card-border);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;color:var(--text);transition:all 0.2s;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0}
+.saved-chip:active{transform:scale(0.95)}
+.saved-chip .chip-remove{font-size:14px;color:var(--text-tertiary);margin-left:2px;line-height:1}
+.btn-save{background:none;border:none;cursor:pointer;font-size:22px;line-height:1;padding:4px;color:var(--text-secondary);transition:transform 0.2s,color 0.2s;-webkit-tap-highlight-color:transparent}
+.btn-save:active{transform:scale(1.3)}
+.btn-save.saved{color:#f5a623}
+
 /* Loading spinner */
 .spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--card-border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.glass{animation:cardIn 0.45s ease forwards}
+.forecast-day:nth-child(1){animation-delay:0.05s}
+.forecast-day:nth-child(2){animation-delay:0.10s}
+.forecast-day:nth-child(3){animation-delay:0.15s}
+.forecast-day:nth-child(4){animation-delay:0.20s}
+.forecast-day:nth-child(5){animation-delay:0.25s}
 
 /* Landing state */
 .landing{text-align:center;padding:40px 16px 60px;max-width:480px;margin:0 auto}
@@ -278,6 +295,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 </style>
 </head>
 <body>
+<canvas id="weatherCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
 <div class="app" id="app">
   <header class="header">
     <div class="search-wrap">
@@ -293,6 +311,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
       <svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
     </button>
   </header>
+  <div id="savedBar" class="saved-bar" style="display:none"></div>
 
   <div id="content">
     <div class="landing">
@@ -382,6 +401,7 @@ function updateGradient(){
   const now=new Date();
   const night=isNight(now,state.data.daily.sunrise[0],state.data.daily.sunset[0]);
   document.body.classList.toggle('night',night);
+  if(window.setWeatherAnim)setWeatherAnim(code,night);
   let from,to;
   if(night){from=state.dark?'#0a1428':'#1a2a4a';to=state.dark?'#0a2018':'#1a3a4a'}
   // Thunderstorms: dramatic deep blue-slate
@@ -505,6 +525,16 @@ async function fetchWeather(){
     render();
     updateGradient();
     $('#mobileNav').style.display='';
+    renderSavedBar();
+    // Animate hero temperature
+    const heroEl=document.getElementById('heroTemp');
+    if(heroEl){
+      const target=Math.round(toF(state.data.current.temperature_2m));
+      let cur=target-12;
+      heroEl.textContent=(cur)+'\u00b0';
+      const tick=()=>{cur+=2;heroEl.textContent=(Math.min(cur,target))+'\u00b0';if(cur<target)requestAnimationFrame(tick);};
+      requestAnimationFrame(tick);
+    }
     scheduleRefresh();
   }catch(e){console.error(e)}
   app.classList.remove('loading');
@@ -531,14 +561,14 @@ function render(){
 
   const html=`
     <div class="location-bar">
-      <h2>${state.name}</h2>
-      <p>${state.region}</p>
+      <div><h2>${state.name}</h2><p>${state.region}</p></div>
+      <button class="btn-save ${isSaved()?'saved':''}" id="btnSave" onclick="toggleSaveLocation()" title="Save location">${isSaved()?'★':'☆'}</button>
     </div>
     <div class="desktop-layout">
       <div class="left-panel">
         <div class="hero">
           <div class="hero-icon">${wi.icon}</div>
-          <div class="hero-temp">${formatTemp(c.temperature_2m)}&deg;</div>
+          <div class="hero-temp" id="heroTemp">${formatTemp(c.temperature_2m)}&deg;</div>
           <div class="hero-desc">${wi.desc}</div>
           <div class="hero-hilo">H:${formatTemp(daily.temperature_2m_max[0])}&deg; L:${formatTemp(daily.temperature_2m_min[0])}&deg;</div>
           <div class="hero-feels">Feels like ${formatTemp(c.apparent_temperature)}&deg;F</div>
@@ -1046,6 +1076,40 @@ function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,is
   return quips[seed];
 }
 
+// === Saved Locations ===
+function getSaved(){try{return JSON.parse(localStorage.getItem('breezeLocations')||'[]');}catch{return[];}}
+function isSaved(){return state.lat&&getSaved().some(l=>Math.abs(l.lat-state.lat)<0.01&&Math.abs(l.lon-state.lon)<0.01);}
+function toggleSaveLocation(){
+  const locs=getSaved();
+  const exists=locs.findIndex(l=>Math.abs(l.lat-state.lat)<0.01&&Math.abs(l.lon-state.lon)<0.01);
+  if(exists>=0){locs.splice(exists,1);}
+  else{locs.unshift({name:state.name,region:state.region,lat:state.lat,lon:state.lon});if(locs.length>8)locs.pop();}
+  localStorage.setItem('breezeLocations',JSON.stringify(locs));
+  renderSavedBar();
+  // Update star button
+  const btn=$('#btnSave');if(btn){btn.classList.toggle('saved',isSaved());}
+}
+function renderSavedBar(){
+  const bar=$('#savedBar');if(!bar)return;
+  const locs=getSaved();
+  if(!locs.length){bar.style.display='none';return;}
+  bar.style.display='flex';
+  bar.innerHTML=locs.map((l,i)=>`<div class="saved-chip" onclick="loadSaved(${i})"><span>${l.name}</span><span class="chip-remove" onclick="removeSaved(event,${i})">×</span></div>`).join('');
+}
+function loadSaved(i){
+  const l=getSaved()[i];if(!l)return;
+  state.lat=l.lat;state.lon=l.lon;state.name=l.name;state.region=l.region;
+  $('#searchInput').value='';
+  fetchWeather();
+}
+function removeSaved(e,i){
+  e.stopPropagation();
+  const locs=getSaved();locs.splice(i,1);
+  localStorage.setItem('breezeLocations',JSON.stringify(locs));
+  renderSavedBar();
+  const btn=$('#btnSave');if(btn)btn.classList.toggle('saved',isSaved());
+}
+
 function toggleDay(i){
   state.openDay=state.openDay===i?-1:i;
   document.querySelectorAll('.forecast-day').forEach((el,idx)=>{
@@ -1053,6 +1117,82 @@ function toggleDay(i){
   });
 }
 
+// === Weather Canvas Animations ===
+(function(){
+  const canvas=document.getElementById('weatherCanvas');
+  const ctx=canvas.getContext('2d');
+  let W,H,particles=[],mode='none',raf,lightning=0,lflash=false;
+
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+  window.addEventListener('resize',resize);resize();
+
+  function makeRain(n){
+    return Array.from({length:n},()=>({
+      x:Math.random()*W,y:Math.random()*H,
+      spd:9+Math.random()*7,len:12+Math.random()*10,
+      op:0.18+Math.random()*0.22
+    }));
+  }
+  function makeSnow(n){
+    return Array.from({length:n},()=>({
+      x:Math.random()*W,y:Math.random()*H,
+      spd:0.6+Math.random()*1.4,sz:1.5+Math.random()*3,
+      drift:(Math.random()-0.5)*0.4,ph:Math.random()*Math.PI*2,
+      op:0.55+Math.random()*0.35
+    }));
+  }
+  function makeStars(n){
+    return Array.from({length:n},()=>({
+      x:Math.random()*W,y:Math.random()*H*0.75,
+      sz:0.4+Math.random()*1.8,ph:Math.random()*Math.PI*2,
+      spd:0.015+Math.random()*0.025
+    }));
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    if(mode==='rain'||mode==='storm'){
+      particles.forEach(p=>{
+        ctx.strokeStyle=`rgba(180,215,245,${p.op})`;
+        ctx.lineWidth=1;ctx.beginPath();
+        ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-2,p.y+p.len);ctx.stroke();
+        p.y+=p.spd;p.x-=1.5;
+        if(p.y>H){p.y=-20;p.x=Math.random()*W;}
+      });
+      if(mode==='storm'){
+        lightning++;
+        if(lightning>200+Math.random()*400&&!lflash){lflash=true;lightning=0;setTimeout(()=>{lflash=false;},90);}
+        if(lflash){ctx.fillStyle='rgba(255,255,255,0.10)';ctx.fillRect(0,0,W,H);}
+      }
+    }else if(mode==='snow'){
+      particles.forEach(p=>{
+        ctx.fillStyle=`rgba(255,255,255,${p.op})`;
+        ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,Math.PI*2);ctx.fill();
+        p.ph+=0.02;p.y+=p.spd;p.x+=Math.sin(p.ph)*0.6+p.drift;
+        if(p.y>H){p.y=-10;p.x=Math.random()*W;}
+      });
+    }else if(mode==='stars'){
+      particles.forEach(p=>{
+        p.ph+=p.spd;
+        const op=0.35+Math.sin(p.ph)*0.45;
+        ctx.fillStyle=`rgba(255,255,255,${Math.max(0,op)})`;
+        ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,Math.PI*2);ctx.fill();
+      });
+    }
+    raf=requestAnimationFrame(draw);
+  }
+
+  window.setWeatherAnim=function(code,isNight){
+    cancelAnimationFrame(raf);
+    ctx.clearRect(0,0,W,H);
+    if([95,96,99].includes(code)){mode='storm';particles=makeRain(140);}
+    else if((code>=51&&code<=67)||(code>=80&&code<=82)){mode='rain';particles=makeRain(110);}
+    else if((code>=71&&code<=77)||(code>=85&&code<=86)){mode='snow';particles=makeSnow(90);}
+    else if(isNight&&code<=2){mode='stars';particles=makeStars(130);}
+    else{mode='none';particles=[];}
+    if(mode!=='none')draw();
+  };
+})();
 </script>
 </body>
 </html>
