@@ -298,6 +298,29 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Refresh indicator */
 .refresh-bar{text-align:center;font-size:11px;color:var(--text-tertiary);padding:4px 0 8px}
+
+/* Radar */
+#radarView{display:none;padding-bottom:8px}
+#radarMap{width:100%;height:calc(100dvh - 210px);min-height:320px;border-radius:20px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.3)}
+.radar-controls{display:flex;align-items:center;gap:12px;padding:12px 4px 6px}
+.radar-play-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:12px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;flex-shrink:0;transition:opacity 0.2s}
+.radar-play-btn:active{opacity:0.8}
+.radar-time-label{flex:1;text-align:center;font-size:13px;font-weight:600;color:var(--text-secondary)}
+.radar-legend{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-tertiary);font-weight:600;flex-shrink:0}
+.radar-legend-bar{width:56px;height:7px;border-radius:4px;background:linear-gradient(to right,#00d4ff,#00ff88,#ffe000,#ff8c00,#ff2200)}
+.radar-timeline{display:flex;align-items:center;gap:4px;padding:4px 4px 8px;overflow-x:auto;scrollbar-width:none}
+.radar-timeline::-webkit-scrollbar{display:none}
+.radar-dot{width:9px;height:9px;border-radius:50%;background:rgba(128,128,128,0.3);cursor:pointer;transition:all 0.15s;flex-shrink:0;border:none;padding:0}
+.radar-dot.active{background:var(--accent);transform:scale(1.5)}
+.radar-dot.future{background:rgba(58,143,212,0.35)}
+.radar-dot.active.future{background:#7ec8ff}
+.radar-divider{width:1px;height:14px;background:var(--accent);opacity:0.5;flex-shrink:0;margin:0 2px}
+.radar-fcst-label{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:0.5px;flex-shrink:0;opacity:0.8}
+.leaflet-container{background:#1a2a3a!important}
+.leaflet-control-attribution{font-size:9px!important;background:rgba(0,0,0,0.5)!important;color:rgba(255,255,255,0.5)!important}
+.leaflet-control-attribution a{color:rgba(255,255,255,0.6)!important}
+.radar-city-pulse{width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(58,143,212,0.4);animation:radarPulse 2s infinite}
+@keyframes radarPulse{0%,100%{box-shadow:0 0 0 4px rgba(58,143,212,0.4)}50%{box-shadow:0 0 0 8px rgba(58,143,212,0.1)}}
 </style>
 </head>
 <body>
@@ -371,6 +394,23 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
   </div>
 </div>
 
+<div id="radarView">
+  <div id="radarMap"></div>
+  <div class="radar-controls">
+    <button class="radar-play-btn" id="radarPlayBtn" onclick="toggleRadarPlay()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path id="radarPlayIcon" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      <span id="radarPlayLabel">Pause</span>
+    </button>
+    <span class="radar-time-label" id="radarTimeLabel">Loading radar…</span>
+    <div class="radar-legend">
+      <span>Light</span>
+      <div class="radar-legend-bar"></div>
+      <span>Heavy</span>
+    </div>
+  </div>
+  <div class="radar-timeline" id="radarTimeline"></div>
+</div>
+
 <nav class="mobile-nav" id="mobileNav" style="display:none">
   <button class="nav-tab active" data-tab="current">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/></svg>
@@ -379,6 +419,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
   <button class="nav-tab" data-tab="forecast">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4m8-4v4"/></svg>
     <span>Forecast</span>
+  </button>
+  <button class="nav-tab" data-tab="radar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M6.34 6.34a8 8 0 1 0 11.32 0"/><path d="M9.17 9.17a4 4 0 1 0 5.66 0"/></svg>
+    <span>Radar</span>
   </button>
 </nav>
 
@@ -507,11 +551,20 @@ $$('.nav-tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
     $$('.nav-tab').forEach(t=>t.classList.remove('active'));
     btn.classList.add('active');
-    if(btn.dataset.tab==='forecast'){
-      const fs=document.querySelector('.forecast-section');
-      if(fs)fs.scrollIntoView({behavior:'smooth',block:'start'});
+    const tab=btn.dataset.tab;
+    if(tab==='radar'){
+      $('#content').style.display='none';
+      $('#radarView').style.display='';
+      initRadar();
     }else{
-      window.scrollTo({top:0,behavior:'smooth'});
+      $('#radarView').style.display='none';
+      $('#content').style.display='';
+      if(tab==='forecast'){
+        const fs=$('.forecast-section');
+        if(fs)fs.scrollIntoView({behavior:'smooth',block:'start'});
+      }else{
+        window.scrollTo({top:0,behavior:'smooth'});
+      }
     }
   });
 });
@@ -1252,6 +1305,127 @@ function toggleDay(i){
     if(mode!=='none')draw();
   };
 })();
+
+// ===================== RADAR =====================
+let radarMap=null,radarLayers=[],radarFrames=[],radarPastCount=0,radarIdx=0,radarPlaying=true,radarTimer=null,radarInited=false,radarCityMarker=null;
+
+function loadLeaflet(){
+  return new Promise(resolve=>{
+    if(window.L){resolve();return;}
+    const lc=document.createElement('link');
+    lc.rel='stylesheet';lc.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(lc);
+    const ls=document.createElement('script');
+    ls.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    ls.onload=resolve;document.head.appendChild(ls);
+  });
+}
+
+async function initRadar(){
+  try{
+    await loadLeaflet();
+    if(!radarInited){
+      radarInited=true;
+      radarMap=L.map('radarMap',{zoomControl:true,attributionControl:false});
+      L.control.attribution({prefix:false,position:'bottomright'}).addTo(radarMap);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+        attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains:'abcd',maxZoom:19
+      }).addTo(radarMap);
+      await fetchRadarFrames();
+    }
+    // Center on city
+    const lat=state.lat||39,lon=state.lon||-98,zoom=state.lat?7:4;
+    radarMap.setView([lat,lon],zoom);
+    // City pulse marker
+    if(radarCityMarker)radarMap.removeLayer(radarCityMarker);
+    if(state.lat){
+      const icon=L.divIcon({className:'',html:'<div class="radar-city-pulse"></div>',iconSize:[12,12],iconAnchor:[6,6]});
+      radarCityMarker=L.marker([state.lat,state.lon],{icon,zIndexOffset:1000}).addTo(radarMap);
+      radarCityMarker.bindTooltip(state.name||'Current Location',{permanent:false,direction:'top',offset:[0,-8]});
+    }
+    setTimeout(()=>radarMap.invalidateSize(),100);
+  }catch(e){
+    console.error('Radar init error:',e);
+    document.getElementById('radarTimeLabel').textContent='Radar unavailable';
+  }
+}
+
+async function fetchRadarFrames(){
+  try{
+    const res=await fetch('https://api.rainviewer.com/public/weather-maps.json');
+    const data=await res.json();
+    const past=data.radar.past||[];
+    const nowcast=data.radar.nowcast||[];
+    radarPastCount=past.length;
+    radarFrames=[...past,...nowcast];
+    radarLayers=radarFrames.map(f=>L.tileLayer(
+      `https://tilecache.rainviewer.com${f.path}/256/{z}/{x}/{y}/4/1_1.png`,
+      {opacity:0.65,zIndex:10,tileSize:256}
+    ));
+    renderRadarTimeline();
+    showRadarFrame(radarPastCount>0?radarPastCount-1:0);
+    startRadarAnim();
+  }catch(e){
+    document.getElementById('radarTimeLabel').textContent='Radar data unavailable';
+  }
+}
+
+function renderRadarTimeline(){
+  const tl=document.getElementById('radarTimeline');
+  if(!tl)return;
+  let html='';
+  radarFrames.forEach((f,i)=>{
+    if(i===radarPastCount&&radarFrames.length>radarPastCount){
+      html+=`<div class="radar-divider"></div><span class="radar-fcst-label">FCST</span>`;
+    }
+    html+=`<button class="radar-dot${i>=radarPastCount?' future':''}" data-i="${i}" onclick="seekRadarFrame(${i})" title="${new Date(f.time*1000).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}"></button>`;
+  });
+  tl.innerHTML=html;
+}
+
+function showRadarFrame(idx){
+  if(radarLayers[radarIdx])radarMap.removeLayer(radarLayers[radarIdx]);
+  radarIdx=idx;
+  if(radarLayers[radarIdx])radarLayers[radarIdx].addTo(radarMap);
+  const ts=radarFrames[radarIdx]?.time;
+  if(ts){
+    const d=new Date(ts*1000);
+    const diffMin=Math.round((ts*1000-Date.now())/60000);
+    let lbl=d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    if(diffMin>1)lbl+=` (+${diffMin}m forecast)`;
+    else if(diffMin>=-2)lbl+=' · Live';
+    document.getElementById('radarTimeLabel').textContent=lbl;
+  }
+  document.querySelectorAll('.radar-dot').forEach((dot,i)=>{
+    dot.classList.toggle('active',i===parseInt(dot.dataset.i)&&parseInt(dot.dataset.i)===radarIdx);
+  });
+}
+
+function seekRadarFrame(i){
+  clearInterval(radarTimer);radarPlaying=false;
+  document.getElementById('radarPlayIcon').setAttribute('d','M8 5v14l11-7z');
+  document.getElementById('radarPlayLabel').textContent='Play';
+  showRadarFrame(i);
+}
+
+function startRadarAnim(){
+  clearInterval(radarTimer);
+  radarTimer=setInterval(()=>showRadarFrame((radarIdx+1)%radarLayers.length),600);
+  radarPlaying=true;
+  document.getElementById('radarPlayIcon').setAttribute('d','M6 19h4V5H6v14zm8-14v14h4V5h-4z');
+  document.getElementById('radarPlayLabel').textContent='Pause';
+}
+
+function toggleRadarPlay(){
+  if(radarPlaying){
+    clearInterval(radarTimer);radarPlaying=false;
+    document.getElementById('radarPlayIcon').setAttribute('d','M8 5v14l11-7z');
+    document.getElementById('radarPlayLabel').textContent='Play';
+  }else{
+    startRadarAnim();
+  }
+}
 </script>
 </body>
 </html>
