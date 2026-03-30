@@ -1330,8 +1330,9 @@ async function initRadar(){
       L.control.attribution({prefix:false,position:'bottomright'}).addTo(radarMap);
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
         attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-        subdomains:'abcd',maxZoom:19
+        subdomains:'abcd',maxZoom:18
       }).addTo(radarMap);
+      radarMap.setMaxZoom(18);
       await fetchRadarFrames();
     }
     // Center on city
@@ -1361,7 +1362,7 @@ async function fetchRadarFrames(){
     radarFrames=[...past,...nowcast];
     radarLayers=radarFrames.map(f=>L.tileLayer(
       `https://tilecache.rainviewer.com${f.path}/512/{z}/{x}/{y}/6/1_1.png`,
-      {opacity:0,zIndex:10,tileSize:512,detectRetina:false}
+      {opacity:0,zIndex:10,tileSize:512,detectRetina:false,maxNativeZoom:12,maxZoom:18}
     ));
     renderRadarTimeline();
     showRadarFrame(radarPastCount>0?radarPastCount-1:0);
