@@ -1360,8 +1360,8 @@ async function fetchRadarFrames(){
     radarPastCount=past.length;
     radarFrames=[...past,...nowcast];
     radarLayers=radarFrames.map(f=>L.tileLayer(
-      `https://tilecache.rainviewer.com${f.path}/256/{z}/{x}/{y}/4/1_1.png`,
-      {opacity:0.65,zIndex:10,tileSize:256}
+      `https://tilecache.rainviewer.com${f.path}/512/{z}/{x}/{y}/6/1_1.png`,
+      {opacity:0,zIndex:10,tileSize:512,detectRetina:false}
     ));
     renderRadarTimeline();
     showRadarFrame(radarPastCount>0?radarPastCount-1:0);
@@ -1385,20 +1385,39 @@ function renderRadarTimeline(){
 }
 
 function showRadarFrame(idx){
-  if(radarLayers[radarIdx])radarMap.removeLayer(radarLayers[radarIdx]);
+  const oldIdx=radarIdx;
   radarIdx=idx;
-  if(radarLayers[radarIdx])radarLayers[radarIdx].addTo(radarMap);
+  const oldLayer=radarLayers[oldIdx];
+  const newLayer=radarLayers[radarIdx];
+  // Crossfade: bring new layer in, then remove old
+  if(newLayer){
+    newLayer.addTo(radarMap);
+    let op=0;
+    const target=0.72;
+    const step=()=>{
+      op=Math.min(op+0.08,target);
+      newLayer.setOpacity(op);
+      if(op<target)requestAnimationFrame(step);
+      else if(oldLayer&&oldIdx!==radarIdx)radarMap.removeLayer(oldLayer);
+    };
+    requestAnimationFrame(step);
+  }else if(oldLayer&&oldIdx!==radarIdx){
+    radarMap.removeLayer(oldLayer);
+  }
+  // Update timestamp label
   const ts=radarFrames[radarIdx]?.time;
   if(ts){
     const d=new Date(ts*1000);
     const diffMin=Math.round((ts*1000-Date.now())/60000);
     let lbl=d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    if(diffMin>1)lbl+=` (+${diffMin}m forecast)`;
-    else if(diffMin>=-2)lbl+=' · Live';
+    if(diffMin>2)lbl+=` \u25b8 +${diffMin}m forecast`;
+    else if(diffMin>=-2)lbl+=' \u25cf Live';
+    else lbl+=' \u25b8 Past';
     document.getElementById('radarTimeLabel').textContent=lbl;
   }
-  document.querySelectorAll('.radar-dot').forEach((dot,i)=>{
-    dot.classList.toggle('active',i===parseInt(dot.dataset.i)&&parseInt(dot.dataset.i)===radarIdx);
+  // Update timeline dots
+  document.querySelectorAll('.radar-dot').forEach(dot=>{
+    dot.classList.toggle('active',parseInt(dot.dataset.i)===radarIdx);
   });
 }
 
@@ -1411,7 +1430,7 @@ function seekRadarFrame(i){
 
 function startRadarAnim(){
   clearInterval(radarTimer);
-  radarTimer=setInterval(()=>showRadarFrame((radarIdx+1)%radarLayers.length),600);
+  radarTimer=setInterval(()=>showRadarFrame((radarIdx+1)%radarLayers.length),900);
   radarPlaying=true;
   document.getElementById('radarPlayIcon').setAttribute('d','M6 19h4V5H6v14zm8-14v14h4V5h-4z');
   document.getElementById('radarPlayLabel').textContent='Pause';
