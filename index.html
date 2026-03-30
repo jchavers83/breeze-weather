@@ -87,6 +87,11 @@
 --text:#e8f0f8;--text-secondary:#a0b8c8;--text-tertiary:#6a8898;
 --accent:#5ab0f0;
 }
+/* Night time in light mode: dark navy sky needs light text */
+.night:not(.dark){
+--card-bg:rgba(255,255,255,0.13);--card-border:rgba(255,255,255,0.22);
+--text:#e8f0f8;--text-secondary:#b0c8d8;--text-tertiary:#7a9ab0;
+}
 html{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--bg-from),var(--bg-to));color:var(--text);transition:background var(--transition),color var(--transition);overflow-x:hidden}
 .app{max-width:1200px;margin:0 auto;padding:env(safe-area-inset-top,16px) 16px calc(env(safe-area-inset-bottom,16px) + 70px) 16px;opacity:1;transition:opacity 0.3s}
@@ -370,6 +375,7 @@ function updateGradient(){
   const code=state.data.current.weather_code;
   const now=new Date();
   const night=isNight(now,state.data.daily.sunrise[0],state.data.daily.sunset[0]);
+  document.body.classList.toggle('night',night);
   let from,to;
   if(night){from=state.dark?'#0a1428':'#1a2a4a';to=state.dark?'#0a2018':'#1a3a4a'}
   else if(code>=61||code>=51&&code<=57){from=state.dark?'#1a2a3a':'#8aaabb';to=state.dark?'#1a3030':'#7aacaa'}
@@ -436,6 +442,20 @@ $('#btnLocate').addEventListener('click',()=>{
     }else if(err.code===2)alert('Could not determine your location. Try searching for your city instead.');
     else alert('Location request timed out. Try searching for your city instead.');
   },{enableHighAccuracy:true,timeout:10000});
+});
+
+// Mobile nav tabs
+$$('.nav-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    $$('.nav-tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    if(btn.dataset.tab==='forecast'){
+      const fs=document.querySelector('.forecast-section');
+      if(fs)fs.scrollIntoView({behavior:'smooth',block:'start'});
+    }else{
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+  });
 });
 
 // Dark mode
