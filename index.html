@@ -363,7 +363,7 @@ function visUnit(km){return (km*0.621371).toFixed(1)+' mi'}
 function dirStr(deg){const dirs=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];return dirs[Math.round(deg/22.5)%16]}
 function formatTime(iso){const d=new Date(iso);let h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+ap}
 function formatHour(iso){const d=new Date(iso);let h=d.getHours(),ap=h>=12?'PM':'AM';h=h%12||12;return h+ap}
-function dayName(iso,i){if(i===0)return 'Today';const d=new Date(iso);return d.toLocaleDateString('en-US',{weekday:'short'})}
+function dayName(iso,i){if(i===0)return 'Today';const[y,mo,dy]=iso.split('-').map(Number);const d=new Date(y,mo-1,dy);return d.toLocaleDateString('en-US',{weekday:'short'})}
 function daylightDuration(rise,set){const ms=new Date(set)-new Date(rise);const h=Math.floor(ms/3600000);const m=Math.floor((ms%3600000)/60000);return h+'h '+m+'m'}
 
 function isNight(d,sunrise,sunset){if(!sunrise||!sunset)return false;return d<new Date(sunrise)||d>new Date(sunset)}
