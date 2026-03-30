@@ -300,12 +300,12 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .refresh-bar{text-align:center;font-size:11px;color:var(--text-tertiary);padding:4px 0 8px}
 
 /* Radar */
-#radarView{display:none;position:fixed;inset:0;z-index:51;padding:72px 0 68px;box-sizing:border-box;flex-direction:column}
+#radarView{display:none;position:fixed;inset:0;z-index:51;padding:72px 0 0;box-sizing:border-box;flex-direction:column}
 #radarView.active{display:flex}
 #windyFrame{flex:1;min-height:0;width:100%;border:none}
-.radar-overlay-bar{display:flex;gap:8px;padding:10px 14px 8px;flex-shrink:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.radar-overlay-bar{display:flex;gap:8px;padding:8px 14px calc(env(safe-area-inset-bottom,8px) + 68px);flex-shrink:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;background:var(--card-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--card-border)}
 .radar-overlay-bar::-webkit-scrollbar{display:none}
-.radar-overlay-btn{padding:7px 16px;border-radius:20px;border:1.5px solid var(--card-border);background:var(--card-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s;flex-shrink:0}
+.radar-overlay-btn{padding:7px 14px;border-radius:20px;border:1.5px solid var(--card-border);background:rgba(128,128,128,0.08);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s;flex-shrink:0}
 .radar-overlay-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 </style>
 </head>
@@ -381,14 +381,16 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 </div>
 
 <div id="radarView">
+  <iframe id="windyFrame" frameborder="0" allowfullscreen></iframe>
   <div class="radar-overlay-bar">
-    <button class="radar-overlay-btn active" onclick="setWindyOverlay('rain',this)">🌧 Rain</button>
+    <button class="radar-overlay-btn active" onclick="setWindyOverlay('radar',this)">📡 Radar</button>
+    <button class="radar-overlay-btn" onclick="setWindyOverlay('satellite',this)">🛰 Satellite</button>
+    <button class="radar-overlay-btn" onclick="setWindyOverlay('rain',this)">🌧 Rain</button>
     <button class="radar-overlay-btn" onclick="setWindyOverlay('wind',this)">💨 Wind</button>
     <button class="radar-overlay-btn" onclick="setWindyOverlay('temp',this)">🌡 Temp</button>
     <button class="radar-overlay-btn" onclick="setWindyOverlay('clouds',this)">☁️ Clouds</button>
     <button class="radar-overlay-btn" onclick="setWindyOverlay('snowcover',this)">❄️ Snow</button>
   </div>
-  <iframe id="windyFrame" frameborder="0" allowfullscreen></iframe>
 </div>
 
 <nav class="mobile-nav" id="mobileNav" style="display:none">
@@ -1287,7 +1289,7 @@ function toggleDay(i){
 })();
 
 // ===================== RADAR (Windy embed) =====================
-let windyOverlay='rain';
+let windyOverlay='radar';
 
 function windySrc(overlay){
   const lat=state.lat||39,lon=state.lon||-98,zoom=state.lat?7:4;
