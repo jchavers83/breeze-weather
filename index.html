@@ -300,15 +300,16 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .refresh-bar{text-align:center;font-size:11px;color:var(--text-tertiary);padding:4px 0 8px}
 
 /* Radar */
-#radarView{display:none;padding-bottom:8px}
-#radarMap{width:100%;height:calc(100dvh - 210px);min-height:320px;border-radius:20px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.3)}
-.radar-controls{display:flex;align-items:center;gap:12px;padding:12px 4px 6px}
+#radarView{display:none;position:fixed;inset:0;z-index:51;padding:72px 12px 68px;box-sizing:border-box;flex-direction:column;gap:0}
+#radarView.active{display:flex}
+#radarMap{flex:1;min-height:0;border-radius:16px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.3)}
+.radar-controls{display:flex;align-items:center;gap:12px;padding:10px 4px 4px;flex-shrink:0}
 .radar-play-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:12px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;flex-shrink:0;transition:opacity 0.2s}
 .radar-play-btn:active{opacity:0.8}
 .radar-time-label{flex:1;text-align:center;font-size:13px;font-weight:600;color:var(--text-secondary)}
 .radar-legend{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-tertiary);font-weight:600;flex-shrink:0}
 .radar-legend-bar{width:56px;height:7px;border-radius:4px;background:linear-gradient(to right,#00d4ff,#00ff88,#ffe000,#ff8c00,#ff2200)}
-.radar-timeline{display:flex;align-items:center;gap:4px;padding:4px 4px 8px;overflow-x:auto;scrollbar-width:none}
+.radar-timeline{display:flex;align-items:center;gap:4px;padding:4px 4px 6px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
 .radar-timeline::-webkit-scrollbar{display:none}
 .radar-dot{width:9px;height:9px;border-radius:50%;background:rgba(128,128,128,0.3);cursor:pointer;transition:all 0.15s;flex-shrink:0;border:none;padding:0}
 .radar-dot.active{background:var(--accent);transform:scale(1.5)}
@@ -554,10 +555,10 @@ $$('.nav-tab').forEach(btn=>{
     const tab=btn.dataset.tab;
     if(tab==='radar'){
       $('#content').style.display='none';
-      $('#radarView').style.display='block';
+      $('#radarView').classList.add('active');
       initRadar();
     }else{
-      $('#radarView').style.display='none';
+      $('#radarView').classList.remove('active');
       $('#content').style.display='block';
       if(tab==='forecast'){
         const fs=$('.forecast-section');
@@ -1326,13 +1327,12 @@ async function initRadar(){
     await loadLeaflet();
     if(!radarInited){
       radarInited=true;
-      radarMap=L.map('radarMap',{zoomControl:true,attributionControl:false});
+      radarMap=L.map('radarMap',{zoomControl:true,attributionControl:false,maxZoom:18,minZoom:3});
       L.control.attribution({prefix:false,position:'bottomright'}).addTo(radarMap);
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
         attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-        subdomains:'abcd',maxZoom:18
+        subdomains:'abcd',maxZoom:18,minZoom:3
       }).addTo(radarMap);
-      radarMap.setMaxZoom(18);
       await fetchRadarFrames();
     }
     // Center on city
