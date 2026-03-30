@@ -66,20 +66,40 @@
   let fav=document.querySelector('link[rel="icon"]');
   if(!fav){fav=document.createElement('link');fav.rel='icon';document.head.appendChild(fav);}
   fav.href=url;
-  // Draw into landing canvas
+  // Draw into landing canvas — no background, just the illustration floating
   function drawLanding(){
     const lc=document.getElementById('landingIcon');
-    if(lc){const lx=lc.getContext('2d');
-      // Draw with rounded corners on landing
-      const ls=160,lr=ls*0.225;
-      lx.save();lx.beginPath();
-      lx.moveTo(lr,0);lx.lineTo(ls-lr,0);lx.quadraticCurveTo(ls,0,ls,lr);
-      lx.lineTo(ls,ls-lr);lx.quadraticCurveTo(ls,ls,ls-lr,ls);
-      lx.lineTo(lr,ls);lx.quadraticCurveTo(0,ls,0,ls-lr);
-      lx.lineTo(0,lr);lx.quadraticCurveTo(0,0,lr,0);
-      lx.closePath();lx.clip();
-      lx.drawImage(c,0,0,ls,ls);lx.restore();
-    }
+    if(!lc)return;
+    const ls=lc.width;
+    const lx=lc.getContext('2d');
+    function lp(v){return v*(ls/180);}
+    lx.clearRect(0,0,ls,ls);
+    // Sun
+    lx.fillStyle='#FFD84D';
+    lx.beginPath();lx.arc(lp(108),lp(62),lp(26),0,Math.PI*2);lx.fill();
+    // Rays
+    lx.strokeStyle='#FFD84D';lx.lineWidth=lp(5);lx.lineCap='round';
+    [[lp(108),lp(24),lp(108),lp(15)],[lp(108),lp(100),lp(108),lp(109)],
+     [lp(70),lp(62),lp(61),lp(62)],[lp(146),lp(62),lp(137),lp(62)],
+     [lp(81),lp(35),lp(75),lp(29)],[lp(135),lp(89),lp(141),lp(95)],
+     [lp(135),lp(35),lp(141),lp(29)],[lp(81),lp(89),lp(75),lp(95)]]
+    .forEach(([x1,y1,x2,y2])=>{lx.beginPath();lx.moveTo(x1,y1);lx.lineTo(x2,y2);lx.stroke();});
+    // Cloud
+    lx.fillStyle='white';
+    lx.beginPath();lx.arc(lp(54),lp(108),lp(17),Math.PI,0);lx.fill();
+    lx.beginPath();lx.arc(lp(74),lp(98),lp(23),Math.PI,0);lx.fill();
+    lx.beginPath();lx.arc(lp(100),lp(106),lp(19),Math.PI,0);lx.fill();
+    lx.fillRect(lp(54),lp(98),lp(65),lp(27));
+    // Wind lines
+    lx.lineCap='round';
+    [{y1:lp(130),y2:lp(128),cpx:lp(72),cpy:lp(120),ep:lp(155),w:lp(5.5),op:0.70},
+     {y1:lp(145),y2:lp(143),cpx:lp(68),cpy:lp(135),ep:lp(148),w:lp(4.5),op:0.50},
+     {y1:lp(159),y2:lp(157),cpx:lp(70),cpy:lp(150),ep:lp(140),w:lp(3.5),op:0.32}]
+    .forEach(({y1,y2,cpx,cpy,ep,w,op})=>{
+      lx.globalAlpha=op;lx.strokeStyle='white';lx.lineWidth=w;
+      lx.beginPath();lx.moveTo(lp(28),y1);lx.quadraticCurveTo(cpx,cpy,ep,y2);lx.stroke();
+    });
+    lx.globalAlpha=1;
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',drawLanding);
   else drawLanding();
@@ -258,8 +278,8 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Landing state */
 .landing{text-align:center;padding:40px 16px 60px;max-width:480px;margin:0 auto}
-.landing-icon{width:80px;height:80px;border-radius:20px;margin:0 auto 20px;overflow:hidden;box-shadow:0 8px 32px rgba(26,144,228,0.35)}
-.landing-icon canvas{width:100%;height:100%}
+.landing-icon{width:130px;height:130px;margin:0 auto 20px}
+.landing-icon canvas{width:100%;height:100%;display:block}
 .landing-title{font-size:42px;font-weight:800;letter-spacing:6px;background:linear-gradient(135deg,var(--text),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
 .landing-tagline{font-size:16px;color:var(--text-secondary);font-weight:500;margin-bottom:28px}
 .landing-cta{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:16px;background:var(--accent);color:#fff;font-size:15px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 16px rgba(26,144,228,0.35);margin-bottom:12px}
@@ -360,7 +380,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
   <div id="content">
     <div class="landing">
-      <div class="landing-icon"><canvas id="landingIcon" width="160" height="160"></canvas></div>
+      <div class="landing-icon"><canvas id="landingIcon" width="260" height="260"></canvas></div>
       <div class="landing-title">BREEZE</div>
       <div class="landing-tagline">Your weather, at a glance</div>
       <button class="landing-cta" onclick="document.getElementById('btnLocate').click()">
