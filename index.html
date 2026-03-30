@@ -660,6 +660,11 @@ function render(){
           <div class="hero-hilo">H:${formatTemp(daily.temperature_2m_max[0])}&deg; L:${formatTemp(daily.temperature_2m_min[0])}&deg;</div>
           <div class="hero-feels">Feels like ${formatTemp(c.apparent_temperature)}&deg;${state.unit}</div>
         </div>
+        <div class="summary-card glass">
+          <div class="summary-label">Next 12 Hours</div>
+          <div class="vibe-tag">${vibeTag}</div>
+          <div class="summary-text">${summary}</div>
+        </div>
         ${buildSparkline(hourly,daily,now)}
         <div class="sun-bar glass">
           <div class="sun-item">
@@ -676,11 +681,6 @@ function render(){
             <div class="sun-label">Sunset</div>
             <div class="sun-time">${formatTime(daily.sunset[0])}</div>
           </div>
-        </div>
-        <div class="summary-card glass">
-          <div class="summary-label">Next 12 Hours</div>
-          <div class="vibe-tag">${vibeTag}</div>
-          <div class="summary-text">${summary}</div>
         </div>
       </div>
       <div class="right-panel">
