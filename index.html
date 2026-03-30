@@ -14,62 +14,72 @@
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Breeze%22%2C%22short_name%22%3A%22Breeze%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%234A90D9%22%2C%22theme_color%22%3A%22%234A90D9%22%7D">
 <link rel="apple-touch-icon" id="appIcon">
 <script>
-// Generate PWA icon at runtime
+// Generate PWA icon — Sun + Cloud + 3 wind lines
 (function(){
-  const s=180,c=document.createElement('canvas');c.width=s;c.height=s;
+  const s=512,c=document.createElement('canvas');c.width=s;c.height=s;
   const x=c.getContext('2d');
-  // Background: rich gradient
+  const sc=s/180; // scale factor (design is in 180px coords)
+  function p(v){return v*sc;}
+
+  // Background gradient
   const bg=x.createLinearGradient(0,0,s,s);
-  bg.addColorStop(0,'#4A90D9');bg.addColorStop(0.5,'#5B7FD6');bg.addColorStop(1,'#6DD5C3');
-  x.fillStyle=bg;
-  // Rounded rect (iOS clips to circle, but rounded rect looks good everywhere)
-  const r=36;x.beginPath();x.moveTo(r,0);x.lineTo(s-r,0);x.quadraticCurveTo(s,0,s,r);
-  x.lineTo(s,s-r);x.quadraticCurveTo(s,s,s-r,s);x.lineTo(r,s);x.quadraticCurveTo(0,s,0,s-r);
-  x.lineTo(0,r);x.quadraticCurveTo(0,0,r,0);x.closePath();x.fill();
+  bg.addColorStop(0,'#5ec7f0');bg.addColorStop(1,'#52d4a0');
+  x.fillStyle=bg;x.fillRect(0,0,s,s);
 
-  // Sun: white circle with soft glow
-  x.save();
-  x.shadowColor='rgba(255,255,255,0.3)';x.shadowBlur=20;
-  x.fillStyle='rgba(255,255,255,0.95)';
-  x.beginPath();x.arc(s*0.42,s*0.38,24,0,Math.PI*2);x.fill();
-  x.restore();
+  // Sun body
+  x.fillStyle='#FFD84D';
+  x.beginPath();x.arc(p(108),p(62),p(26),0,Math.PI*2);x.fill();
 
-  // Sun rays: thin elegant lines
-  x.strokeStyle='rgba(255,255,255,0.7)';x.lineWidth=2.5;x.lineCap='round';
-  const cx=s*0.42,cy=s*0.38,ri=30,ro=42;
-  for(let i=0;i<8;i++){
-    const a=(Math.PI*2/8)*i-Math.PI/8;
-    x.beginPath();x.moveTo(cx+Math.cos(a)*ri,cy+Math.sin(a)*ri);
-    x.lineTo(cx+Math.cos(a)*ro,cy+Math.sin(a)*ro);x.stroke();
-  }
+  // Sun rays
+  x.strokeStyle='#FFD84D';x.lineWidth=p(5);x.lineCap='round';
+  const rays=[
+    [p(108),p(24),p(108),p(15)],[p(108),p(100),p(108),p(109)],
+    [p(70),p(62),p(61),p(62)],[p(146),p(62),p(137),p(62)],
+    [p(81),p(35),p(75),p(29)],[p(135),p(89),p(141),p(95)],
+    [p(135),p(35),p(141),p(29)],[p(81),p(89),p(75),p(95)]
+  ];
+  rays.forEach(([x1,y1,x2,y2])=>{x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);x.stroke();});
 
-  // Cloud: modern rounded shape, slightly transparent
-  x.fillStyle='rgba(255,255,255,0.85)';
-  x.beginPath();
-  x.arc(s*0.55,s*0.62,20,Math.PI,1.5*Math.PI);
-  x.arc(s*0.68,s*0.52,22,1.15*Math.PI,1.85*Math.PI);
-  x.arc(s*0.82,s*0.58,18,1.2*Math.PI,0.5*Math.PI);
-  x.lineTo(s*0.48,s*0.76);
-  x.arc(s*0.48,s*0.68,8,0.5*Math.PI,1.5*Math.PI);
-  x.closePath();x.fill();
+  // Cloud
+  x.fillStyle='white';
+  x.beginPath();x.arc(p(54),p(108),p(17),Math.PI,0);x.fill();
+  x.beginPath();x.arc(p(74),p(98),p(23),Math.PI,0);x.fill();
+  x.beginPath();x.arc(p(100),p(106),p(19),Math.PI,0);x.fill();
+  x.fillRect(p(54),p(98),p(65),p(27));
 
-  // "breeze" wind lines: three curved strokes
-  x.strokeStyle='rgba(255,255,255,0.5)';x.lineWidth=2;x.lineCap='round';
-  [[s*0.2,s*0.78,40],[s*0.18,s*0.84,50],[s*0.22,s*0.90,35]].forEach(([lx,ly,w])=>{
-    x.beginPath();x.moveTo(lx,ly);x.quadraticCurveTo(lx+w*0.5,ly-4,lx+w,ly);x.stroke();
+  // Wind lines — tapered opacity
+  x.lineCap='round';
+  [
+    {y1:p(130),y2:p(128),cp1x:p(72),cp1y:p(120),ep:p(155),w:p(5.5),op:0.70},
+    {y1:p(145),y2:p(143),cp1x:p(68),cp1y:p(135),ep:p(148),w:p(4.5),op:0.50},
+    {y1:p(159),y2:p(157),cp1x:p(70),cp1y:p(150),ep:p(140),w:p(3.5),op:0.32}
+  ].forEach(({y1,y2,cp1x,cp1y,ep,w,op})=>{
+    x.globalAlpha=op;
+    x.strokeStyle='white';x.lineWidth=w;
+    x.beginPath();x.moveTo(p(28),y1);x.quadraticCurveTo(cp1x,cp1y,ep,y2);x.stroke();
   });
+  x.globalAlpha=1;
 
-  // Set as icon
+  // Export
   const url=c.toDataURL('image/png');
   document.getElementById('appIcon').href=url;
-  // Also set favicon
   let fav=document.querySelector('link[rel="icon"]');
-  if(!fav){fav=document.createElement('link');fav.rel='icon';document.head.appendChild(fav)}
+  if(!fav){fav=document.createElement('link');fav.rel='icon';document.head.appendChild(fav);}
   fav.href=url;
-  // Draw into landing icon canvas after DOM is ready
+  // Draw into landing canvas
   function drawLanding(){
     const lc=document.getElementById('landingIcon');
-    if(lc){const lx=lc.getContext('2d');lx.drawImage(c,0,0,160,160)}
+    if(lc){const lx=lc.getContext('2d');
+      // Draw with rounded corners on landing
+      const ls=160,lr=ls*0.225;
+      lx.save();lx.beginPath();
+      lx.moveTo(lr,0);lx.lineTo(ls-lr,0);lx.quadraticCurveTo(ls,0,ls,lr);
+      lx.lineTo(ls,ls-lr);lx.quadraticCurveTo(ls,ls,ls-lr,ls);
+      lx.lineTo(lr,ls);lx.quadraticCurveTo(0,ls,0,ls-lr);
+      lx.lineTo(0,lr);lx.quadraticCurveTo(0,0,lr,0);
+      lx.closePath();lx.clip();
+      lx.drawImage(c,0,0,ls,ls);lx.restore();
+    }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',drawLanding);
   else drawLanding();
