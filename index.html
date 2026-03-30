@@ -222,12 +222,12 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Landing state */
 .landing{text-align:center;padding:40px 16px 60px;max-width:480px;margin:0 auto}
-.landing-icon{width:80px;height:80px;border-radius:20px;margin:0 auto 20px;overflow:hidden;box-shadow:0 8px 32px rgba(74,144,217,0.3)}
+.landing-icon{width:80px;height:80px;border-radius:20px;margin:0 auto 20px;overflow:hidden;box-shadow:0 8px 32px rgba(26,144,228,0.35)}
 .landing-icon canvas{width:100%;height:100%}
 .landing-title{font-size:42px;font-weight:800;letter-spacing:6px;background:linear-gradient(135deg,var(--text),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
 .landing-tagline{font-size:16px;color:var(--text-secondary);font-weight:500;margin-bottom:28px}
-.landing-cta{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:16px;background:var(--accent);color:#fff;font-size:15px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 16px rgba(58,143,212,0.3);margin-bottom:12px}
-.landing-cta:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(58,143,212,0.4)}
+.landing-cta{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:16px;background:var(--accent);color:#fff;font-size:15px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 16px rgba(26,144,228,0.35);margin-bottom:12px}
+.landing-cta:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(26,144,228,0.5)}
 .landing-cta:active{transform:scale(0.97)}
 .landing-cta svg{width:18px;height:18px}
 .landing-or{font-size:13px;color:var(--text-tertiary);margin-bottom:32px}
@@ -249,6 +249,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .preview-hero-mock .mock-details{margin-left:auto;text-align:right}
 .preview-hero-mock .mock-desc{font-size:13px;font-weight:600;color:var(--text-secondary)}
 .preview-hero-mock .mock-hilo{font-size:12px;color:var(--text-tertiary);margin-top:2px}
+.preview-summary-mock .mock-vibe{font-size:15px;font-weight:800;color:var(--text);font-style:normal;display:block;margin-bottom:6px}
 .preview-summary-mock{font-size:13px;line-height:1.5;color:var(--text-secondary);font-style:italic}
 .preview-forecast-mock{display:flex;align-items:center;gap:10px;font-size:13px}
 .preview-forecast-mock .pf-day{font-weight:700;width:44px}
@@ -258,7 +259,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .preview-forecast-mock .pf-temps span{color:var(--text-tertiary);font-weight:400}
 
 /* Breeze animation */
-.breeze-lines{position:relative;height:24px;margin:20px 0 8px;overflow:hidden;opacity:0.4}
+.breeze-lines{position:relative;height:24px;margin:20px 0 8px;overflow:hidden;opacity:0.55}
 .breeze-line{position:absolute;height:2px;border-radius:1px;background:var(--text-tertiary);animation:breezeFloat linear infinite}
 .breeze-line:nth-child(1){width:40px;top:4px;left:20%;animation-duration:3s}
 .breeze-line:nth-child(2){width:60px;top:12px;left:35%;animation-duration:2.5s;animation-delay:0.4s}
@@ -322,7 +323,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
             </div>
           </div>
           <div class="preview-card glass">
-            <div class="preview-summary-mock">"Clear skies and a pleasant 72&deg; ahead. UV is on the higher side, so don't skip the sunscreen. &#9728;&#65039; Gorgeous out there &mdash; your legs would appreciate a walk."</div>
+            <div class="preview-summary-mock">
+              <span class="mock-vibe">&#9728;&#65039; Absolutely perfect out there.</span>
+              "72&deg; and clear skies &mdash; this is the weather people move to new cities chasing. UV is running high, so throw on some sunscreen before you head out. &#128247; This kind of day doesn't come around that often. Make a memory."
+            </div>
           </div>
           <div class="preview-card glass">
             <div class="preview-forecast-mock">
