@@ -95,7 +95,9 @@
 }
 html{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--bg-from),var(--bg-to));color:var(--text);transition:background var(--transition),color var(--transition);overflow-x:hidden}
-.app{max-width:1200px;margin:0 auto;padding:env(safe-area-inset-top,16px) 16px calc(env(safe-area-inset-bottom,16px) + 70px) 16px;opacity:1;transition:opacity 0.3s}
+/* Canvas sits above the body gradient but below all app content */
+#weatherCanvas{z-index:1!important}
+.app{max-width:1200px;margin:0 auto;padding:env(safe-area-inset-top,16px) 16px calc(env(safe-area-inset-bottom,16px) + 70px) 16px;opacity:1;transition:opacity 0.3s;position:relative;z-index:2}
 .app.loading{opacity:0.4}
 
 /* Header */
@@ -343,7 +345,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
           </div>
           <div class="preview-card glass">
             <div class="preview-summary-mock">
-              <span class="mock-vibe">&#9728;&#65039; Absolutely perfect out there.</span>
+              <span class="mock-vibe">&#9728;&#65039; Absolutely perfect out there</span>
               "72&deg; and clear skies &mdash; this is the weather people move to new cities chasing. UV is running high, so throw on some sunscreen before you head out. &#128247; This kind of day doesn't come around that often. Make a memory."
             </div>
           </div>
@@ -752,28 +754,28 @@ function getVibeTag(hourly,daily,currentCode,now){
   const niceOutdoor=maxT>=62&&maxT<=92&&rainCount===0&&stormCount===0&&!isPredomNight;
   const isNight=nowHour>=20||nowHour<5;
 
-  if(stormCount>0)return '\u26A1 Stay inside.';
-  if(snowCount>2&&maxT<32)return '\u2744\uFE0F Full winter mode.';
-  if(snowCount>0)return '\u2744\uFE0F Snow day energy.';
+  if(stormCount>0)return '\u26A1 Stay inside';
+  if(snowCount>2&&maxT<32)return '\u2744\uFE0F Full winter mode';
+  if(snowCount>0)return '\u2744\uFE0F Snow day energy';
   if(rainCount>4)return '\uD83C\uDF27\uFE0F Indoor day. No debate.';
-  if(rainCount>2)return '\uD83C\uDF26\uFE0F Umbrella weather.';
+  if(rainCount>2)return '\uD83C\uDF26\uFE0F Umbrella weather';
   if(isPredomNight||isNight){
-    if(minT>65)return '\uD83C\uDF19 Good sleeping weather.';
+    if(minT>65)return '\uD83C\uDF19 Good sleeping weather';
     if(minT<32)return '\uD83E\uDD76 Cold night. Stay warm.';
-    if(clearCount>3)return '\u2728 Clear and quiet tonight.';
-    return '\uD83C\uDF19 Quiet night ahead.';
+    if(clearCount>3)return '\u2728 Clear and quiet tonight';
+    return '\uD83C\uDF19 Quiet night ahead';
   }
   if(maxT>98)return '\uD83D\uDD25 Dangerous heat. Seriously.';
   if(maxT>92)return '\uD83D\uDD25 Heat wave. Stay hydrated.';
-  if(niceOutdoor&&maxT>=70&&maxT<=80)return '\u2728 Absolutely perfect out there.';
-  if(niceOutdoor&&maxT>80)return '\u2600\uFE0F Beautiful and warm.';
-  if(niceOutdoor&&maxT<70)return '\uD83C\uDF24\uFE0F Pretty great, honestly.';
+  if(niceOutdoor&&maxT>=70&&maxT<=80)return '\u2728 Absolutely perfect out there';
+  if(niceOutdoor&&maxT>80)return '\u2600\uFE0F Beautiful and warm';
+  if(niceOutdoor&&maxT<70)return '\uD83C\uDF24\uFE0F Pretty great, honestly';
   if(maxT<28)return '\uD83E\uDD76 Genuinely cold. Not joking.';
-  if(maxT<42)return '\uD83E\uDDE5 Bundle up weather.';
+  if(maxT<42)return '\uD83E\uDDE5 Bundle up weather';
   if(maxT<55)return '\uD83E\uDDE5 Jacket required. No debate.';
-  if(windyCount>4)return '\uD83D\uDCA8 Breezy and a little unhinged.';
-  if(cloudyCount>7&&rainCount===0)return '\u2601\uFE0F Gray but fine.';
-  if(clearCount>5)return '\u2600\uFE0F Nice out there.';
+  if(windyCount>4)return '\uD83D\uDCA8 Breezy and a little unhinged';
+  if(cloudyCount>7&&rainCount===0)return '\u2601\uFE0F Gray but fine';
+  if(clearCount>5)return '\u2600\uFE0F Nice out there';
   return '\uD83C\uDF24\uFE0F Nothing wild. Just decent.';
 }
 
