@@ -75,21 +75,22 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
---bg-from:#a8d8ea;--bg-to:#a8e6cf;
---card-bg:rgba(255,255,255,0.45);--card-border:rgba(255,255,255,0.6);
---text:#1a2a3a;--text-secondary:#4a6a7a;--text-tertiary:#7a9aaa;
---accent:#3a8fd4;--card-radius:20px;--card-blur:20px;
+/* Vivid sky-blue → fresh mint: higher saturation = more engaging, better mood */
+--bg-from:#5ec7f0;--bg-to:#52d4a0;
+--card-bg:rgba(255,255,255,0.66);--card-border:rgba(255,255,255,0.88);
+--text:#182838;--text-secondary:#2e5060;--text-tertiary:#5a7e90;
+--accent:#1a90e4;--card-radius:20px;--card-blur:20px;
 --transition:0.4s cubic-bezier(.4,0,.2,1);
 }
 .dark{
 --bg-from:#1a2a3a;--bg-to:#1a3a2a;
---card-bg:rgba(255,255,255,0.08);--card-border:rgba(255,255,255,0.12);
+--card-bg:rgba(255,255,255,0.10);--card-border:rgba(255,255,255,0.16);
 --text:#e8f0f8;--text-secondary:#a0b8c8;--text-tertiary:#6a8898;
---accent:#5ab0f0;
+--accent:#4ab8f8;
 }
-/* Night time in light mode: dark navy sky needs light text */
+/* Night time in light mode: dark navy sky needs light text + crisper cards */
 .night:not(.dark){
---card-bg:rgba(255,255,255,0.13);--card-border:rgba(255,255,255,0.22);
+--card-bg:rgba(255,255,255,0.16);--card-border:rgba(255,255,255,0.28);
 --text:#e8f0f8;--text-secondary:#b0c8d8;--text-tertiary:#7a9ab0;
 }
 html{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
@@ -379,9 +380,14 @@ function updateGradient(){
   document.body.classList.toggle('night',night);
   let from,to;
   if(night){from=state.dark?'#0a1428':'#1a2a4a';to=state.dark?'#0a2018':'#1a3a4a'}
-  else if(code>=61||code>=51&&code<=57){from=state.dark?'#1a2a3a':'#8aaabb';to=state.dark?'#1a3030':'#7aacaa'}
-  else if(code>=3&&code<=48){from=state.dark?'#1a2a30':'#9abac8';to=state.dark?'#1a3028':'#8abab0'}
-  else{from=state.dark?'#1a2a3a':'#a8d8ea';to=state.dark?'#1a3a2a':'#a8e6cf'}
+  // Thunderstorms: dramatic deep blue-slate
+  else if([95,96,99].includes(code)){from=state.dark?'#18283a':'#3a6888';to=state.dark?'#18302a':'#3a7880'}
+  // Rain / drizzle: deeper, more dramatic blue than clear
+  else if(code>=61||code>=51&&code<=57){from=state.dark?'#1a2a3a':'#4e88b8';to=state.dark?'#1a3030':'#4ea8b0'}
+  // Cloudy / fog: still colorful, just calmer
+  else if(code>=3&&code<=48){from=state.dark?'#1a2a30':'#72aac8';to=state.dark?'#1a3028':'#70b8b0'}
+  // Clear / partly cloudy: vivid sky-blue → vivid mint (the money shot)
+  else{from=state.dark?'#1a2a3a':'#5ec7f0';to=state.dark?'#1a3a2a':'#52d4a0'}
   document.documentElement.style.setProperty('--bg-from',from);
   document.documentElement.style.setProperty('--bg-to',to);
 }
