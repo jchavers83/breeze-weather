@@ -1515,11 +1515,14 @@ function setWindyOverlay(overlay,btn){
 }
 
 function setWindyNextHour(btn){
-  windyOverlay='rain';
+  windyOverlay='radar_next';
   document.querySelectorAll('.radar-overlay-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  // Load ECMWF rain forecast stepped 1 hour into the future
-  document.getElementById('windyFrame').src=windySrc('rain', Date.now()+3600000);
+  // radarRange=1 = Windy's built-in 1-hour radar nowcast (motion extrapolation forward)
+  const lat=state.lat||39,lon=state.lon||-98,zoom=state.lat?7:4;
+  const tUnit=state.unit==='F'?encodeURIComponent('°F'):encodeURIComponent('°C');
+  const wUnit=state.unit==='F'?'mph':encodeURIComponent('km/h');
+  document.getElementById('windyFrame').src=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=${zoom}&level=surface&overlay=radar&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=${wUnit}&metricTemp=${tUnit}&radarRange=1`;
 }
 </script>
 </body>
