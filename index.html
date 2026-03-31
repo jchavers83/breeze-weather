@@ -894,29 +894,31 @@ function getVibeTag(hourly,daily,currentCode,now){
   const niceOutdoor=maxT>=62&&maxT<=92&&rainCount===0&&stormCount===0&&!isPredomNight;
   const isNight=nowHour>=20||nowHour<5;
 
-  if(stormCount>0)return '\u26A1 Stay inside';
-  if(snowCount>2&&maxT<32)return '\u2744\uFE0F Full winter mode';
-  if(snowCount>0)return '\u2744\uFE0F Snow day energy';
-  if(rainCount>4)return '\uD83C\uDF27\uFE0F Indoor day. No debate.';
-  if(rainCount>2)return '\uD83C\uDF26\uFE0F Umbrella weather';
+  const seed=(now.getDate()*31+nowHour)%7;
+  const vpick=(arr)=>arr[seed%arr.length];
+  if(stormCount>0)return vpick(['\u26A1 Stay inside','\u26A1 Shelter up','\u26A1 Not a good time to be outside','\u26A1 Storm watch']);
+  if(snowCount>2&&maxT<32)return vpick(['\u2744\uFE0F Full winter mode','\u2744\uFE0F Deep freeze','\u2744\uFE0F Bundle everything','\u2744\uFE0F Serious cold']);
+  if(snowCount>0)return vpick(['\u2744\uFE0F Snow day energy','\u2744\uFE0F Let it snow','\u2744\uFE0F Winter showing up','\u2744\uFE0F Snowy stretch ahead']);
+  if(rainCount>4)return vpick(['\uD83C\uDF27\uFE0F Indoor day. No debate.','\uD83C\uDF27\uFE0F Stay in. It\u2019s fine.','\uD83C\uDF27\uFE0F Full washout','\uD83C\uDF27\uFE0F Committed rain day']);
+  if(rainCount>2)return vpick(['\uD83C\uDF26\uFE0F Umbrella weather','\uD83C\uDF26\uFE0F Grab a jacket','\uD83C\uDF26\uFE0F Rain\u2019s in the mix','\uD83C\uDF26\uFE0F Damp one ahead']);
   if(isPredomNight||isNight){
-    if(minT>65)return '\uD83C\uDF19 Good sleeping weather';
-    if(minT<32)return '\uD83E\uDD76 Cold night. Stay warm.';
-    if(clearCount>3)return '\u2728 Clear and quiet tonight';
-    return '\uD83C\uDF19 Quiet night ahead';
+    if(minT>65)return vpick(['\uD83C\uDF19 Good sleeping weather','\uD83C\uDF19 Warm night ahead','\uD83C\uDF19 Open the windows','\uD83C\uDF19 Mild and quiet']);
+    if(minT<32)return vpick(['\uD83E\uDD76 Cold night. Stay warm.','\uD83E\uDD76 Freezing out there','\uD83E\uDD76 Extra blanket night','\uD83E\uDD76 Bundle up before bed']);
+    if(clearCount>3)return vpick(['\u2728 Clear and quiet tonight','\uD83C\uDF1F Good night to look up','\uD83C\uDF19 Stars are out','\u2728 Calm and clear']);
+    return vpick(['\uD83C\uDF19 Quiet night ahead','\uD83C\uDF19 Easy night out there','\uD83C\uDF19 Settling in nicely','\uD83C\uDF19 Nothing dramatic tonight']);
   }
-  if(maxT>98)return '\uD83D\uDD25 Dangerous heat. Seriously.';
-  if(maxT>92)return '\uD83D\uDD25 Heat wave. Stay hydrated.';
-  if(niceOutdoor&&maxT>=70&&maxT<=80)return '\u2728 Absolutely perfect out there';
-  if(niceOutdoor&&maxT>80)return '\u2600\uFE0F Beautiful and warm';
-  if(niceOutdoor&&maxT<70)return '\uD83C\uDF24\uFE0F Pretty great, honestly';
-  if(maxT<28)return '\uD83E\uDD76 Genuinely cold. Not joking.';
-  if(maxT<42)return '\uD83E\uDDE5 Bundle up weather';
-  if(maxT<55)return '\uD83E\uDDE5 Jacket required. No debate.';
-  if(windyCount>4)return '\uD83D\uDCA8 Breezy and a little unhinged';
-  if(cloudyCount>7&&rainCount===0)return '\u2601\uFE0F Gray but fine';
-  if(clearCount>5)return '\u2600\uFE0F Nice out there';
-  return '\uD83C\uDF24\uFE0F Nothing wild. Just decent.';
+  if(maxT>98)return vpick(['\uD83D\uDD25 Dangerous heat. Seriously.','\uD83D\uDD25 Stay out of the sun','\uD83D\uDD25 Extreme heat warning','\uD83D\uDD25 Heat is no joke today']);
+  if(maxT>92)return vpick(['\uD83D\uDD25 Heat wave. Stay hydrated.','\uD83D\uDD25 Scorcher today','\uD83D\uDD25 Full summer mode','\uD83D\uDD25 Drink water. Seriously.']);
+  if(niceOutdoor&&maxT>=70&&maxT<=80)return vpick(['\u2728 Absolutely perfect out there','\uD83D\uDE0A As good as it gets','\u2728 Golden hour all day','\uD83C\uDF3C Textbook perfect day','\u2728 Hard to top this']);
+  if(niceOutdoor&&maxT>80)return vpick(['\u2600\uFE0F Beautiful and warm','\uD83C\uDF1E Warm and wonderful','\u2600\uFE0F Sunshine delivered','\uD83C\uDF1E Peak summer vibes']);
+  if(niceOutdoor&&maxT<70)return vpick(['\uD83C\uDF24\uFE0F Pretty great, honestly','\uD83D\uDC9A Crisp and lovely','\uD83C\uDF24\uFE0F Fresh air weather','\uD83D\uDC9A Genuinely nice out']);
+  if(maxT<28)return vpick(['\uD83E\uDD76 Genuinely cold. Not joking.','\uD83E\uDD76 Bundle everything','\uD83E\uDD76 True cold today','\uD83E\uDD76 Layers on layers']);
+  if(maxT<42)return vpick(['\uD83E\uDDE5 Bundle up weather','\uD83E\uDDE5 Real coat required','\uD83E\uDDE5 Cold one today','\uD83E\uDDE5 Jacket is non-negotiable']);
+  if(maxT<55)return vpick(['\uD83E\uDDE5 Jacket required. No debate.','\uD83E\uDDE5 Reach for a layer','\uD83E\uDDE5 Chilly stretch ahead','\uD83E\uDDE5 Don\u2019t skip the coat']);
+  if(windyCount>4)return vpick(['\uD83D\uDCA8 Breezy and a little unhinged','\uD83D\uDCA8 Windy out there','\uD83D\uDCA8 Hold onto your hat','\uD83D\uDCA8 Wind\u2019s the story today']);
+  if(cloudyCount>7&&rainCount===0)return vpick(['\u2601\uFE0F Gray but fine','\u2601\uFE0F Overcast and okay','\u2601\uFE0F Moody skies, dry day','\u2601\uFE0F Cloudy but no drama']);
+  if(clearCount>5)return vpick(['\u2600\uFE0F Nice out there','\u2600\uFE0F Clear and bright','\u2600\uFE0F Sunshine day','\u2600\uFE0F Good sky today']);
+  return vpick(['\uD83C\uDF24\uFE0F Nothing wild. Just decent.','\uD83C\uDF24\uFE0F Mild and manageable','\uD83C\uDF24\uFE0F Low-drama day','\uD83C\uDF24\uFE0F Solid and unremarkable']);
 }
 
 function generateSummary(hourly,daily,currentCode,nowHour){
@@ -1085,7 +1087,8 @@ function generateSummary(hourly,daily,currentCode,nowHour){
   // Fun closer
   sentences.push(getWeatherQuip(maxT,minT,rainHours.length,clearHours.length,cloudyHours.length,windyHours.length,isNight,nowHour,isPredomNight,outdoorWorthy,niceOutdoor));
 
-  return sentences.slice(0,6).join(' ');
+  // Strip leading emoji from each sentence — vibe tag above already owns the emoji; body copy should be clean prose
+  return sentences.slice(0,6).map(s=>s.replace(/^(?:[\u2600-\u27BF]|[\uD800-\uDBFF][\uDC00-\uDFFF])[\uFE0F\u20E3]?\s*/,'')).join(' ');
 }
 
 function getMoonPhase(date){
