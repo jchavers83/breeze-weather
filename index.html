@@ -566,7 +566,7 @@ async function searchCity(q){
         const f=results[i];
         const p=f.properties;
         const [lon,lat]=f.geometry.coordinates;
-        state.lat=lat;state.lon=lon;
+        state.lat=lat;state.lon=lon;state.isGPS=false;
         state.name=p.name||p.city||p.town||p.village||'Unknown';
         state.region=[p.state||p.county,p.country].filter(Boolean).join(', ');
         autoUnit(p.country||'');
@@ -586,7 +586,7 @@ $('#btnLocate').addEventListener('click',()=>{
   const btn=$('#btnLocate');
   btn.innerHTML='<div class="spinner"></div>';
   navigator.geolocation.getCurrentPosition(async pos=>{
-    state.lat=pos.coords.latitude;state.lon=pos.coords.longitude;
+    state.lat=pos.coords.latitude;state.lon=pos.coords.longitude;state.isGPS=true;
     try{
       const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=&count=1&language=en&format=json&latitude=${state.lat}&longitude=${state.lon}`);
       const rr=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${state.lat}&lon=${state.lon}&format=json`);
@@ -987,7 +987,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
   // Daily voice rotation: 0=deadpan  1=warm  2=wry  3=minimal
   const dayOfYear=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000);
   const voice=dayOfYear%4;
-  const city=state.name?state.name.split(',')[0]:'';
+  const city=(!state.isGPS&&state.name)?state.name.split(',')[0]:'';
   const month=now.toLocaleString('en-US',{month:'long'});
   const timeframe=isNight?'tonight':isMorning?'this morning':isAfternoon?'this afternoon':isEvening?'this evening':'ahead';
   const seed=(now.getDate()*31+nowHour)%7;
