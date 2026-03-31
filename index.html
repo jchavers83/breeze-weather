@@ -451,7 +451,8 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 <div id="radarView">
   <iframe id="windyFrame" frameborder="0" allowfullscreen></iframe>
   <div class="radar-overlay-bar">
-    <button class="radar-overlay-btn active" onclick="setWindyOverlay('radar',this)">📡 Radar</button>
+    <button class="radar-overlay-btn active" onclick="setWindyOverlay('radar',this)">📡 Past Hour</button>
+    <button class="radar-overlay-btn" onclick="setWindyNextHour(this)">⏩ Next Hour</button>
     <button class="radar-overlay-btn" onclick="setWindyOverlay('satellite',this)">🛰 Satellite</button>
     <button class="radar-overlay-btn" onclick="setWindyOverlay('rain',this)">🌧 Rain</button>
     <button class="radar-overlay-btn" onclick="setWindyOverlay('wind',this)">💨 Wind</button>
@@ -1486,11 +1487,13 @@ function buildSparkline(hourly,daily,now){
 // ===================== RADAR (Windy embed) =====================
 let windyOverlay='radar';
 
-function windySrc(overlay){
+function windySrc(overlay, calendarMs){
   const lat=state.lat||39,lon=state.lon||-98,zoom=state.lat?7:4;
   const tUnit=state.unit==='F'?encodeURIComponent('°F'):encodeURIComponent('°C');
   const wUnit=state.unit==='F'?'mph':encodeURIComponent('km/h');
-  return `https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=${zoom}&level=surface&overlay=${overlay}&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=${wUnit}&metricTemp=${tUnit}&radarRange=-1`;
+  const cal=calendarMs||'now';
+  const radarRange=overlay==='radar'?-1:'';
+  return `https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=${zoom}&level=surface&overlay=${overlay}&product=ecmwf&menu=&message=&marker=&calendar=${cal}&pressure=&type=map&location=coordinates&detail=&metricWind=${wUnit}&metricTemp=${tUnit}&radarRange=${radarRange}`;
 }
 
 function initRadar(){
@@ -1503,6 +1506,14 @@ function setWindyOverlay(overlay,btn){
   document.querySelectorAll('.radar-overlay-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   document.getElementById('windyFrame').src=windySrc(overlay);
+}
+
+function setWindyNextHour(btn){
+  windyOverlay='rain';
+  document.querySelectorAll('.radar-overlay-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  // Load ECMWF rain forecast stepped 1 hour into the future
+  document.getElementById('windyFrame').src=windySrc('rain', Date.now()+3600000);
 }
 </script>
 </body>
