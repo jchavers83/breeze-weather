@@ -1528,11 +1528,11 @@ function setWindyNextHour(btn){
   document.querySelectorAll('.radar-overlay-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   // HRRR = High Resolution Rapid Refresh, 1-hour steps, best short-range model for North America
-  // calendar = now + 1hr in ms so the map opens already at the +1hr forecast snapshot
+  // Windy calendar param expects Unix SECONDS (not ms) — divide Date.now() by 1000
   const lat=state.lat||39,lon=state.lon||-98,zoom=state.lat?7:4;
   const tUnit=state.unit==='F'?encodeURIComponent('°F'):encodeURIComponent('°C');
   const wUnit=state.unit==='F'?'mph':encodeURIComponent('km/h');
-  const cal=Date.now()+3600000;
+  const cal=Math.floor(Date.now()/1000)+3600; // Unix seconds + 1 hour
   document.getElementById('windyFrame').src=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=${zoom}&level=surface&overlay=rain&product=hrrr&menu=&message=&marker=&calendar=${cal}&pressure=&type=map&location=coordinates&detail=&metricWind=${wUnit}&metricTemp=${tUnit}&radarRange=`;
 }
 </script>
