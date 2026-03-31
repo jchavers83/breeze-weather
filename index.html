@@ -372,6 +372,9 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 #radarView{display:none;position:fixed;inset:0;z-index:51;padding:env(safe-area-inset-top,0px) 0 0;box-sizing:border-box;flex-direction:column}
 #radarView.active{display:flex}
 #windyFrame{flex:1;min-height:0;width:100%;border:none}
+#nowcastView{display:none;flex:1;min-height:0;width:100%;position:relative}
+#nowcastMap{width:100%;height:100%}
+.nowcast-badge{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:#fff;padding:5px 16px;border-radius:14px;font-size:13px;font-weight:700;z-index:400;pointer-events:none;white-space:nowrap;letter-spacing:0.3px}
 .radar-overlay-bar{display:flex;gap:8px;padding:8px 14px calc(env(safe-area-inset-bottom,8px) + 68px);flex-shrink:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;background:var(--card-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--card-border)}
 .radar-overlay-bar::-webkit-scrollbar{display:none}
 .radar-overlay-btn{padding:7px 14px;border-radius:20px;border:1.5px solid var(--card-border);background:rgba(128,128,128,0.08);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s;flex-shrink:0}
@@ -454,6 +457,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 <div id="radarView">
   <iframe id="windyFrame" frameborder="0" allowfullscreen></iframe>
+  <div id="nowcastView">
+    <div id="nowcastMap"></div>
+    <div id="nowcastBadge" class="nowcast-badge"></div>
+  </div>
   <div class="radar-overlay-bar">
     <button class="radar-overlay-btn active" onclick="setWindyOverlay('radar',this)">📡 Past Hour</button>
     <button class="radar-overlay-btn" onclick="setWindyNextHour(this)">⏩ Next Hour</button>
@@ -1520,20 +1527,85 @@ function setWindyOverlay(overlay,btn){
   windyOverlay=overlay;
   document.querySelectorAll('.radar-overlay-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
+  _destroyNowcast();
+  document.getElementById('windyFrame').style.display='';
   document.getElementById('windyFrame').src=windySrc(overlay);
 }
 
-function setWindyNextHour(btn){
-  windyOverlay='radar_next';
+// ── Nowcast map (RainViewer) — precise short-range only ──────────────────────
+let _ncMap=null,_ncLayers=[],_ncTimer=null,_ncIdx=0;
+
+function _loadAsset(tag,attr,val){
+  return new Promise(res=>{
+    if(document.querySelector(`${tag}[${attr}="${val}"]`)){res();return;}
+    const el=document.createElement(tag);
+    if(tag==='script'){el.src=val;el.onload=res;}
+    else{el.rel='stylesheet';el.href=val;res();}
+    document.head.appendChild(el);
+  });
+}
+
+async function setWindyNextHour(btn){
+  windyOverlay='nowcast';
   document.querySelectorAll('.radar-overlay-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  // HRRR = High Resolution Rapid Refresh, 1-hour steps, best short-range model for North America
-  // Windy calendar param expects Unix SECONDS (not ms) — divide Date.now() by 1000
+
+  // Swap Windy out, show nowcast container
+  document.getElementById('windyFrame').style.display='none';
+  document.getElementById('nowcastView').style.display='flex';
+
+  // Lazy-load Leaflet
+  await _loadAsset('link','href','https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+  await _loadAsset('script','src','https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+
   const lat=state.lat||39,lon=state.lon||-98,zoom=state.lat?7:4;
-  const tUnit=state.unit==='F'?encodeURIComponent('°F'):encodeURIComponent('°C');
-  const wUnit=state.unit==='F'?'mph':encodeURIComponent('km/h');
-  const cal=Math.floor(Date.now()/1000)+3600; // Unix seconds + 1 hour
-  document.getElementById('windyFrame').src=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=${zoom}&level=surface&overlay=rain&product=hrrr&menu=&message=&marker=&calendar=${cal}&pressure=&type=map&location=coordinates&detail=&metricWind=${wUnit}&metricTemp=${tUnit}&radarRange=`;
+
+  if(!_ncMap){
+    _ncMap=window.L.map('nowcastMap',{zoomControl:true,attributionControl:false});
+    window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(_ncMap);
+    window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:19,pane:'shadowPane'}).addTo(_ncMap);
+  }
+  _ncMap.setView([lat,lon],zoom);
+  setTimeout(()=>_ncMap.invalidateSize(),150);
+
+  // Clear previous frames & timer
+  clearInterval(_ncTimer);
+  _ncLayers.forEach(f=>f.layer.remove());
+  _ncLayers=[];
+
+  try{
+    const data=await fetch('https://api.rainviewer.com/public/weather-maps.json').then(r=>r.json());
+    const past=(data.radar.past||[]).slice(-3);      // last ~30 min
+    const nowcast=(data.radar.nowcast||[]).slice(0,4); // next ~40 min
+    const frames=[...past,...nowcast];
+    if(!frames.length)return;
+
+    frames.forEach(fr=>{
+      const layer=window.L.tileLayer(
+        `https://tilecache.rainviewer.com${fr.path}/256/{z}/{x}/{y}/4/1_1.png`,
+        {opacity:0,maxZoom:19,zIndex:2}
+      ).addTo(_ncMap);
+      _ncLayers.push({layer,time:fr.time});
+    });
+
+    const badge=document.getElementById('nowcastBadge');
+    const now=Math.floor(Date.now()/1000);
+
+    function showFrame(i){
+      _ncLayers.forEach((f,j)=>f.layer.setOpacity(j===i?0.85:0));
+      const diff=Math.round((_ncLayers[i].time-now)/60);
+      badge.textContent=diff===0?'● NOW':diff>0?`▶ +${diff} min`:`◀ ${diff} min`;
+    }
+
+    _ncIdx=0;showFrame(0);
+    _ncTimer=setInterval(()=>{_ncIdx=(_ncIdx+1)%_ncLayers.length;showFrame(_ncIdx);},900);
+  }catch(e){console.warn('RainViewer nowcast error',e);}
+}
+
+function _destroyNowcast(){
+  clearInterval(_ncTimer);_ncTimer=null;
+  _ncLayers.forEach(f=>f.layer.remove());_ncLayers=[];
+  document.getElementById('nowcastView').style.display='none';
 }
 </script>
 </body>
