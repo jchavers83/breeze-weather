@@ -327,10 +327,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .preview-card:nth-child(3){animation-delay:0.6s}
 .preview-hero-mock{display:flex;align-items:center;gap:14px}
 .preview-hero-mock .mock-icon{font-size:36px}
-.preview-hero-mock .mock-temp{font-size:40px;font-weight:800;letter-spacing:-2px}
+.preview-hero-mock .mock-temp{font-size:40px;font-weight:800;letter-spacing:1px;font-variant-numeric:tabular-nums}
 .preview-hero-mock .mock-details{margin-left:auto;text-align:right}
 .preview-hero-mock .mock-desc{font-size:13px;font-weight:600;color:var(--text-secondary)}
-.preview-hero-mock .mock-hilo{font-size:12px;color:var(--text-tertiary);margin-top:2px}
+.preview-hero-mock .mock-hilo{font-size:12px;color:var(--text-tertiary);margin-top:2px;font-variant-numeric:tabular-nums;letter-spacing:0.3px}
 .preview-summary-mock .mock-vibe{font-size:15px;font-weight:800;color:var(--text);font-style:normal;display:block;margin-bottom:6px}
 .preview-summary-mock{font-size:13px;line-height:1.5;color:var(--text-secondary);font-style:italic}
 .preview-forecast-mock{display:flex;align-items:center;gap:10px;font-size:13px}
@@ -438,7 +438,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
           <div class="preview-card glass">
             <div class="preview-summary-mock">
               <span class="mock-vibe">&#9728;&#65039; Absolutely perfect out there</span>
-              "72&deg; and clear skies &mdash; this is the weather people move to new cities chasing. UV is running high, so throw on some sunscreen before you head out. &#128247; This kind of day doesn't come around that often. Make a memory."
+              "72&deg; and clear. Hard to ask for more than this. Clouds roll in later &mdash; get outside while it's this nice. &#128247; Roll the windows down on your drive."
             </div>
           </div>
           <div class="preview-card glass">
@@ -1144,10 +1144,55 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
     }
   }
 
+  // Part 3: Personality sign-off (rotates with voice)
+  if(parts.length<4){
+    if(niceOutdoor){
+      if(voice===0)parts.push(pick([`The weather is doing its part.`,`No excuses today.`,`It won't always be this nice.`]));
+      else if(voice===1)parts.push(pick([`Honestly, go enjoy it.`,`Make the most of it.`,`Days like this are worth savoring.`]));
+      else if(voice===2)parts.push(pick([`The kind of day that makes you feel irrationally optimistic.`,`If the weather were filing taxes it would get a full refund.`,city?`${city} is having a good day. You should too.`:`Even the forecast looks happy about this.`]));
+      else parts.push(`Go outside.`);
+    }else if(stormHours.length>0){
+      if(voice===0)parts.push(pick([`Stay sharp out there.`,`Not a day to be cavalier about it.`]));
+      else if(voice===1)parts.push(pick([`Stay safe and don't push your luck outside.`,`Hope the rest of your day is warmer and drier.`]));
+      else if(voice===2)parts.push(pick([`The sky is basically doing a whole thing right now.`,`Mother Nature is going through something today.`]));
+      else parts.push(`Stay inside.`);
+    }else if(rainHours.length>3){
+      if(voice===0)parts.push(pick([`Rain days have their uses.`,`Indoor energy is appropriate here.`]));
+      else if(voice===1)parts.push(pick([`Good day to lean into the cozy.`,`Not all days need to be outside days.`]));
+      else if(voice===2)parts.push(pick([`The rain is not your fault and it's not personal.`,`Someone, somewhere, is thrilled about this weather.`]));
+      else parts.push(`Stay in.`);
+    }else if(snowHours.length>2){
+      if(voice===0)parts.push(pick([`Everything takes longer in the snow. Budget for that.`,`Winter is doing winter things today.`]));
+      else if(voice===1)parts.push(pick([`At least it's pretty.`,`There's something kind of peaceful about a snowy day, if you can stay off the roads.`]));
+      else if(voice===2)parts.push(pick([`Snow has a way of making everything quiet and beautiful and also slightly dangerous.`,`The snow looks great. The roads, less so.`]));
+      else parts.push(`Budget extra time.`);
+    }else if(isNight||isPredomNight){
+      if(voice===0)parts.push(pick([`Rest up.`,`Night's doing its thing out there.`]));
+      else if(voice===1)parts.push(pick([`Hope the evening treats you well.`,`Quiet night — enjoy the downtime.`]));
+      else if(voice===2)parts.push(pick([`The night shift of the atmosphere is clocked in.`,`Nights like this make good excuses for doing absolutely nothing.`]));
+      else parts.push(`Good night.`);
+    }else if(maxT>88){
+      if(voice===0)parts.push(pick([`Shade and water. That's the whole strategy.`,`The heat doesn't care how tough you are.`]));
+      else if(voice===1)parts.push(pick([`Take it easy out there — the heat is real today.`,`Your body will thank you for going slow in this.`]));
+      else if(voice===2)parts.push(pick([`The sun has elected itself boss today and everyone else is just along for the ride.`,`Hot enough that doing anything outside feels like a personal achievement.`]));
+      else parts.push(`Hydrate.`);
+    }else if(cloudyHours.length>hours.length*0.6&&rainHours.length===0){
+      if(voice===0)parts.push(pick([`Gray but dry. Could be worse.`,`The clouds are committing today, at least.`]));
+      else if(voice===1)parts.push(pick([`Overcast days have a certain calm to them.`,`Gloomy light, sure — but there's something nice about a gray quiet day.`]));
+      else if(voice===2)parts.push(pick([`The sky didn't get the memo about it being daytime.`,`Somewhere the sun is shining. Not here. But somewhere.`]));
+      else parts.push(`Gray day.`);
+    }else{
+      if(voice===0)parts.push(pick([`Unremarkable, dependable weather.`,`Nothing wild. That's fine.`,`A perfectly average day, meteorologically speaking.`]));
+      else if(voice===1)parts.push(pick([`Sometimes "fine" is exactly what you need.`,`A solid, steady day. Take it.`,`Not every day has to be a weather event.`]));
+      else if(voice===2)parts.push(pick([`The forecast is giving "steady workhorse" energy today.`,`This weather showed up, did its job, and asked for nothing in return.`,`Meteorologically unremarkable. Personally, that might be fine.`]));
+      else parts.push(`Fine.`);
+    }
+  }
+
   // Quip
   parts.push(getWeatherQuip(maxT,minT,rainHours.length,clearHours.length,cloudyHours.length,windyHours.length,isNight,nowHour,isPredomNight,outdoorWorthy,niceOutdoor,sunsetH));
 
-  return parts.slice(0,3).map(s=>s.replace(/^(?:[\u2600-\u27BF]|[\uD800-\uDBFF][\uDC00-\uDFFF])[\uFE0F\u20E3]?\s*/,'')).join(' ');
+  return parts.slice(0,4).map(s=>s.replace(/^(?:[\u2600-\u27BF]|[\uD800-\uDBFF][\uDC00-\uDFFF])[\uFE0F\u20E3]?\s*/,'')).join(' ');
 }
 
 function getMoonPhase(date){
