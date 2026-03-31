@@ -696,8 +696,8 @@ function render(){
   const wi=getWeatherInfo(c.weather_code,night);
 
   const visibility=(c.visibility!=null?c.visibility/1000:10); // API returns meters, convert to km
-  const summary=generateSummary(hourly,daily,c.weather_code,now.getHours());
-  const vibeTag=getVibeTag(hourly,daily,c.weather_code,now);
+  const summary=generateSummary(hourly,daily,c.weather_code,now.getHours(),daily.sunrise[0],daily.sunset[0]);
+  const vibeTag=getVibeTag(hourly,daily,c.weather_code,now,daily.sunrise[0],daily.sunset[0]);
 
   const html=`
     <div class="location-bar">
@@ -873,12 +873,22 @@ function dewComfort(cDew){
   if(f<50)return 'Dry';if(f<55)return 'Comfortable';if(f<60)return 'Pleasant';if(f<65)return 'Sticky';if(f<70)return 'Muggy';return 'Oppressive';
 }
 
-function getVibeTag(hourly,daily,currentCode,now){
+function getVibeTag(hourly,daily,currentCode,now,sunrise,sunset){
   const nowHour=now.getHours();
+  const nowMin=now.getMinutes();
+  const nowFrac=nowHour+nowMin/60;
   const today=daily.time[0];
+  // Parse real sunrise/sunset fractional hours
+  function fracHour(s){if(!s)return null;const p=s.split('T')[1]||'';const[h,m]=(p.split(':'));return parseInt(h)+(parseInt(m)||0)/60;}
+  const sunriseH=fracHour(sunrise)||6;
+  const sunsetH=fracHour(sunset)||20;
+  const isDaytime=nowFrac>=sunriseH&&nowFrac<sunsetH;
+  const isNight=!isDaytime;
   const hours=[];
+  // Collect next 12 hours across day boundaries
   hourly.time.forEach((t,i)=>{
-    if(t.startsWith(today)){const h=new Date(t).getHours();if(h>=nowHour&&h<nowHour+12)hours.push({h,temp:hourly.temperature_2m[i],code:hourly.weather_code[i],precip:hourly.precipitation_probability[i],wind:hourly.wind_speed_10m[i]});}
+    const d=new Date(t);const diff=(d-now)/3600000;
+    if(diff>=0&&diff<12)hours.push({h:d.getHours(),temp:hourly.temperature_2m[i],code:hourly.weather_code[i],precip:hourly.precipitation_probability[i],wind:hourly.wind_speed_10m[i]});
   });
   if(!hours.length)return '';
   const temps=hours.map(h=>toF(h.temp));
@@ -890,10 +900,10 @@ function getVibeTag(hourly,daily,currentCode,now){
   const clearCount=hours.filter(h=>[0,1].includes(h.code)).length;
   const cloudyCount=hours.filter(h=>[2,3].includes(h.code)).length;
   const windyCount=hours.filter(h=>h.wind>30).length;
-  const dayHours=hours.filter(h=>h.h>=6&&h.h<20).length;
+  // Daytime hours in window using real sunrise/sunset
+  const dayHours=hours.filter(h=>h.h+0.5>=sunriseH&&h.h+0.5<sunsetH).length;
   const isPredomNight=dayHours<hours.length*0.35;
-  const niceOutdoor=maxT>=62&&maxT<=92&&rainCount===0&&stormCount===0&&!isPredomNight;
-  const isNight=nowHour>=20||nowHour<5;
+  const niceOutdoor=maxT>=62&&maxT<=92&&rainCount===0&&stormCount===0&&!isPredomNight&&isDaytime;
 
   const seed=(now.getDate()*31+nowHour)%7;
   const vpick=(arr)=>arr[seed%arr.length];
@@ -903,14 +913,14 @@ function getVibeTag(hourly,daily,currentCode,now){
   if(rainCount>4)return vpick(['\uD83C\uDF27\uFE0F Indoor day. No debate.','\uD83C\uDF27\uFE0F Stay in. It\u2019s fine.','\uD83C\uDF27\uFE0F Full washout','\uD83C\uDF27\uFE0F Committed rain day']);
   if(rainCount>2)return vpick(['\uD83C\uDF26\uFE0F Umbrella weather','\uD83C\uDF26\uFE0F Grab a jacket','\uD83C\uDF26\uFE0F Rain\u2019s in the mix','\uD83C\uDF26\uFE0F Damp one ahead']);
   if(isPredomNight||isNight){
-    if(minT>65)return vpick(['\uD83C\uDF19 Good sleeping weather','\uD83C\uDF19 Warm night ahead','\uD83C\uDF19 Open the windows','\uD83C\uDF19 Mild and quiet']);
+    if(minT>65)return vpick(['\uD83C\uDF19 Good sleeping weather','\uD83C\uDF19 Warm night ahead',rainCount===0?'\uD83C\uDF19 Open the windows':'\uD83C\uDF19 Quiet night ahead','\uD83C\uDF19 Mild and quiet']);
     if(minT<32)return vpick(['\uD83E\uDD76 Cold night. Stay warm.','\uD83E\uDD76 Freezing out there','\uD83E\uDD76 Extra blanket night','\uD83E\uDD76 Bundle up before bed']);
     if(clearCount>3)return vpick(['\u2728 Clear and quiet tonight','\uD83C\uDF1F Good night to look up','\uD83C\uDF19 Stars are out','\u2728 Calm and clear']);
     return vpick(['\uD83C\uDF19 Quiet night ahead','\uD83C\uDF19 Easy night out there','\uD83C\uDF19 Settling in nicely','\uD83C\uDF19 Nothing dramatic tonight']);
   }
   if(maxT>98)return vpick(['\uD83D\uDD25 Dangerous heat. Seriously.','\uD83D\uDD25 Stay out of the sun','\uD83D\uDD25 Extreme heat warning','\uD83D\uDD25 Heat is no joke today']);
   if(maxT>92)return vpick(['\uD83D\uDD25 Heat wave. Stay hydrated.','\uD83D\uDD25 Scorcher today','\uD83D\uDD25 Full summer mode','\uD83D\uDD25 Drink water. Seriously.']);
-  if(niceOutdoor&&maxT>=70&&maxT<=80)return vpick(['\u2728 Absolutely perfect out there','\uD83D\uDE0A As good as it gets','\u2728 Golden hour all day','\uD83C\uDF3C Textbook perfect day','\u2728 Hard to top this']);
+  if(niceOutdoor&&maxT>=70&&maxT<=80)return vpick(['\u2728 Absolutely perfect out there','\uD83D\uDE0A As good as it gets','\uD83C\uDF3C Textbook perfect day','\u2728 Hard to top this','\u2600\uFE0F Can\u2019t ask for more than this']);
   if(niceOutdoor&&maxT>80)return vpick(['\u2600\uFE0F Beautiful and warm','\uD83C\uDF1E Warm and wonderful','\u2600\uFE0F Sunshine delivered','\uD83C\uDF1E Peak summer vibes']);
   if(niceOutdoor&&maxT<70)return vpick(['\uD83C\uDF24\uFE0F Pretty great, honestly','\uD83D\uDC9A Crisp and lovely','\uD83C\uDF24\uFE0F Fresh air weather','\uD83D\uDC9A Genuinely nice out']);
   if(maxT<28)return vpick(['\uD83E\uDD76 Genuinely cold. Not joking.','\uD83E\uDD76 Bundle everything','\uD83E\uDD76 True cold today','\uD83E\uDD76 Layers on layers']);
@@ -922,24 +932,20 @@ function getVibeTag(hourly,daily,currentCode,now){
   return vpick(['\uD83C\uDF24\uFE0F Nothing wild. Just decent.','\uD83C\uDF24\uFE0F Mild and manageable','\uD83C\uDF24\uFE0F Low-drama day','\uD83C\uDF24\uFE0F Solid and unremarkable']);
 }
 
-function generateSummary(hourly,daily,currentCode,nowHour){
-  const today=daily.time[0];
+function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
+  // Real sunrise/sunset fractional hours — never fall back to hardcoded guesses
+  function fracHour(s){if(!s)return null;const p=(s.split('T')[1]||'');const[h,m]=p.split(':');return parseInt(h)+(parseInt(m)||0)/60;}
+  const sunriseH=fracHour(sunrise)||6;
+  const sunsetH=fracHour(sunset)||20;
+  const isDaytime=nowHour>=sunriseH&&nowHour<sunsetH;
+  const hoursUntilSunset=Math.max(0,sunsetH-nowHour);
+
+  const now=new Date();
   const hours=[];
   hourly.time.forEach((t,i)=>{
-    if(t.startsWith(today)){
-      const h=new Date(t).getHours();
-      if(h>=nowHour&&h<nowHour+12)hours.push({h,temp:hourly.temperature_2m[i],code:hourly.weather_code[i],precip:hourly.precipitation_probability[i],wind:hourly.wind_speed_10m[i]});
-    }
+    const d=new Date(t);const diff=(d-now)/3600000;
+    if(diff>=-0.5&&diff<12)hours.push({h:d.getHours(),temp:hourly.temperature_2m[i],code:hourly.weather_code[i],precip:hourly.precipitation_probability[i],wind:hourly.wind_speed_10m[i]});
   });
-  if(hours.length<12&&daily.time[1]){
-    const tmrw=daily.time[1];
-    hourly.time.forEach((t,i)=>{
-      if(t.startsWith(tmrw)){
-        const h=new Date(t).getHours();
-        if(hours.length<12)hours.push({h,temp:hourly.temperature_2m[i],code:hourly.weather_code[i],precip:hourly.precipitation_probability[i],wind:hourly.wind_speed_10m[i]});
-      }
-    });
-  }
   if(!hours.length)return 'Weather data loading...';
 
   const tempsF=hours.map(h=>Math.round(toF(h.temp)));
@@ -960,19 +966,19 @@ function generateSummary(hourly,daily,currentCode,nowHour){
   const windyHours=hours.filter(h=>h.wind>30);
   const maxWind=Math.round(Math.max(...hours.map(h=>h.wind))*0.621371);
 
-  // Time context
-  const isNight=nowHour>=20||nowHour<5;
-  const isMorning=nowHour>=5&&nowHour<12;
-  const isAfternoon=nowHour>=12&&nowHour<17;
-  const isEvening=nowHour>=17&&nowHour<20;
+  // Time context — use real sunrise/sunset, not hardcoded hours
+  const isNight=!isDaytime;
+  const isMorning=isDaytime&&nowHour<12;
+  const isAfternoon=isDaytime&&nowHour>=12&&nowHour<17;
+  const isEvening=isDaytime&&nowHour>=17;
 
-  // How much of the 12-hour window is actual daytime (6am–8pm)?
-  const dayHoursInWindow=hours.filter(h=>h.h>=6&&h.h<20).length;
+  // Daytime hours in window using real sunrise/sunset
+  const dayHoursInWindow=hours.filter(h=>h.h+0.5>=sunriseH&&h.h+0.5<sunsetH).length;
   const isPredomNight=dayHoursInWindow<hours.length*0.35;
 
-  // Is it worth going outside? Gates ALL outdoor suggestions.
-  const outdoorWorthy=maxT>=50&&rainHours.length<3&&stormHours.length===0&&snowHours.length<2;
-  const niceOutdoor=maxT>=62&&maxT<=92&&rainHours.length===0&&(clearHours.length>3||cloudyHours.length>0)&&stormHours.length===0&&!isPredomNight;
+  // Is it worth going outside? Only valid when the sun is actually up.
+  const outdoorWorthy=isDaytime&&maxT>=50&&rainHours.length<3&&stormHours.length===0&&snowHours.length<2;
+  const niceOutdoor=isDaytime&&maxT>=62&&maxT<=92&&rainHours.length===0&&(clearHours.length>3||cloudyHours.length>0)&&stormHours.length===0&&!isPredomNight;
 
   const sentences=[];
   const timeframe=isNight?'tonight':isMorning?'today':isAfternoon?'this afternoon':isEvening?'this evening':'ahead';
@@ -1049,7 +1055,7 @@ function generateSummary(hourly,daily,currentCode,nowHour){
   // Sentence 3: Practical tip
   if(sentences.length<5){
     const uvMax=daily.uv_index_max[0];
-    if(!isPredomNight&&nowHour<16){
+    if(isDaytime&&hoursUntilSunset>1){
       if(uvMax>=8)sentences.push(pick([`\uD83E\uDDF4 UV is extreme today\u2014SPF isn't optional. Your future skin will thank you.`,`\uD83E\uDDF4 Extreme UV today\u2014if you're going outside for any meaningful stretch, sunscreen is non-negotiable.`,`\uD83E\uDDF4 The UV index is serious today. Sunscreen, hat, the whole thing.`]));
       else if(uvMax>=6)sentences.push(pick([`\uD83E\uDDF4 UV is running high\u2014throw on some sunscreen before you head out. You'll forget and then you'll regret it.`,`\uD83E\uDDF4 High UV today\u2014worth the 30 seconds it takes to put on sunscreen before walking out.`,`\uD83E\uDDF4 Don't skip the sunscreen today\u2014the UV is high enough to matter.`]));
       else if(uvMax>=4&&maxT>72&&clearHours.length>3)sentences.push(pick([`\uD83D\uDE0E Sunglasses weather\u2014UV is moderate and the sun is absolutely putting in work today.`,`\uD83D\uDE0E The sun is out and making itself known\u2014sunglasses aren't optional today.`,`\uD83D\uDE0E Moderate UV and full sun\u2014grab the sunglasses and maybe a light layer of SPF.`]));
@@ -1075,7 +1081,7 @@ function generateSummary(hourly,daily,currentCode,nowHour){
   if(sentences.length<5){
     if(isPredomNight||isNight){
       if(rainHours.length>3)sentences.push(pick([`Rain through the night\u2014honestly, good sleeping weather.`,`Rainy night ahead\u2014the good kind, where you're inside and it's not your problem.`,`Rain all night. That's the universe handing you permission to do absolutely nothing.`]));
-      else if(minT>60&&clearHours.length>3)sentences.push(pick([`Good night to step outside for a few minutes before bed. Seriously, go look up.`,`Clear night and mild enough to enjoy it\u2014worth a few minutes outside before turning in.`,`Nice enough tonight to take a little walk before bed. You'll sleep better.`]));
+      else if(minT>60&&clearHours.length>3&&(nowHour>=18||nowHour<2))sentences.push(pick([`Good night to step outside for a few minutes before bed. Seriously, go look up.`,`Clear night and mild enough to enjoy it\u2014worth a few minutes outside before turning in.`,`Nice enough tonight to take a little walk before bed. You'll sleep better.`]));
       else if(minT<35)sentences.push(pick([`It's cold and dark out there\u2014that's nature telling you to stay in. Listen to nature.`,`${minTDisp}\u00b0 overnight. The bed is the correct answer tonight.`,`Cold one tonight. The couch isn't laziness\u2014it's wisdom.`]));
       else sentences.push(pick([`Good night to put the phone down and actually wind down. The weather agrees.`,`Quiet night ahead\u2014perfect for actually getting some rest for once.`,`Nothing exciting outside tonight, and that's kind of perfect.`]));
     }else if(niceOutdoor)sentences.push(pick([`Honestly, the weather is doing its part. The rest is on you.`,`The conditions are genuinely excellent today. Don't let them go to waste.`,`Weather this good doesn't come around every day. Do something with it.`,`You can make excuses or you can go outside. The weather's not giving you any.`]));
