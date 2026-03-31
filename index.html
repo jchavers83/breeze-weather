@@ -144,9 +144,13 @@
 }
 /* Night time in light mode: dark navy sky needs light text + crisper cards */
 .night:not(.dark){
---card-bg:rgba(255,255,255,0.16);--card-border:rgba(255,255,255,0.28);
---text:#e8f0f8;--text-secondary:#b0c8d8;--text-tertiary:#7a9ab0;
+--card-bg:rgba(255,255,255,0.20);--card-border:rgba(255,255,255,0.35);
+--text:#f0f6fc;--text-secondary:#c8d8e8;--text-tertiary:#a0c0d4;
 }
+/* Nav bar at night: solid enough to read without squinting */
+.night:not(.dark) .mobile-nav{background:rgba(12,22,44,0.92);border-top-color:rgba(255,255,255,0.18)}
+.night:not(.dark) .nav-tab{color:rgba(180,210,230,0.70)}
+.night:not(.dark) .nav-tab.active{color:var(--accent)}
 html{font-family:'Outfit',-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--bg-from),var(--bg-to));color:var(--text);transition:background var(--transition),color var(--transition);overflow-x:hidden}
 /* Canvas sits above the body gradient but below all app content */
@@ -1092,7 +1096,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
   }
 
   // Fun closer
-  sentences.push(getWeatherQuip(maxT,minT,rainHours.length,clearHours.length,cloudyHours.length,windyHours.length,isNight,nowHour,isPredomNight,outdoorWorthy,niceOutdoor));
+  sentences.push(getWeatherQuip(maxT,minT,rainHours.length,clearHours.length,cloudyHours.length,windyHours.length,isNight,nowHour,isPredomNight,outdoorWorthy,niceOutdoor,sunsetH));
 
   // Strip leading emoji from each sentence — vibe tag above already owns the emoji; body copy should be clean prose
   return sentences.slice(0,6).map(s=>s.replace(/^(?:[\u2600-\u27BF]|[\uD800-\uDBFF][\uDC00-\uDFFF])[\uFE0F\u20E3]?\s*/,'')).join(' ');
@@ -1115,12 +1119,16 @@ function getMoonPhase(date){
   return{name:'New Moon',emoji:'\uD83C\uDF11'};
 }
 
-function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,isNight,hour,isPredomNight,outdoorWorthy,niceOutdoor){
+function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,isNight,hour,isPredomNight,outdoorWorthy,niceOutdoor,sunsetH){
   const moon=getMoonPhase(new Date());
   const now=new Date();
   const quips=[];
-  const morning=hour>=5&&hour<12;
-  const afternoon=hour>=12&&hour<17;
+  const sh=sunsetH||20; // real sunset fractional hour
+  const sunAlreadyDown=hour>=sh;
+  const minsToSunset=Math.max(0,(sh-(hour+now.getMinutes()/60))*60);
+  const isGoldenHour=!sunAlreadyDown&&minsToSunset<=50; // within 50 min of sunset
+  const morning=!sunAlreadyDown&&hour>=6&&hour<12;
+  const afternoon=!sunAlreadyDown&&hour>=12&&hour<17;
   // Day of week
   const dow=now.getDay();
   const isMon=dow===1,isFri=dow===5,isSat=dow===6,isSun=dow===0;
@@ -1131,8 +1139,9 @@ function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,is
   const isSpring=month>=2&&month<5;
   const isSummer=month>=5&&month<8;
   const isFall=month>=8&&month<11;
-  const evening=hour>=17&&hour<21;
-  const lateNight=hour>=21||hour<5;
+  // Evening = after 5pm but still before sunset
+  const evening=!sunAlreadyDown&&hour>=17&&hour<sh;
+  const lateNight=sunAlreadyDown||hour<6;
 
   // === Late Night ===
   if(lateNight){
@@ -1145,16 +1154,16 @@ function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,is
     quips.push('\uD83C\uDF19 Not a bad night to wind down. You\'ve earned the rest.');
   }
 
-  // === Evening ===
+  // === Evening (sun still up, after 5pm) ===
   if(evening){
-    if(moon.name==='Full Moon')quips.push(moon.emoji+' Full moon rising tonight\u2014perfect excuse for an evening stroll if you\'re up for it.');
-    if(clearCount>3&&maxT>60)quips.push('\uD83C\uDF05 Golden hour is coming in hot\u2014grab your camera or just your eyes.');
-    if(maxT>68&&rainCount===0&&minT>50)quips.push('\uD83C\uDF7D\uFE0F Honestly, tonight\'s a great one for dinner on the patio.');
-    if(niceOutdoor)quips.push('\uD83D\uDEB6 Great evening for a walk before it gets dark. Genuinely.');
+    if(isGoldenHour&&clearCount>3&&maxT>60)quips.push('\uD83C\uDF05 Golden hour right now\u2014grab your camera or just go stand in it.');
+    if(!isGoldenHour&&clearCount>3&&maxT>60)quips.push('\uD83C\uDF05 Beautiful evening light out there\u2014worth stepping outside before sunset.');
+    if(maxT>68&&rainCount===0&&minT>50)quips.push('\uD83C\uDF7D\uFE0F Honestly, tonight\u2019s a great one for dinner on the patio before it gets dark.');
+    if(niceOutdoor&&minsToSunset>30)quips.push('\uD83D\uDEB6 Great evening for a walk before it gets dark. Genuinely.');
     if(maxT>72&&clearCount>3)quips.push('\uD83C\uDF66 Evening ice cream run? The weather is basically asking you to.');
     if(maxT<42)quips.push('\uD83E\uDDE5 Bundle up before stepping out\u2014it gets cold fast once the sun goes down.');
-    if(rainCount>2)quips.push('\uD83C\uDFAC Rainy evening in\u2014pick something good and don\'t feel bad about it.');
-    quips.push('\uD83C\uDF05 Wind down and enjoy the evening\u2014you earned it today.');
+    if(rainCount>2)quips.push('\uD83C\uDFAC Rainy evening in\u2014pick something good and don\u2019t feel bad about it.');
+    quips.push('\uD83C\uDF05 Wind down and enjoy what\u2019s left of the evening\u2014you earned it.');
   }
 
   // === Morning ===
@@ -1518,11 +1527,13 @@ function setWindyNextHour(btn){
   windyOverlay='radar_next';
   document.querySelectorAll('.radar-overlay-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  // radarRange=1 = Windy's built-in 1-hour radar nowcast (motion extrapolation forward)
+  // HRRR = High Resolution Rapid Refresh, 1-hour steps, best short-range model for North America
+  // calendar = now + 1hr in ms so the map opens already at the +1hr forecast snapshot
   const lat=state.lat||39,lon=state.lon||-98,zoom=state.lat?7:4;
   const tUnit=state.unit==='F'?encodeURIComponent('°F'):encodeURIComponent('°C');
   const wUnit=state.unit==='F'?'mph':encodeURIComponent('km/h');
-  document.getElementById('windyFrame').src=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=${zoom}&level=surface&overlay=radar&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=${wUnit}&metricTemp=${tUnit}&radarRange=1`;
+  const cal=Date.now()+3600000;
+  document.getElementById('windyFrame').src=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=${zoom}&level=surface&overlay=rain&product=hrrr&menu=&message=&marker=&calendar=${cal}&pressure=&type=map&location=coordinates&detail=&metricWind=${wUnit}&metricTemp=${tUnit}&radarRange=`;
 }
 </script>
 </body>
