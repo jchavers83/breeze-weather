@@ -319,7 +319,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 }
 
 /* Mobile nav */
-.mobile-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card-bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-top:1px solid var(--card-border);display:flex;justify-content:center;gap:40px;padding:10px 0 calc(env(safe-area-inset-bottom,8px) + 6px);z-index:100}
+.mobile-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card-bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-top:1px solid var(--card-border);display:flex;justify-content:space-around;padding:10px 16px calc(env(safe-area-inset-bottom,8px) + 6px);z-index:100}
 .nav-tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text-tertiary);font-size:10px;font-weight:600;cursor:pointer;transition:color 0.2s;border:none;background:none;-webkit-tap-highlight-color:transparent}
 .nav-tab.active{color:var(--accent)}
 .nav-tab svg{width:22px;height:22px}
@@ -414,6 +414,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 #pullIndicator svg{color:var(--accent);transition:transform 0.1s}
 .pull-spin{animation:pullSpin 0.75s linear infinite}
 @keyframes pullSpin{to{transform:rotate(360deg)}}
+
+/* Tab views (Forecast, Details) */
+.tab-view{display:none;padding:calc(env(safe-area-inset-top,0px) + 68px) 16px calc(env(safe-area-inset-bottom,8px) + 74px);box-sizing:border-box;min-height:100vh}
+.tab-view.active{display:block}
 
 /* Radar */
 #radarView{display:none;position:fixed;inset:0;z-index:51;padding:env(safe-area-inset-top,0px) 0 0;box-sizing:border-box;flex-direction:column}
@@ -551,6 +555,9 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
   </div>
 </div>
 
+<div id="forecastView" class="tab-view"></div>
+<div id="detailsView" class="tab-view"></div>
+
 <nav class="mobile-nav" id="mobileNav" style="display:none">
   <button class="nav-tab active" data-tab="current">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/></svg>
@@ -559,6 +566,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
   <button class="nav-tab" data-tab="forecast">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4m8-4v4"/></svg>
     <span>Forecast</span>
+  </button>
+  <button class="nav-tab" data-tab="details">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Details</span>
   </button>
   <button class="nav-tab" data-tab="radar">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M6.34 6.34a8 8 0 1 0 11.32 0"/><path d="M9.17 9.17a4 4 0 1 0 5.66 0"/></svg>
@@ -718,29 +729,34 @@ $('#btnLocate').addEventListener('click',()=>{
 });
 
 // Mobile nav tabs
+function showTab(tab){
+  $('#content').style.display='none';
+  $('#radarView').classList.remove('active');
+  document.getElementById('forecastView').classList.remove('active');
+  document.getElementById('detailsView').classList.remove('active');
+  if(tab==='radar'){
+    $('.header').style.display='none';
+    $('#savedBar').style.display='none';
+    $('#radarView').classList.add('active');
+    initRadar();
+  }else{
+    $('.header').style.display='';
+    if(getSaved().length)$('#savedBar').style.display='';
+    if(tab==='forecast'){
+      document.getElementById('forecastView').classList.add('active');
+    }else if(tab==='details'){
+      document.getElementById('detailsView').classList.add('active');
+    }else{
+      $('#content').style.display='block';
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+  }
+}
 $$('.nav-tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
     $$('.nav-tab').forEach(t=>t.classList.remove('active'));
     btn.classList.add('active');
-    const tab=btn.dataset.tab;
-    if(tab==='radar'){
-      $('#content').style.display='none';
-      $('.header').style.display='none';
-      $('#savedBar').style.display='none';
-      $('#radarView').classList.add('active');
-      initRadar();
-    }else{
-      $('#radarView').classList.remove('active');
-      $('.header').style.display='';
-      if(getSaved().length)$('#savedBar').style.display='';
-      $('#content').style.display='block';
-      if(tab==='forecast'){
-        const fs=$('.forecast-section');
-        if(fs)fs.scrollIntoView({behavior:'smooth',block:'start'});
-      }else{
-        window.scrollTo({top:0,behavior:'smooth'});
-      }
-    }
+    showTab(btn.dataset.tab);
   });
 });
 
@@ -1023,100 +1039,33 @@ function render(){
   const summary=generateSummary(hourly,daily,c.weather_code,now.getHours(),daily.sunrise[0],daily.sunset[0]);
   const vibeTag=getVibeTag(hourly,daily,c.weather_code,now,daily.sunrise[0],daily.sunset[0]);
 
-  const html=`
+  // --- Now tab ---
+  const nowHtml=`
     <div class="location-bar">
       <div><h2>${state.name}</h2><p>${state.region}</p></div>
       <button class="btn-save ${isSaved()?'saved':''}" id="btnSave" onclick="toggleSaveLocation()" title="Save location">${isSaved()?'★':'☆'}</button>
     </div>
     <div id="alertBanner" style="display:none"></div>
-    <div class="desktop-layout">
-      <div class="left-panel">
-        <div class="hero">
-          <div class="hero-icon ${getHeroAnimClass(c.weather_code)}">${wi.icon}</div>
-          <div class="hero-temp" id="heroTemp">${formatTemp(c.temperature_2m)}&deg;</div>
-          <div class="hero-desc">${wi.desc}</div>
-          <div class="hero-hilo">H:${formatTemp(daily.temperature_2m_max[0])}&deg; L:${formatTemp(daily.temperature_2m_min[0])}&deg;</div>
-          <div class="hero-feels">Feels like ${formatTemp(c.apparent_temperature)}&deg;${state.unit}</div>
-        </div>
-        <div class="summary-card glass" id="summaryCard">
-          <div class="summary-label">Next 12 Hours</div>
-          <div class="vibe-tag">${vibeTag}</div>
-          <div class="summary-text">${summary}</div>
-        </div>
-        ${buildWearCard(c,daily,hourly,now)}
-        ${buildPrecipTimeline(hourly,now)}
-        ${buildSparkline(hourly,daily,now)}
-        <div class="sun-bar glass">
-          <div class="sun-item">
-            <div class="sun-icon">&#127749;</div>
-            <div class="sun-label">Sunrise</div>
-            <div class="sun-time">${formatTime(daily.sunrise[0])}</div>
-          </div>
-          <div class="sun-mid">
-            <div class="sun-label">Daylight</div>
-            <div class="sun-time">${daylightDuration(daily.sunrise[0],daily.sunset[0])}</div>
-            <div class="sun-moon">${getMoonPhase(now).emoji} ${getMoonPhase(now).name}</div>
-          </div>
-          <div class="sun-item">
-            <div class="sun-icon">&#127751;</div>
-            <div class="sun-label">Sunset</div>
-            <div class="sun-time">${formatTime(daily.sunset[0])}</div>
-          </div>
-        </div>
-      </div>
-      <div class="right-panel">
-        <div class="detail-grid">
-          <div class="detail-card glass">
-            <div class="label">Humidity</div>
-            <div class="value">${c.relative_humidity_2m}%</div>
-            <div class="sub">${c.dew_point_2m!=null?dewComfort(c.dew_point_2m):''}</div>
-          </div>
-          <div class="detail-card glass">
-            <div class="label">Wind</div>
-            <div class="value">${windSpeed(c.wind_speed_10m)}</div>
-            <div class="sub">${windUnit()} ${dirStr(c.wind_direction_10m)}</div>
-          </div>
-          <div class="detail-card glass">
-            <div class="label">UV Index</div>
-            <div class="value">${c.is_day?daily.uv_index_max[0].toFixed(0):'0'}</div>
-            <div class="uv-bar-wrap"><div class="uv-cursor" style="left:${c.is_day?Math.min(daily.uv_index_max[0]/12*100,100):0}%"></div></div>
-            <div class="sub">${c.is_day?uvLabel(daily.uv_index_max[0]):'None \u00b7 Nighttime'}</div>
-          </div>
-          <div class="detail-card glass">
-            <div class="label">Rain Next Hour</div>
-            <div class="value">${rainNextHour(hourly,now).icon}</div>
-            <div class="sub">${rainNextHour(hourly,now).text}</div>
-          </div>
-          <div class="detail-card glass">
-            <div class="label">Cloud Cover</div>
-            <div class="value">${c.cloud_cover}%</div>
-          </div>
-          <div class="detail-card glass">
-            <div class="label">Visibility</div>
-            <div class="value" style="font-size:18px">${visUnit(visibility)}</div>
-          </div>
-        </div>
-        <div class="wind-card glass">
-          <div class="compass">
-            <div class="compass-ring">
-              <span class="compass-label n">N</span>
-              <span class="compass-label s">S</span>
-              <span class="compass-label e">E</span>
-              <span class="compass-label w">W</span>
-              <div class="compass-needle" style="transform:rotate(${c.wind_direction_10m}deg)"></div>
-              <div class="compass-dot"></div>
-            </div>
-          </div>
-          <div class="wind-details">
-            <div class="wd-row"><span class="wd-label">Speed</span><span class="wd-value">${windSpeed(c.wind_speed_10m)} ${windUnit()}</span></div>
-            <div class="wd-row"><span class="wd-label">Gusts</span><span class="wd-value">${windSpeed(c.wind_gusts_10m)} ${windUnit()}</span></div>
-            <div class="wd-row"><span class="wd-label">Direction</span><span class="wd-value">${dirStr(c.wind_direction_10m)} (${c.wind_direction_10m}&deg;)</span></div>
-          </div>
-        </div>
-      </div>
+    <div class="hero">
+      <div class="hero-icon ${getHeroAnimClass(c.weather_code)}">${wi.icon}</div>
+      <div class="hero-temp" id="heroTemp">${formatTemp(c.temperature_2m)}&deg;</div>
+      <div class="hero-desc">${wi.desc}</div>
+      <div class="hero-hilo">H:${formatTemp(daily.temperature_2m_max[0])}&deg; L:${formatTemp(daily.temperature_2m_min[0])}&deg;</div>
+      <div class="hero-feels">Feels like ${formatTemp(c.apparent_temperature)}&deg;${state.unit}</div>
     </div>
+    <div class="summary-card glass" id="summaryCard">
+      <div class="summary-label">Next 12 Hours</div>
+      <div class="vibe-tag">${vibeTag}</div>
+      <div class="summary-text">${summary}</div>
+    </div>
+    ${buildWearCard(c,daily,hourly,now)}
+    ${buildPrecipTimeline(hourly,now)}
     ${buildTopHourly(hourly,daily,now)}
     <div id="aqiCard" class="aqi-card glass"></div>
+    <div class="refresh-bar">Auto-refreshes every 10 min &middot; Updated ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
+  `;
+  // --- Forecast tab ---
+  const forecastHtml=`
     <div class="forecast-section">
       <div class="forecast-title">5-Day Forecast</div>
       ${daily.time.map((t,i)=>{
@@ -1159,9 +1108,79 @@ function render(){
         </div>`;
       }).join('')}
     </div>
-    <div class="refresh-bar">Auto-refreshes every 10 min &middot; Updated ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
   `;
-  $('#content').innerHTML=html;
+  // --- Details tab ---
+  const detailsHtml=`
+    ${buildSparkline(hourly,daily,now)}
+    <div class="sun-bar glass">
+      <div class="sun-item">
+        <div class="sun-icon">&#127749;</div>
+        <div class="sun-label">Sunrise</div>
+        <div class="sun-time">${formatTime(daily.sunrise[0])}</div>
+      </div>
+      <div class="sun-mid">
+        <div class="sun-label">Daylight</div>
+        <div class="sun-time">${daylightDuration(daily.sunrise[0],daily.sunset[0])}</div>
+        <div class="sun-moon">${getMoonPhase(now).emoji} ${getMoonPhase(now).name}</div>
+      </div>
+      <div class="sun-item">
+        <div class="sun-icon">&#127751;</div>
+        <div class="sun-label">Sunset</div>
+        <div class="sun-time">${formatTime(daily.sunset[0])}</div>
+      </div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-card glass">
+        <div class="label">Humidity</div>
+        <div class="value">${c.relative_humidity_2m}%</div>
+        <div class="sub">${c.dew_point_2m!=null?dewComfort(c.dew_point_2m):''}</div>
+      </div>
+      <div class="detail-card glass">
+        <div class="label">Wind</div>
+        <div class="value">${windSpeed(c.wind_speed_10m)}</div>
+        <div class="sub">${windUnit()} ${dirStr(c.wind_direction_10m)}</div>
+      </div>
+      <div class="detail-card glass">
+        <div class="label">UV Index</div>
+        <div class="value">${c.is_day?daily.uv_index_max[0].toFixed(0):'0'}</div>
+        <div class="uv-bar-wrap"><div class="uv-cursor" style="left:${c.is_day?Math.min(daily.uv_index_max[0]/12*100,100):0}%"></div></div>
+        <div class="sub">${c.is_day?uvLabel(daily.uv_index_max[0]):'None \u00b7 Nighttime'}</div>
+      </div>
+      <div class="detail-card glass">
+        <div class="label">Rain Next Hour</div>
+        <div class="value">${rainNextHour(hourly,now).icon}</div>
+        <div class="sub">${rainNextHour(hourly,now).text}</div>
+      </div>
+      <div class="detail-card glass">
+        <div class="label">Cloud Cover</div>
+        <div class="value">${c.cloud_cover}%</div>
+      </div>
+      <div class="detail-card glass">
+        <div class="label">Visibility</div>
+        <div class="value" style="font-size:18px">${visUnit(visibility)}</div>
+      </div>
+    </div>
+    <div class="wind-card glass">
+      <div class="compass">
+        <div class="compass-ring">
+          <span class="compass-label n">N</span>
+          <span class="compass-label s">S</span>
+          <span class="compass-label e">E</span>
+          <span class="compass-label w">W</span>
+          <div class="compass-needle" style="transform:rotate(${c.wind_direction_10m}deg)"></div>
+          <div class="compass-dot"></div>
+        </div>
+      </div>
+      <div class="wind-details">
+        <div class="wd-row"><span class="wd-label">Speed</span><span class="wd-value">${windSpeed(c.wind_speed_10m)} ${windUnit()}</span></div>
+        <div class="wd-row"><span class="wd-label">Gusts</span><span class="wd-value">${windSpeed(c.wind_gusts_10m)} ${windUnit()}</span></div>
+        <div class="wd-row"><span class="wd-label">Direction</span><span class="wd-value">${dirStr(c.wind_direction_10m)} (${c.wind_direction_10m}&deg;)</span></div>
+      </div>
+    </div>
+  `;
+  $('#content').innerHTML=nowHtml;
+  document.getElementById('forecastView').innerHTML=forecastHtml;
+  document.getElementById('detailsView').innerHTML=detailsHtml;
   _updateSummaryCard();
   _updateAqiCard();
   const shareBtn=document.getElementById('btnShareHeader');
