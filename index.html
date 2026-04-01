@@ -363,9 +363,22 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .preview-label{font-size:11px;color:var(--text-tertiary);text-transform:uppercase;font-weight:700;letter-spacing:0.8px;margin-bottom:14px}
 .preview-cards{display:flex;flex-direction:column;gap:10px}
 .preview-card{padding:16px 20px;text-align:left;opacity:0;animation:fadeSlideUp 0.6s ease forwards}
-.preview-card:nth-child(1){animation-delay:0.2s}
-.preview-card:nth-child(2){animation-delay:0.4s}
-.preview-card:nth-child(3){animation-delay:0.6s}
+.preview-card:nth-child(1){animation-delay:0.15s}
+.preview-card:nth-child(2){animation-delay:0.28s}
+.preview-card:nth-child(3){animation-delay:0.41s}
+.preview-card:nth-child(4){animation-delay:0.54s}
+.preview-card:nth-child(5){animation-delay:0.67s}
+.preview-card:nth-child(6){animation-delay:0.80s}
+.preview-wear-mock{font-size:13px;color:var(--text-secondary);line-height:1.5}
+.preview-wear-mock .mock-wear-title{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px}
+.preview-wear-mock .mock-wear-quip{font-size:12px;color:var(--text-tertiary);margin-top:5px}
+.preview-stats-mock{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center}
+.preview-stats-mock .ms-item .ms-label{font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px}
+.preview-stats-mock .ms-item .ms-val{font-size:18px;font-weight:700;color:var(--text)}
+.preview-stats-mock .ms-item .ms-sub{font-size:11px;color:var(--text-tertiary);margin-top:2px}
+.preview-aqi-mock .mock-aqi-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.preview-aqi-mock .mock-aqi-bar{width:100%;height:5px;border-radius:3px;background:linear-gradient(to right,#22c55e,#facc15,#f97316,#dc2626,#9333ea,#7f1d1d);position:relative;margin-bottom:6px}
+.preview-aqi-mock .mock-aqi-tip{font-size:12px;color:var(--text-secondary);font-weight:500}
 .preview-hero-mock{display:flex;align-items:center;gap:14px}
 .preview-hero-mock .mock-icon{font-size:36px}
 .preview-hero-mock .mock-temp{font-size:40px;font-weight:800;letter-spacing:0px;font-variant-numeric:tabular-nums;background:linear-gradient(160deg,var(--text) 20%,var(--accent) 110%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 3px 14px rgba(0,0,0,0.18))}
@@ -507,7 +520,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
               <span class="mock-temp">72&deg;</span>
               <div class="mock-details">
                 <div class="mock-desc">Clear Sky</div>
-                <div class="mock-hilo">H:78&deg; L:54&deg;</div>
+                <div class="mock-hilo">H:78&deg; &nbsp;L:54&deg; &nbsp;Feels like 70&deg;</div>
               </div>
             </div>
           </div>
@@ -518,11 +531,42 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
             </div>
           </div>
           <div class="preview-card glass">
+            <div class="preview-wear-mock">
+              <div class="mock-wear-title">What to Wear</div>
+              Light layers and sneakers will do the trick &mdash; it's a great day to be outside.
+              <div class="mock-wear-quip">Looking sharp out there &#128085; &#128115;</div>
+            </div>
+          </div>
+          <div class="preview-card glass">
+            <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">5-Day Forecast</div>
+            <div class="preview-forecast-mock" style="margin-bottom:8px">
+              <span class="pf-day">Today</span><span class="pf-icon">&#9728;&#65039;</span><span class="pf-desc">Clear Sky</span><span class="pf-temps">78&deg; <span>54&deg;</span></span>
+            </div>
+            <div class="preview-forecast-mock" style="margin-bottom:8px">
+              <span class="pf-day">Thu</span><span class="pf-icon">&#9925;</span><span class="pf-desc">Partly Cloudy</span><span class="pf-temps">74&deg; <span>58&deg;</span></span>
+            </div>
+            <div class="preview-forecast-mock" style="margin-bottom:8px">
+              <span class="pf-day">Fri</span><span class="pf-icon">&#127783;&#65039;</span><span class="pf-desc">Rain Showers</span><span class="pf-temps">65&deg; <span>52&deg;</span></span>
+            </div>
+            <div class="preview-forecast-mock" style="margin-bottom:8px">
+              <span class="pf-day">Sat</span><span class="pf-icon">&#9729;&#65039;</span><span class="pf-desc">Overcast</span><span class="pf-temps">68&deg; <span>55&deg;</span></span>
+            </div>
             <div class="preview-forecast-mock">
-              <span class="pf-day">Today</span>
-              <span class="pf-icon">&#127780;&#65039;</span>
-              <span class="pf-desc">Mostly Sunny</span>
-              <span class="pf-temps">78&deg; <span>54&deg;</span></span>
+              <span class="pf-day">Sun</span><span class="pf-icon">&#127780;&#65039;</span><span class="pf-desc">Mostly Sunny</span><span class="pf-temps">76&deg; <span>57&deg;</span></span>
+            </div>
+          </div>
+          <div class="preview-card glass">
+            <div class="preview-stats-mock">
+              <div class="ms-item"><div class="ms-label">Humidity</div><div class="ms-val">48%</div><div class="ms-sub">Comfortable</div></div>
+              <div class="ms-item"><div class="ms-label">UV Index</div><div class="ms-val">6</div><div class="ms-sub">High · SPF</div></div>
+              <div class="ms-item"><div class="ms-label">Wind</div><div class="ms-val">9</div><div class="ms-sub">mph SW</div></div>
+            </div>
+          </div>
+          <div class="preview-card glass">
+            <div class="preview-aqi-mock">
+              <div class="mock-aqi-label">Air Quality &nbsp;&middot;&nbsp; <span style="font-size:18px;font-weight:700;color:var(--text);text-transform:none">2</span></div>
+              <div class="mock-aqi-bar"><div style="position:absolute;left:12%;top:50%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,0.25)"></div></div>
+              <div class="mock-aqi-tip">Outdoor air is excellent today</div>
             </div>
           </div>
         </div>
