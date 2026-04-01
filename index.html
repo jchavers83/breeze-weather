@@ -216,8 +216,8 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .hero-icon.anim-storm{animation:heroStormPulse 1.6s ease-in-out infinite}
 
 /* Top hourly strip */
-.top-hourly-card{margin-bottom:16px;overflow:hidden;padding-top:4px}
-.top-hourly-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding:12px 20px 0}
+.top-hourly-card{margin-bottom:16px;overflow:hidden}
+.top-hourly-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding:16px 20px 0}
 
 /* Air quality card — compact detail card */
 .aqi-bar-wrap{margin:6px 0 4px;width:100%;height:5px;border-radius:3px;background:linear-gradient(to right,#22c55e 0%,#22c55e 17%,#facc15 33%,#f97316 50%,#dc2626 67%,#9333ea 83%,#7f1d1d 100%);position:relative}
@@ -1190,15 +1190,15 @@ function render(){
         <div class="uv-bar-wrap"><div class="uv-cursor" style="left:${c.is_day?Math.min(daily.uv_index_max[0]/12*100,100):0}%"></div></div>
         <div class="sub">${c.is_day?uvLabel(daily.uv_index_max[0]):'None \u00b7 Nighttime'}</div>
       </div>
+      <div id="aqiCard" class="detail-card glass"></div>
       <div class="detail-card glass">
         <div class="label">Cloud Cover</div>
-        <div class="value">${c.cloud_cover}%</div>
+        <div class="value" style="font-size:18px">${c.cloud_cover}%</div>
       </div>
       <div class="detail-card glass">
         <div class="label">Visibility</div>
         <div class="value" style="font-size:18px">${visUnit(visibility)}</div>
       </div>
-      <div id="aqiCard" class="detail-card glass" style="grid-column:span 2"></div>
     </div>
     <div class="refresh-bar">Auto-refreshes every 10 min &middot; Updated ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
   `;
