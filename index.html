@@ -216,20 +216,12 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .hero-icon.anim-storm{animation:heroStormPulse 1.6s ease-in-out infinite}
 
 /* Top hourly strip */
-.top-hourly-card{margin-bottom:16px;overflow:hidden}
-.top-hourly-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding:14px 20px 0}
+.top-hourly-card{margin-bottom:16px;overflow:hidden;padding-top:4px}
+.top-hourly-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding:12px 20px 0}
 
-/* Air quality card */
-.aqi-card{padding:16px 20px;margin-bottom:16px}
-.aqi-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.aqi-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px}
-.aqi-badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;color:#fff}
-.aqi-bar-wrap{width:100%;height:6px;border-radius:3px;background:linear-gradient(to right,#22c55e 0%,#22c55e 17%,#facc15 33%,#f97316 50%,#dc2626 67%,#9333ea 83%,#7f1d1d 100%);position:relative;margin-bottom:6px}
-.aqi-cursor{position:absolute;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,0.25)}
-.aqi-ticks{display:flex;justify-content:space-between;margin-bottom:8px}
-.aqi-ticks span{font-size:10px;font-weight:600;color:var(--text-tertiary);line-height:1;width:18px;text-align:center}
-.aqi-desc{font-size:13px;font-weight:500;color:var(--text)}
-.aqi-tip{font-size:12px;font-weight:500;color:var(--text-secondary);margin-top:2px}
+/* Air quality card — compact detail card */
+.aqi-bar-wrap{margin:6px 0 4px;width:100%;height:5px;border-radius:3px;background:linear-gradient(to right,#22c55e 0%,#22c55e 17%,#facc15 33%,#f97316 50%,#dc2626 67%,#9333ea 83%,#7f1d1d 100%);position:relative}
+.aqi-cursor{position:absolute;top:50%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,0.25)}
 
 /* Share button */
 .btn-share:active{transform:scale(1.3)}
@@ -244,10 +236,12 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 /* Precipitation timeline */
 .precip-timeline{padding:16px 20px;margin-bottom:16px}
 .precip-tl-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px}
-.precip-sentence{font-size:14px;font-weight:500;color:var(--text);line-height:1.45;margin-bottom:10px}
-.precip-dots{display:flex;gap:2px}
-.precip-dot{flex:1;height:5px;border-radius:3px;background:rgba(128,128,128,0.15)}
-.precip-dot.wet{background:rgba(58,143,212,0.65)}
+.precip-sentence{font-size:14px;font-weight:500;color:var(--text);line-height:1.45;margin-bottom:12px}
+.precip-dots{display:flex;gap:3px;align-items:flex-end}
+.precip-dot{flex:1;height:20px;border-radius:4px}
+.precip-hours{display:flex;gap:3px;margin-top:5px}
+.precip-hours span{flex:1;font-size:9px;font-weight:600;color:var(--text-tertiary);text-align:center;overflow:hidden;white-space:nowrap}
+.precip-next-hour{font-size:12px;font-weight:500;color:var(--text-secondary);margin-top:10px;padding-top:10px;border-top:1px solid var(--card-border)}
 
 /* UV bar */
 .uv-bar-wrap{margin:6px 0 4px;width:100%;height:5px;border-radius:3px;background:linear-gradient(to right,#4ade80 0%,#4ade80 25%,#facc15 42%,#f97316 58%,#dc2626 75%,#9333ea 100%);position:relative}
@@ -1153,11 +1147,6 @@ function render(){
         <div class="sub">${c.is_day?uvLabel(daily.uv_index_max[0]):'None \u00b7 Nighttime'}</div>
       </div>
       <div class="detail-card glass">
-        <div class="label">Rain Next Hour</div>
-        <div class="value">${rainNextHour(hourly,now).icon}</div>
-        <div class="sub">${rainNextHour(hourly,now).text}</div>
-      </div>
-      <div class="detail-card glass">
         <div class="label">Cloud Cover</div>
         <div class="value">${c.cloud_cover}%</div>
       </div>
@@ -1165,8 +1154,8 @@ function render(){
         <div class="label">Visibility</div>
         <div class="value" style="font-size:18px">${visUnit(visibility)}</div>
       </div>
+      <div id="aqiCard" class="detail-card glass" style="grid-column:span 2"></div>
     </div>
-    <div id="aqiCard" class="aqi-card glass"></div>
     <div class="refresh-bar">Auto-refreshes every 10 min &middot; Updated ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
   `;
   $('#content').innerHTML=html;
@@ -1280,8 +1269,8 @@ function _updateAqiCard(){
   const aqi=state.airQuality.us_aqi;
   const info=aqiInfo(aqi);
   if(!info)return;
-  const ticks=[1,2,3,4,5,6,7,8,9,10].map(n=>`<span>${n}</span>`).join('');
-  card.innerHTML=`<div class="aqi-header"><div class="aqi-label">Air Quality</div></div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="aqi-ticks">${ticks}</div><div class="aqi-tip">${info.tip}</div>`;
+  const aqiScore=Math.max(1,Math.min(10,Math.ceil(aqi/30)));
+  card.innerHTML=`<div class="label">Air Quality</div><div class="value">${aqiScore}</div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="sub">${info.tip}</div>`;
 }
 
 function shareWeather(){
@@ -1429,8 +1418,17 @@ function buildPrecipTimeline(hourly,now){
     else sentence=`${label} expected from ${fmtH(w.start)}\u2013${fmtH(w.end+1<24?w.end+1:w.end)}.`;
     if(windows.length>1){const l2=precipLabel(windows[1].code);sentence+=` Another round of ${l2.toLowerCase()} near ${fmtH(windows[1].start)}.`;}
   }
-  const dots=hrs.map(h=>`<div class="precip-dot${h.prob>=THRESHOLD?' wet':''}" title="${fmtH(h.h)} \u2014 ${h.prob}%"></div>`).join('');
-  return`<div class="precip-timeline glass"><div class="precip-tl-label">Precipitation</div><div class="precip-sentence">${sentence}</div><div class="precip-dots">${dots}</div></div>`;
+  function precipChanceLabel(p){if(p===0)return'None';if(p<=15)return'Very unlikely';if(p<=35)return'Unlikely';if(p<=55)return'Possible';if(p<=75)return'Likely';return'Very likely';}
+  const dots=hrs.map(h=>{
+    const wet=h.prob>=THRESHOLD;
+    const alpha=wet?Math.max(0.28,Math.min(1,(h.prob-THRESHOLD)/(100-THRESHOLD)*0.72+0.28)).toFixed(2):0.11;
+    const bg=wet?`rgba(58,143,212,${alpha})`:`rgba(128,128,128,${alpha})`;
+    return`<div class="precip-dot" style="background:${bg}" title="${fmtH(h.h)} \u2014 ${h.prob}%"></div>`;
+  }).join('');
+  const hourLabels=hrs.map((h,i)=>`<span>${i===0?'Now':i%3===0?fmtH(h.h):''}</span>`).join('');
+  const nextProb=hrs[0]?hrs[0].prob:0;
+  const nextHourLine=`<div class="precip-next-hour">Next hour &middot; ${nextProb}% &middot; ${precipChanceLabel(nextProb)}</div>`;
+  return`<div class="precip-timeline glass"><div class="precip-tl-label">Precipitation</div><div class="precip-sentence">${sentence}</div><div class="precip-dots">${dots}</div><div class="precip-hours">${hourLabels}</div>${nextHourLine}</div>`;
 }
 
 function dewComfort(cDew){
