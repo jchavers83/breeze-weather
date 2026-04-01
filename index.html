@@ -198,7 +198,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Detail grid */
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-.detail-card{text-align:center;padding:16px 12px;display:flex;flex-direction:column;align-items:center;min-height:116px}
+.detail-card{text-align:center;padding:14px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .detail-card .label{font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
 .detail-card .value{font-size:22px;font-weight:700}
 .detail-card .sub{font-size:12px;color:var(--text-tertiary);margin-top:2px}
@@ -217,7 +217,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Top hourly strip */
 .top-hourly-card{margin-bottom:16px;overflow:hidden}
-.top-hourly-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding:14px 14px 0}
+.top-hourly-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding:14px 20px 0}
 
 /* Air quality card — compact detail card */
 .aqi-bar-wrap{margin:6px 0 4px;width:100%;height:5px;border-radius:3px;background:linear-gradient(to right,#22c55e 0%,#22c55e 17%,#facc15 33%,#f97316 50%,#dc2626 67%,#9333ea 83%,#7f1d1d 100%);position:relative}
@@ -525,13 +525,19 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
         <div class="preview-cards">
 
           <div class="preview-card glass">
-            <div style="display:flex;align-items:center;gap:14px">
-              <div style="font-size:52px;line-height:1;flex-shrink:0">&#9728;&#65039;</div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="font-size:50px;line-height:1;flex-shrink:0">&#9728;&#65039;</div>
               <div class="mock-temp" style="flex-shrink:0">72&deg;</div>
               <div style="flex:1;min-width:0">
-                <div style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Clear Sky</div>
-                <div style="font-size:12px;color:var(--text-secondary);font-weight:500;margin-top:3px">Houston, TX</div>
-                <div style="font-size:12px;color:var(--text-tertiary);font-weight:500;margin-top:2px">H:78&deg; &nbsp;L:54&deg; &nbsp;&middot;&nbsp; Feels 70&deg;</div>
+                <div style="font-size:15px;font-weight:700;color:var(--text)">Clear Sky</div>
+                <div style="font-size:12px;color:var(--text-secondary);font-weight:500;margin-top:2px">Houston, TX</div>
+                <div style="font-size:12px;color:var(--text-tertiary);font-weight:500;margin-top:2px">H:78&deg;&nbsp;&nbsp;L:54&deg;</div>
+              </div>
+              <div style="flex-shrink:0;border-left:1px solid rgba(128,128,128,0.15);padding-left:14px;display:flex;flex-direction:column;gap:5px;text-align:left">
+                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">Feels 70&deg;</div>
+                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">&#128167; 45% humidity</div>
+                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">&#127788; 8 mph wind</div>
+                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">UV Index 5</div>
               </div>
             </div>
           </div>
@@ -1240,10 +1246,12 @@ function render(){
       <div class="detail-card glass">
         <div class="label">Cloud Cover</div>
         <div class="value" style="font-size:18px">${c.cloud_cover}%</div>
+        <div class="sub">${c.cloud_cover<=10?'Clear':c.cloud_cover<=25?'Mostly clear':c.cloud_cover<=60?'Partly cloudy':c.cloud_cover<=85?'Mostly cloudy':'Overcast'}</div>
       </div>
       <div class="detail-card glass">
         <div class="label">Visibility</div>
         <div class="value" style="font-size:18px">${visUnit(visibility)}</div>
+        <div class="sub">${visibility>=16?'Excellent':visibility>=8?'Good':visibility>=2?'Moderate':'Poor'}</div>
       </div>
     </div>
     <div class="refresh-bar">Auto-refreshes every 10 min &middot; Updated ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
