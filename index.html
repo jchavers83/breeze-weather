@@ -1046,9 +1046,9 @@ function render(){
           </div>
           <div class="detail-card glass">
             <div class="label">UV Index</div>
-            <div class="value">${daily.uv_index_max[0].toFixed(0)}</div>
-            <div class="uv-bar-wrap"><div class="uv-cursor" style="left:${Math.min(daily.uv_index_max[0]/12*100,100)}%"></div></div>
-            <div class="sub">${uvLabel(daily.uv_index_max[0])}</div>
+            <div class="value">${c.is_day?daily.uv_index_max[0].toFixed(0):'0'}</div>
+            <div class="uv-bar-wrap"><div class="uv-cursor" style="left:${c.is_day?Math.min(daily.uv_index_max[0]/12*100,100):0}%"></div></div>
+            <div class="sub">${c.is_day?uvLabel(daily.uv_index_max[0]):'None \u00b7 Nighttime'}</div>
           </div>
           <div class="detail-card glass">
             <div class="label">Rain Next Hour</div>
@@ -1189,7 +1189,7 @@ function buildWearCard(c,daily,hourly,now){
       if((hourly.precipitation_probability[i]||0)>=50){extras.push('umbrella');break;}
     }
   }
-  if(daily.uv_index_max[0]>=6&&c.is_day)extras.push('sunscreen');
+  if(daily.uv_index_max[0]>=6&&c.is_day===1)extras.push('sunscreen');
   if(c.wind_speed_10m>32)extras.push('windproof layer');
   let sentence=clothing;
   if(extras.length===1)sentence+=` — bring a ${extras[0]}`;
