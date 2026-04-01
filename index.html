@@ -1395,29 +1395,39 @@ function buildPrecipTimeline(hourly,now){
   const hrs=[];
   for(let i=startIdx;i<Math.min(startIdx+WINDOW,hourly.time.length);i++){
     const t=new Date(hourly.time[i]);
-    hrs.push({h:t.getHours(),prob:hourly.precipitation_probability[i]||0});
+    hrs.push({h:t.getHours(),prob:hourly.precipitation_probability[i]||0,code:hourly.weather_code?hourly.weather_code[i]:0});
   }
   if(!hrs.length)return'';
+  // Determine precip type label from WMO code
+  function precipLabel(code){
+    if(!code)return'Rain';
+    if(code>=71&&code<=77)return'Snow';
+    if(code===85||code===86)return'Snow showers';
+    if(code===56||code===57||code===66||code===67)return'Freezing rain';
+    if(code>=95)return'Storms';
+    return'Rain';
+  }
   const windows=[];
   let wStart=-1;
   for(let i=0;i<=hrs.length;i++){
     const wet=i<hrs.length&&hrs[i].prob>=THRESHOLD;
     if(wet&&wStart===-1)wStart=i;
-    else if(!wet&&wStart!==-1){windows.push({start:hrs[wStart].h,end:hrs[i-1].h});wStart=-1;}
+    else if(!wet&&wStart!==-1){windows.push({start:hrs[wStart].h,end:hrs[i-1].h,code:hrs[wStart].code});wStart=-1;}
   }
   function fmtH(h){if(h===0)return'12 AM';if(h<12)return h+' AM';if(h===12)return'12 PM';return(h-12)+' PM';}
   let sentence;
   if(!windows.length){
-    sentence='No rain expected in the next 12 hours.';
+    sentence='No precipitation expected in the next 12 hours.';
   }else{
     const w=windows[0];
+    const label=precipLabel(w.code);
     const atStart=w.start===hrs[0].h;
     const atEnd=w.end===hrs[hrs.length-1].h;
-    if(atStart&&atEnd)sentence='Rain likely throughout the next 12 hours.';
-    else if(atStart)sentence=`Rain tapering off around ${fmtH(w.end+1<24?w.end+1:w.end)}.`;
-    else if(atEnd)sentence=`Rain expected starting around ${fmtH(w.start)}.`;
-    else sentence=`Rain expected from ${fmtH(w.start)}\u2013${fmtH(w.end+1<24?w.end+1:w.end)}.`;
-    if(windows.length>1)sentence+=` Another round near ${fmtH(windows[1].start)}.`;
+    if(atStart&&atEnd)sentence=`${label} likely throughout the next 12 hours.`;
+    else if(atStart)sentence=`${label} tapering off around ${fmtH(w.end+1<24?w.end+1:w.end)}.`;
+    else if(atEnd)sentence=`${label} expected starting around ${fmtH(w.start)}.`;
+    else sentence=`${label} expected from ${fmtH(w.start)}\u2013${fmtH(w.end+1<24?w.end+1:w.end)}.`;
+    if(windows.length>1){const l2=precipLabel(windows[1].code);sentence+=` Another round of ${l2.toLowerCase()} near ${fmtH(windows[1].start)}.`;}
   }
   const dots=hrs.map(h=>`<div class="precip-dot${h.prob>=THRESHOLD?' wet':''}" title="${fmtH(h.h)} \u2014 ${h.prob}%"></div>`).join('');
   return`<div class="precip-timeline glass"><div class="precip-tl-label">Precipitation</div><div class="precip-sentence">${sentence}</div><div class="precip-dots">${dots}</div></div>`;
