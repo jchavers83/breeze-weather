@@ -224,8 +224,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .aqi-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .aqi-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px}
 .aqi-badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;color:#fff}
-.aqi-bar-wrap{width:100%;height:6px;border-radius:3px;background:linear-gradient(to right,#22c55e 0%,#22c55e 17%,#facc15 33%,#f97316 50%,#dc2626 67%,#9333ea 83%,#7f1d1d 100%);position:relative;margin-bottom:8px}
+.aqi-bar-wrap{width:100%;height:6px;border-radius:3px;background:linear-gradient(to right,#22c55e 0%,#22c55e 17%,#facc15 33%,#f97316 50%,#dc2626 67%,#9333ea 83%,#7f1d1d 100%);position:relative;margin-bottom:6px}
 .aqi-cursor{position:absolute;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,0.25)}
+.aqi-ticks{display:flex;justify-content:space-between;margin-bottom:8px}
+.aqi-ticks span{font-size:10px;font-weight:600;color:var(--text-tertiary);line-height:1;width:18px;text-align:center}
 .aqi-desc{font-size:13px;font-weight:500;color:var(--text)}
 
 /* Share button */
@@ -1269,7 +1271,8 @@ function _updateAqiCard(){
   const aqi=state.airQuality.us_aqi;
   const info=aqiInfo(aqi);
   if(!info)return;
-  card.innerHTML=`<div class="aqi-header"><div class="aqi-label">Air Quality</div><div class="aqi-desc">${info.label}</div></div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div>`;
+  const ticks=[1,2,3,4,5,6,7,8,9,10].map(n=>`<span>${n}</span>`).join('');
+  card.innerHTML=`<div class="aqi-header"><div class="aqi-label">Air Quality</div><div class="aqi-desc">${info.label}</div></div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="aqi-ticks">${ticks}</div>`;
 }
 
 function shareWeather(){
