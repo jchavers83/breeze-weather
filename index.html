@@ -729,34 +729,32 @@ $('#btnLocate').addEventListener('click',()=>{
 });
 
 // Mobile nav tabs
-function showTab(tab){
-  $('#content').style.display='none';
-  $('#radarView').classList.remove('active');
-  document.getElementById('forecastView').classList.remove('active');
-  document.getElementById('detailsView').classList.remove('active');
-  if(tab==='radar'){
-    $('.header').style.display='none';
-    $('#savedBar').style.display='none';
-    $('#radarView').classList.add('active');
-    initRadar();
-  }else{
-    $('.header').style.display='';
-    if(getSaved().length)$('#savedBar').style.display='';
-    if(tab==='forecast'){
-      document.getElementById('forecastView').classList.add('active');
-    }else if(tab==='details'){
-      document.getElementById('detailsView').classList.add('active');
-    }else{
-      $('#content').style.display='block';
-      window.scrollTo({top:0,behavior:'smooth'});
-    }
-  }
-}
 $$('.nav-tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
     $$('.nav-tab').forEach(t=>t.classList.remove('active'));
     btn.classList.add('active');
-    showTab(btn.dataset.tab);
+    const tab=btn.dataset.tab;
+    if(tab==='radar'){
+      $('#content').style.display='none';
+      $('.header').style.display='none';
+      $('#savedBar').style.display='none';
+      $('#radarView').classList.add('active');
+      initRadar();
+    }else{
+      $('#radarView').classList.remove('active');
+      $('.header').style.display='';
+      if(getSaved().length)$('#savedBar').style.display='';
+      $('#content').style.display='block';
+      if(tab==='forecast'){
+        const fs=$('.forecast-section');
+        if(fs)fs.scrollIntoView({behavior:'smooth',block:'start'});
+      }else if(tab==='details'){
+        const da=document.getElementById('detailsAnchor');
+        if(da)da.scrollIntoView({behavior:'smooth',block:'start'});
+      }else{
+        window.scrollTo({top:0,behavior:'smooth'});
+      }
+    }
   });
 });
 
@@ -1039,8 +1037,7 @@ function render(){
   const summary=generateSummary(hourly,daily,c.weather_code,now.getHours(),daily.sunrise[0],daily.sunset[0]);
   const vibeTag=getVibeTag(hourly,daily,c.weather_code,now,daily.sunrise[0],daily.sunset[0]);
 
-  // --- Now tab ---
-  const nowHtml=`
+  const html=`
     <div class="location-bar">
       <div><h2>${state.name}</h2><p>${state.region}</p></div>
       <button class="btn-save ${isSaved()?'saved':''}" id="btnSave" onclick="toggleSaveLocation()" title="Save location">${isSaved()?'★':'☆'}</button>
@@ -1060,12 +1057,6 @@ function render(){
     </div>
     ${buildWearCard(c,daily,hourly,now)}
     ${buildPrecipTimeline(hourly,now)}
-    ${buildTopHourly(hourly,daily,now)}
-    <div id="aqiCard" class="aqi-card glass"></div>
-    <div class="refresh-bar">Auto-refreshes every 10 min &middot; Updated ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
-  `;
-  // --- Forecast tab ---
-  const forecastHtml=`
     <div class="forecast-section">
       <div class="forecast-title">5-Day Forecast</div>
       ${daily.time.map((t,i)=>{
@@ -1108,9 +1099,9 @@ function render(){
         </div>`;
       }).join('')}
     </div>
-  `;
-  // --- Details tab ---
-  const detailsHtml=`
+    <div id="detailsAnchor"></div>
+    ${buildTopHourly(hourly,daily,now)}
+    <div id="aqiCard" class="aqi-card glass"></div>
     ${buildSparkline(hourly,daily,now)}
     <div class="sun-bar glass">
       <div class="sun-item">
@@ -1177,10 +1168,9 @@ function render(){
         <div class="wd-row"><span class="wd-label">Direction</span><span class="wd-value">${dirStr(c.wind_direction_10m)} (${c.wind_direction_10m}&deg;)</span></div>
       </div>
     </div>
+    <div class="refresh-bar">Auto-refreshes every 10 min &middot; Updated ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
   `;
-  $('#content').innerHTML=nowHtml;
-  document.getElementById('forecastView').innerHTML=forecastHtml;
-  document.getElementById('detailsView').innerHTML=detailsHtml;
+  $('#content').innerHTML=html;
   _updateSummaryCard();
   _updateAqiCard();
   const shareBtn=document.getElementById('btnShareHeader');
