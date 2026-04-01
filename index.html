@@ -565,7 +565,7 @@ function addRecentSearch(loc){
   let recents=getRecentSearches();
   recents=recents.filter(r=>!(Math.abs(r.lat-loc.lat)<0.01&&Math.abs(r.lon-loc.lon)<0.01));
   recents.unshift(loc);
-  if(recents.length>5)recents.pop();
+  if(recents.length>3)recents.pop();
   localStorage.setItem('cirrusRecent',JSON.stringify(recents));
 }
 function showRecentSearches(){
