@@ -1057,6 +1057,41 @@ function render(){
     </div>
     ${buildWearCard(c,daily,hourly,now)}
     ${buildPrecipTimeline(hourly,now)}
+    ${buildTopHourly(hourly,daily,now)}
+    <div class="sun-bar glass">
+      <div class="sun-item">
+        <div class="sun-icon">&#127749;</div>
+        <div class="sun-label">Sunrise</div>
+        <div class="sun-time">${formatTime(daily.sunrise[0])}</div>
+      </div>
+      <div class="sun-mid">
+        <div class="sun-label">Daylight</div>
+        <div class="sun-time">${daylightDuration(daily.sunrise[0],daily.sunset[0])}</div>
+        <div class="sun-moon">${getMoonPhase(now).emoji} ${getMoonPhase(now).name}</div>
+      </div>
+      <div class="sun-item">
+        <div class="sun-icon">&#127751;</div>
+        <div class="sun-label">Sunset</div>
+        <div class="sun-time">${formatTime(daily.sunset[0])}</div>
+      </div>
+    </div>
+    <div class="wind-card glass">
+      <div class="compass">
+        <div class="compass-ring">
+          <span class="compass-label n">N</span>
+          <span class="compass-label s">S</span>
+          <span class="compass-label e">E</span>
+          <span class="compass-label w">W</span>
+          <div class="compass-needle" style="transform:rotate(${c.wind_direction_10m}deg)"></div>
+          <div class="compass-dot"></div>
+        </div>
+      </div>
+      <div class="wind-details">
+        <div class="wd-row"><span class="wd-label">Speed</span><span class="wd-value">${windSpeed(c.wind_speed_10m)} ${windUnit()}</span></div>
+        <div class="wd-row"><span class="wd-label">Gusts</span><span class="wd-value">${windSpeed(c.wind_gusts_10m)} ${windUnit()}</span></div>
+        <div class="wd-row"><span class="wd-label">Direction</span><span class="wd-value">${dirStr(c.wind_direction_10m)} (${c.wind_direction_10m}&deg;)</span></div>
+      </div>
+    </div>
     <div class="forecast-section">
       <div class="forecast-title">5-Day Forecast</div>
       ${daily.time.map((t,i)=>{
@@ -1100,26 +1135,7 @@ function render(){
       }).join('')}
     </div>
     <div id="detailsAnchor"></div>
-    ${buildTopHourly(hourly,daily,now)}
-    <div id="aqiCard" class="aqi-card glass"></div>
     ${buildSparkline(hourly,daily,now)}
-    <div class="sun-bar glass">
-      <div class="sun-item">
-        <div class="sun-icon">&#127749;</div>
-        <div class="sun-label">Sunrise</div>
-        <div class="sun-time">${formatTime(daily.sunrise[0])}</div>
-      </div>
-      <div class="sun-mid">
-        <div class="sun-label">Daylight</div>
-        <div class="sun-time">${daylightDuration(daily.sunrise[0],daily.sunset[0])}</div>
-        <div class="sun-moon">${getMoonPhase(now).emoji} ${getMoonPhase(now).name}</div>
-      </div>
-      <div class="sun-item">
-        <div class="sun-icon">&#127751;</div>
-        <div class="sun-label">Sunset</div>
-        <div class="sun-time">${formatTime(daily.sunset[0])}</div>
-      </div>
-    </div>
     <div class="detail-grid">
       <div class="detail-card glass">
         <div class="label">Humidity</div>
@@ -1151,23 +1167,7 @@ function render(){
         <div class="value" style="font-size:18px">${visUnit(visibility)}</div>
       </div>
     </div>
-    <div class="wind-card glass">
-      <div class="compass">
-        <div class="compass-ring">
-          <span class="compass-label n">N</span>
-          <span class="compass-label s">S</span>
-          <span class="compass-label e">E</span>
-          <span class="compass-label w">W</span>
-          <div class="compass-needle" style="transform:rotate(${c.wind_direction_10m}deg)"></div>
-          <div class="compass-dot"></div>
-        </div>
-      </div>
-      <div class="wind-details">
-        <div class="wd-row"><span class="wd-label">Speed</span><span class="wd-value">${windSpeed(c.wind_speed_10m)} ${windUnit()}</span></div>
-        <div class="wd-row"><span class="wd-label">Gusts</span><span class="wd-value">${windSpeed(c.wind_gusts_10m)} ${windUnit()}</span></div>
-        <div class="wd-row"><span class="wd-label">Direction</span><span class="wd-value">${dirStr(c.wind_direction_10m)} (${c.wind_direction_10m}&deg;)</span></div>
-      </div>
-    </div>
+    <div id="aqiCard" class="aqi-card glass"></div>
     <div class="refresh-bar">Auto-refreshes every 10 min &middot; Updated ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
   `;
   $('#content').innerHTML=html;
