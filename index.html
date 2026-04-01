@@ -203,6 +203,35 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .detail-card .value{font-size:22px;font-weight:700}
 .detail-card .sub{font-size:12px;color:var(--text-tertiary);margin-top:2px}
 
+/* Hero icon animations */
+@keyframes heroSunPulse{0%,100%{transform:scale(1) rotate(0deg)}50%{transform:scale(1.08) rotate(6deg)}}
+@keyframes heroRainBounce{0%,100%{transform:translateY(0)}45%{transform:translateY(-5px)}75%{transform:translateY(2px)}}
+@keyframes heroSnowFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-7px) rotate(12deg)}}
+@keyframes heroCloudDrift{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+@keyframes heroStormPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.hero-icon.anim-sun{animation:heroSunPulse 7s ease-in-out infinite}
+.hero-icon.anim-rain{animation:heroRainBounce 2.2s ease-in-out infinite}
+.hero-icon.anim-snow{animation:heroSnowFloat 3s ease-in-out infinite}
+.hero-icon.anim-cloud{animation:heroCloudDrift 5s ease-in-out infinite}
+.hero-icon.anim-storm{animation:heroStormPulse 1.6s ease-in-out infinite}
+
+/* Top hourly strip */
+.top-hourly-card{margin-bottom:16px;overflow:hidden}
+.top-hourly-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding:14px 20px 0}
+
+/* Air quality card */
+.aqi-card{padding:16px 20px;margin-bottom:16px}
+.aqi-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.aqi-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px}
+.aqi-badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;color:#fff}
+.aqi-bar-wrap{width:100%;height:6px;border-radius:3px;background:linear-gradient(to right,#22c55e 0%,#22c55e 17%,#facc15 33%,#f97316 50%,#dc2626 67%,#9333ea 83%,#7f1d1d 100%);position:relative;margin-bottom:8px}
+.aqi-cursor{position:absolute;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,0.25)}
+.aqi-desc{font-size:13px;font-weight:500;color:var(--text)}
+
+/* Share button */
+.btn-share{background:none;border:none;cursor:pointer;padding:4px;color:var(--text-secondary);transition:transform 0.2s,color 0.2s;-webkit-tap-highlight-color:transparent;display:flex;align-items:center}
+.btn-share:active{transform:scale(1.3)}
+
 /* What to wear card */
 .wear-card{padding:16px 20px;margin-bottom:16px}
 .wear-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px}
@@ -536,7 +565,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 <script>
 const WMO_CODES={0:{desc:'Clear Sky',icon:'&#9728;&#65039;',night:'&#127769;'},1:{desc:'Mainly Clear',icon:'&#127780;&#65039;',night:'&#127769;'},2:{desc:'Partly Cloudy',icon:'&#9925;',night:'&#9925;'},3:{desc:'Overcast',icon:'&#9729;&#65039;',night:'&#9729;&#65039;'},45:{desc:'Fog',icon:'&#127787;&#65039;',night:'&#127787;&#65039;'},48:{desc:'Depositing Rime Fog',icon:'&#127787;&#65039;',night:'&#127787;&#65039;'},51:{desc:'Light Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},53:{desc:'Moderate Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},55:{desc:'Dense Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},56:{desc:'Freezing Drizzle',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},57:{desc:'Heavy Freezing Drizzle',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},61:{desc:'Slight Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},63:{desc:'Moderate Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},65:{desc:'Heavy Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},66:{desc:'Freezing Rain',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},67:{desc:'Heavy Freezing Rain',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},71:{desc:'Slight Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},73:{desc:'Moderate Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},75:{desc:'Heavy Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},77:{desc:'Snow Grains',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},80:{desc:'Slight Showers',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},81:{desc:'Moderate Showers',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},82:{desc:'Violent Showers',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},85:{desc:'Slight Snow Showers',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},86:{desc:'Heavy Snow Showers',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},95:{desc:'Thunderstorm',icon:'&#9889;',night:'&#9889;'},96:{desc:'Thunderstorm with Hail',icon:'&#9889;',night:'&#9889;'},99:{desc:'Thunderstorm Heavy Hail',icon:'&#9889;',night:'&#9889;'}};
 
-let state={lat:null,lon:null,name:'',region:'',country:'',dark:false,unit:'F',data:null,openDay:0,refreshTimer:null,activeAlerts:[]};
+let state={lat:null,lon:null,name:'',region:'',country:'',dark:false,unit:'F',data:null,openDay:0,refreshTimer:null,activeAlerts:[],airQuality:null};
 
 const $=s=>document.querySelector(s);
 const $$=s=>document.querySelectorAll(s);
@@ -954,6 +983,7 @@ async function fetchWeather(){
     render();
     updateGradient();
     fetchAlerts();
+    fetchAirQuality();
     $('#mobileNav').style.display='';
     renderSavedBar();
     // Animate hero temperature
@@ -992,13 +1022,16 @@ function render(){
   const html=`
     <div class="location-bar">
       <div><h2>${state.name}</h2><p>${state.region}</p></div>
-      <button class="btn-save ${isSaved()?'saved':''}" id="btnSave" onclick="toggleSaveLocation()" title="Save location">${isSaved()?'★':'☆'}</button>
+      <div style="display:flex;align-items:center;gap:4px">
+        <button class="btn-share" onclick="shareWeather()" title="Share"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>
+        <button class="btn-save ${isSaved()?'saved':''}" id="btnSave" onclick="toggleSaveLocation()" title="Save location">${isSaved()?'★':'☆'}</button>
+      </div>
     </div>
     <div id="alertBanner" style="display:none"></div>
     <div class="desktop-layout">
       <div class="left-panel">
         <div class="hero">
-          <div class="hero-icon">${wi.icon}</div>
+          <div class="hero-icon ${getHeroAnimClass(c.weather_code)}">${wi.icon}</div>
           <div class="hero-temp" id="heroTemp">${formatTemp(c.temperature_2m)}&deg;</div>
           <div class="hero-desc">${wi.desc}</div>
           <div class="hero-hilo">H:${formatTemp(daily.temperature_2m_max[0])}&deg; L:${formatTemp(daily.temperature_2m_min[0])}&deg;</div>
@@ -1085,6 +1118,8 @@ function render(){
         </div>
       </div>
     </div>
+    ${buildTopHourly(hourly,daily,now)}
+    <div id="aqiCard" class="aqi-card glass"></div>
     <div class="forecast-section">
       <div class="forecast-title">5-Day Forecast</div>
       ${daily.time.map((t,i)=>{
@@ -1131,6 +1166,7 @@ function render(){
   `;
   $('#content').innerHTML=html;
   _updateSummaryCard();
+  _updateAqiCard();
 
   // Scroll to top, then scroll today's hourly to current hour (horizontally only)
   window.scrollTo(0,0);
@@ -1171,6 +1207,118 @@ function rainNextHour(hourly,now){
   if(nextPrecip>=30)return{icon:'&#127782;&#65039;',text:nextPrecip+'% chance'};
   if(nextPrecip>0)return{icon:'&#128167;',text:nextPrecip+'% unlikely'};
   return{icon:'&#10003;',text:'All clear'};
+}
+
+function getHeroAnimClass(code){
+  if([0,1].includes(code))return'anim-sun';
+  if([2,3,45,48].includes(code))return'anim-cloud';
+  if([51,53,55,61,63,65,80,81,82].includes(code))return'anim-rain';
+  if([71,73,75,77,85,86].includes(code))return'anim-snow';
+  if([95,96,99].includes(code))return'anim-storm';
+  return'';
+}
+
+function buildTopHourly(hourly,daily,now){
+  let startIdx=-1;
+  const nowMs=now.getTime();
+  for(let i=0;i<hourly.time.length;i++){
+    if(new Date(hourly.time[i]).getTime()>=nowMs-1800000){startIdx=i;break;}
+  }
+  if(startIdx===-1)return'';
+  const items=[];
+  for(let i=startIdx;i<Math.min(startIdx+25,hourly.time.length);i++){
+    const t=new Date(hourly.time[i]);
+    const isNow=i===startIdx;
+    const dayIdx=daily.time.indexOf(hourly.time[i].split('T')[0]);
+    const sr=dayIdx>=0?daily.sunrise[dayIdx]:daily.sunrise[0];
+    const ss=dayIdx>=0?daily.sunset[dayIdx]:daily.sunset[0];
+    const hNight=isNight(t,sr,ss);
+    const hw=getWeatherInfo(hourly.weather_code[i],hNight);
+    const precip=hourly.precipitation_probability[i]||0;
+    items.push(`<div class="hour-item${isNow?' now':''}">
+      <div class="h-time">${isNow?'Now':fmtSparkHour(t.getHours())}</div>
+      <div class="h-icon">${hw.icon}</div>
+      <div class="h-temp">${formatTemp(hourly.temperature_2m[i])}&deg;</div>
+      ${precip>0?`<div class="h-precip">${precip}%</div>`:''}
+      <div class="h-wind">${windSpeed(hourly.wind_speed_10m[i])} ${windUnit()}</div>
+    </div>`);
+  }
+  return`<div class="top-hourly-card glass"><div class="top-hourly-label">Next 24 Hours</div><div class="hourly-scroll" style="padding:10px 14px 14px">${items.join('')}</div></div>`;
+}
+
+function aqiInfo(aqi){
+  if(aqi==null)return null;
+  if(aqi<=50)return{label:'Good',color:'#22c55e',pct:aqi/300*100};
+  if(aqi<=100)return{label:'Moderate',color:'#facc15',pct:aqi/300*100};
+  if(aqi<=150)return{label:'Sensitive Groups',color:'#f97316',pct:aqi/300*100};
+  if(aqi<=200)return{label:'Unhealthy',color:'#dc2626',pct:aqi/300*100};
+  if(aqi<=300)return{label:'Very Unhealthy',color:'#9333ea',pct:aqi/300*100};
+  return{label:'Hazardous',color:'#7f1d1d',pct:100};
+}
+
+async function fetchAirQuality(){
+  if(state.lat===null)return;
+  try{
+    const r=await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${state.lat}&longitude=${state.lon}&current=us_aqi,pm2_5&timezone=auto`);
+    if(!r.ok)return;
+    const d=await r.json();
+    state.airQuality=d.current||null;
+    _updateAqiCard();
+  }catch(e){}
+}
+
+function _updateAqiCard(){
+  const card=document.getElementById('aqiCard');
+  if(!card||!state.airQuality)return;
+  const aqi=state.airQuality.us_aqi;
+  const info=aqiInfo(aqi);
+  if(!info)return;
+  card.innerHTML=`<div class="aqi-header"><div class="aqi-label">Air Quality</div><div class="aqi-badge" style="background:${info.color}">AQI ${aqi}</div></div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="aqi-desc">${info.label}</div>`;
+}
+
+function shareWeather(){
+  if(!state.data)return;
+  const c=state.data.current;const daily=state.data.daily;
+  const wi=getWeatherInfo(c.weather_code,!c.is_day);
+  const W=800,H=420,dpr=Math.min(window.devicePixelRatio||1,2);
+  const canvas=document.createElement('canvas');
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  const dark=state.dark;
+  const grad=ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,dark?'#141420':'#ddeeff');
+  grad.addColorStop(1,dark?'#1a1a32':'#c8dff5');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(58,143,212,0.08)';
+  ctx.beginPath();ctx.arc(W-60,80,180,0,Math.PI*2);ctx.fill();
+  const text=dark?'#ffffff':'#0f172a';
+  const sub=dark?'rgba(255,255,255,0.45)':'rgba(0,0,0,0.38)';
+  ctx.fillStyle=sub;ctx.font='600 12px -apple-system,sans-serif';
+  ctx.fillText('CIRRUS WEATHER',40,38);
+  ctx.fillStyle=text;ctx.font='700 26px -apple-system,sans-serif';
+  ctx.fillText(state.name,40,82);
+  ctx.fillStyle=sub;ctx.font='500 15px -apple-system,sans-serif';
+  ctx.fillText(state.region,40,106);
+  ctx.font='500 88px -apple-system,sans-serif';
+  ctx.fillText(wi.icon,W-170,200);
+  ctx.fillStyle=text;ctx.font='700 108px -apple-system,sans-serif';
+  ctx.fillText(`${formatTemp(c.temperature_2m)}\u00b0`,36,262);
+  ctx.font='600 20px -apple-system,sans-serif';
+  ctx.fillText(wi.desc,40,308);
+  ctx.fillStyle=sub;ctx.font='500 14px -apple-system,sans-serif';
+  ctx.fillText(`Feels like ${formatTemp(c.apparent_temperature)}\u00b0  \u00b7  ${c.relative_humidity_2m}% humidity  \u00b7  ${windSpeed(c.wind_speed_10m)} ${windUnit()} wind`,40,348);
+  ctx.fillStyle='#3a8fd4';ctx.fillRect(0,H-5,W,5);
+  canvas.toBlob(blob=>{
+    const file=new File([blob],`cirrus-${state.name}.png`,{type:'image/png'});
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:`Weather in ${state.name}`}).catch(()=>{});
+    }else{
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=url;
+      a.download=`cirrus-${(state.name||'weather').replace(/\s+/g,'-').toLowerCase()}.png`;
+      a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }
+  },'image/png');
 }
 
 function buildWearCard(c,daily,hourly,now){
