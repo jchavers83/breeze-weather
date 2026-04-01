@@ -217,7 +217,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Top hourly strip */
 .top-hourly-card{margin-bottom:16px;overflow:hidden}
-.top-hourly-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding:14px 20px 0}
+.top-hourly-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;padding:12px 14px 0}
 
 /* Air quality card — compact detail card */
 .aqi-bar-wrap{margin:6px 0 4px;width:100%;height:5px;border-radius:3px;background:linear-gradient(to right,#22c55e 0%,#22c55e 17%,#facc15 33%,#f97316 50%,#dc2626 67%,#9333ea 83%,#7f1d1d 100%);position:relative}
@@ -525,19 +525,21 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
         <div class="preview-cards">
 
           <div class="preview-card glass">
-            <div style="display:flex;align-items:center;gap:12px">
-              <div style="font-size:50px;line-height:1;flex-shrink:0">&#9728;&#65039;</div>
-              <div class="mock-temp" style="flex-shrink:0">72&deg;</div>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:15px;font-weight:700;color:var(--text)">Clear Sky</div>
-                <div style="font-size:12px;color:var(--text-secondary);font-weight:500;margin-top:2px">Houston, TX</div>
-                <div style="font-size:12px;color:var(--text-tertiary);font-weight:500;margin-top:2px">H:78&deg;&nbsp;&nbsp;L:54&deg;</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:center">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="font-size:44px;line-height:1;flex-shrink:0">&#9728;&#65039;</div>
+                <div>
+                  <div class="mock-temp" style="line-height:1;margin-bottom:5px">72&deg;</div>
+                  <div style="font-size:13px;font-weight:700;color:var(--text)">Clear Sky</div>
+                  <div style="font-size:11px;color:var(--text-secondary);font-weight:500;margin-top:2px">Houston, TX</div>
+                  <div style="font-size:11px;color:var(--text-tertiary);font-weight:500;margin-top:1px">H:78&deg;&nbsp;&nbsp;L:54&deg;</div>
+                </div>
               </div>
-              <div style="flex-shrink:0;border-left:1px solid rgba(128,128,128,0.15);padding-left:14px;display:flex;flex-direction:column;gap:5px;text-align:left">
-                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">Feels 70&deg;</div>
+              <div style="border-left:1px solid rgba(128,128,128,0.15);padding-left:14px;display:flex;flex-direction:column;gap:6px">
+                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">&#127777;&#65039; Feels 70&deg;</div>
                 <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">&#128167; 45% humidity</div>
                 <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">&#127788; 8 mph wind</div>
-                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">UV Index 5</div>
+                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">&#128526; UV 5 &middot; Moderate</div>
               </div>
             </div>
           </div>
@@ -1240,7 +1242,7 @@ function render(){
         <div class="label">UV Index</div>
         <div class="value">${c.is_day?daily.uv_index_max[0].toFixed(0):'0'}</div>
         <div class="uv-bar-wrap"><div class="uv-cursor" style="left:${c.is_day?Math.min(daily.uv_index_max[0]/12*100,100):0}%"></div></div>
-        <div class="sub">${c.is_day?uvLabel(daily.uv_index_max[0]):'None \u00b7 Nighttime'}</div>
+        <div class="sub">${c.is_day?(daily.uv_index_max[0]<=3?'\u{1F324}\uFE0F':daily.uv_index_max[0]<=5?'\u{1F60E}':'\u{1F9F4}')+' '+uvLabel(daily.uv_index_max[0]):'None \u00b7 Nighttime'}</div>
       </div>
       <div id="aqiCard" class="detail-card glass"></div>
       <div class="detail-card glass">
@@ -1337,7 +1339,7 @@ function buildTopHourly(hourly,daily,now){
       <div class="h-wind">${windSpeed(hourly.wind_speed_10m[i])} ${windUnit()}</div>
     </div>`);
   }
-  return`<div class="top-hourly-card glass"><div class="top-hourly-label">Next 24 Hours</div><div class="hourly-scroll" style="padding:8px 14px 12px">${items.join('')}</div></div>`;
+  return`<div class="top-hourly-card glass"><div class="top-hourly-label">Next 24 Hours</div><div class="hourly-scroll" style="padding:6px 14px 10px">${items.join('')}</div></div>`;
 }
 
 function aqiInfo(aqi){
