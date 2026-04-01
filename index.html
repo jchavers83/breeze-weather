@@ -380,6 +380,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .alert-watch{background:rgba(234,88,12,0.10);border:2px solid rgba(234,88,12,0.50)}
 .alert-advisory{background:rgba(202,138,4,0.08);border:2px solid rgba(202,138,4,0.38)}
 @keyframes alertPulse{0%,100%{border-color:rgba(220,38,38,0.55)}50%{border-color:rgba(220,38,38,1);box-shadow:0 0 16px rgba(220,38,38,0.35)}}
+.summary-card.severe-warning{background:rgba(220,38,38,0.10);border:2px solid rgba(220,38,38,0.50)}
+.summary-card.severe-warning .summary-text{color:#dc2626}
+.summary-card.severe-watch{background:rgba(234,88,12,0.08);border:2px solid rgba(234,88,12,0.45)}
+.summary-card.severe-watch .summary-text{color:#ea580c}
 .alert-main{padding:14px 16px}
 .alert-top-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
 .alert-badge-icon{font-size:22px;line-height:1;flex-shrink:0}
@@ -513,7 +517,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 <script>
 const WMO_CODES={0:{desc:'Clear Sky',icon:'&#9728;&#65039;',night:'&#127769;'},1:{desc:'Mainly Clear',icon:'&#127780;&#65039;',night:'&#127769;'},2:{desc:'Partly Cloudy',icon:'&#9925;',night:'&#9925;'},3:{desc:'Overcast',icon:'&#9729;&#65039;',night:'&#9729;&#65039;'},45:{desc:'Fog',icon:'&#127787;&#65039;',night:'&#127787;&#65039;'},48:{desc:'Depositing Rime Fog',icon:'&#127787;&#65039;',night:'&#127787;&#65039;'},51:{desc:'Light Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},53:{desc:'Moderate Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},55:{desc:'Dense Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},56:{desc:'Freezing Drizzle',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},57:{desc:'Heavy Freezing Drizzle',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},61:{desc:'Slight Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},63:{desc:'Moderate Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},65:{desc:'Heavy Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},66:{desc:'Freezing Rain',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},67:{desc:'Heavy Freezing Rain',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},71:{desc:'Slight Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},73:{desc:'Moderate Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},75:{desc:'Heavy Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},77:{desc:'Snow Grains',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},80:{desc:'Slight Showers',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},81:{desc:'Moderate Showers',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},82:{desc:'Violent Showers',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},85:{desc:'Slight Snow Showers',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},86:{desc:'Heavy Snow Showers',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},95:{desc:'Thunderstorm',icon:'&#9889;',night:'&#9889;'},96:{desc:'Thunderstorm with Hail',icon:'&#9889;',night:'&#9889;'},99:{desc:'Thunderstorm Heavy Hail',icon:'&#9889;',night:'&#9889;'}};
 
-let state={lat:null,lon:null,name:'',region:'',country:'',dark:false,unit:'F',data:null,openDay:0,refreshTimer:null};
+let state={lat:null,lon:null,name:'',region:'',country:'',dark:false,unit:'F',data:null,openDay:0,refreshTimer:null,activeAlerts:[]};
 
 const $=s=>document.querySelector(s);
 const $$=s=>document.querySelectorAll(s);
@@ -715,6 +719,77 @@ const ALERT_CFG={
   'Special Weather Statement':{icon:'\u26A0\uFE0F',cls:'alert-advisory',p:24},
 };
 
+// ── Severe alert summary card override ──────────────────────────────────────
+const SEVERE_OVERRIDE_STACK=[
+  'Tornado Warning','Hurricane Warning','Tornado Watch','Hurricane Watch',
+  'Severe Thunderstorm Warning','Flash Flood Warning','Tropical Storm Warning',
+  'Severe Thunderstorm Watch','Flash Flood Watch','Tropical Storm Watch'
+];
+const _SEVERE_WARNINGS=new Set(['Tornado Warning','Hurricane Warning','Severe Thunderstorm Warning','Flash Flood Warning','Tropical Storm Warning']);
+
+function _parseStormName(alerts,alertType){
+  const f=alerts.find(a=>a.properties&&a.properties.event===alertType);
+  if(!f)return null;
+  const text=(f.properties.headline||'')+' '+(f.properties.description||'');
+  const m=text.match(/(?:Hurricane|Tropical Storm)\s+([A-Z][a-z]+)/);
+  return m?m[1]:null;
+}
+
+function getSevereAlertOverride(){
+  const alerts=state.activeAlerts||[];
+  if(!alerts.length)return null;
+  const eventNames=new Set(alerts.map(f=>f.properties&&f.properties.event).filter(Boolean));
+  for(const alertType of SEVERE_OVERRIDE_STACK){
+    if(!eventNames.has(alertType))continue;
+    const colorClass=_SEVERE_WARNINGS.has(alertType)?'severe-warning':'severe-watch';
+    let text='';
+    if(alertType==='Tornado Warning'){
+      text='A Tornado Warning is in effect for your area. Take shelter now in an interior room on the lowest floor of a sturdy building. Stay away from windows.';
+    }else if(alertType==='Hurricane Warning'){
+      const n=_parseStormName(alerts,alertType);
+      text=n?`A Hurricane Warning is in effect for your area. ${n} may bring life-threatening conditions. Follow instructions from local officials. Complete preparations now and evacuate if ordered.`:'A Hurricane Warning is in effect for your area. Life-threatening conditions are expected. Follow instructions from local officials. Complete preparations now and evacuate if ordered.';
+    }else if(alertType==='Tornado Watch'){
+      text='A Tornado Watch is in effect for your area. Conditions are favorable for tornado development. Monitor local alerts and be ready to take shelter immediately.';
+    }else if(alertType==='Hurricane Watch'){
+      const n=_parseStormName(alerts,alertType);
+      text=n?`A Hurricane Watch is in effect for your area. ${n} could affect this region within 48 hours. Follow local officials and media. Begin preparations now.`:'A Hurricane Watch is in effect for your area. Hurricane conditions could affect this region within 48 hours. Follow local officials and media. Begin preparations now.';
+    }else if(alertType==='Severe Thunderstorm Warning'){
+      text='A Severe Thunderstorm Warning is in effect for your area. Expect damaging winds, large hail, and dangerous lightning. Stay indoors and away from windows.';
+    }else if(alertType==='Flash Flood Warning'){
+      text='A Flash Flood Warning is in effect for your area. Do not drive through flooded roads. Move to higher ground immediately if necessary.';
+    }else if(alertType==='Tropical Storm Warning'){
+      const n=_parseStormName(alerts,alertType);
+      text=n?`A Tropical Storm Warning is in effect for your area. ${n} is expected to bring tropical storm conditions. Secure loose objects, stay indoors, and monitor local officials and media.`:'A Tropical Storm Warning is in effect for your area. Tropical storm conditions are expected. Secure loose objects, stay indoors, and monitor local officials and media.';
+    }else if(alertType==='Severe Thunderstorm Watch'){
+      text='A Severe Thunderstorm Watch is in effect for your area. Conditions are favorable for severe thunderstorms. Stay weather-aware and be prepared to take shelter quickly.';
+    }else if(alertType==='Flash Flood Watch'){
+      text='A Flash Flood Watch is in effect for your area. Heavy rainfall may cause flooding. Avoid low-lying areas and be prepared to move quickly if conditions worsen.';
+    }else if(alertType==='Tropical Storm Watch'){
+      const n=_parseStormName(alerts,alertType);
+      text=n?`A Tropical Storm Watch is in effect for your area. ${n} could bring tropical storm conditions within 48 hours. Monitor local officials and begin preparing now.`:'A Tropical Storm Watch is in effect for your area. Tropical storm conditions could affect this region within 48 hours. Monitor local officials and begin preparing now.';
+    }
+    return{text,colorClass};
+  }
+  return null;
+}
+
+function _updateSummaryCard(){
+  const card=document.getElementById('summaryCard');
+  if(!card||!state.data)return;
+  const override=getSevereAlertOverride();
+  if(override){
+    card.className=`summary-card glass ${override.colorClass}`;
+    card.innerHTML=`<div class="summary-label">Weather Alert</div><div class="summary-text">${override.text}</div>`;
+    return;
+  }
+  const d=state.data;
+  const now=new Date();
+  const summary=generateSummary(d.hourly,d.daily,d.current.weather_code,now.getHours(),d.daily.sunrise[0],d.daily.sunset[0]);
+  const vibeTag=getVibeTag(d.hourly,d.daily,d.current.weather_code,now,d.daily.sunrise[0],d.daily.sunset[0]);
+  card.className='summary-card glass';
+  card.innerHTML=`<div class="summary-label">Next 12 Hours</div><div class="vibe-tag">${vibeTag}</div><div class="summary-text">${summary}</div>`;
+}
+
 function _alertCfg(event,severity){
   if(ALERT_CFG[event])return ALERT_CFG[event];
   // Fallback by NWS severity field
@@ -736,7 +811,7 @@ function _toggleAlert(){
 function _renderAlerts(features){
   const banner=document.getElementById('alertBanner');
   if(!banner)return;
-  if(!features||!features.length){banner.style.display='none';return;}
+  if(!features||!features.length){state.activeAlerts=[];_updateSummaryCard();banner.style.display='none';return;}
 
   // Sort by priority
   features.sort((a,b)=>{
@@ -745,6 +820,8 @@ function _renderAlerts(features){
     return pa-pb;
   });
 
+  state.activeAlerts=features;
+  _updateSummaryCard();
   const top=features[0].properties;
   const cfg=_alertCfg(top.event,top.severity);
   const extra=features.length>1?features.length-1:0;
@@ -863,7 +940,7 @@ function render(){
           <div class="hero-hilo">H:${formatTemp(daily.temperature_2m_max[0])}&deg; L:${formatTemp(daily.temperature_2m_min[0])}&deg;</div>
           <div class="hero-feels">Feels like ${formatTemp(c.apparent_temperature)}&deg;${state.unit}</div>
         </div>
-        <div class="summary-card glass">
+        <div class="summary-card glass" id="summaryCard">
           <div class="summary-label">Next 12 Hours</div>
           <div class="vibe-tag">${vibeTag}</div>
           <div class="summary-text">${summary}</div>
@@ -980,6 +1057,7 @@ function render(){
     <div class="refresh-bar">Auto-refreshes every 10 min &middot; Updated ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
   `;
   $('#content').innerHTML=html;
+  _updateSummaryCard();
 
   // Scroll to top, then scroll today's hourly to current hour (horizontally only)
   window.scrollTo(0,0);
