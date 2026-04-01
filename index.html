@@ -826,10 +826,10 @@ $$('.nav-tab').forEach(btn=>{
       $('#content').style.display='block';
       if(tab==='forecast'){
         const fs=$('.forecast-section');
-        if(fs)fs.scrollIntoView({behavior:'smooth',block:'start'});
+        if(fs){const hdr=$('.header');const offset=(hdr?hdr.offsetHeight:60)+12;window.scrollTo({top:fs.getBoundingClientRect().top+window.scrollY-offset,behavior:'smooth'});}
       }else if(tab==='details'){
         const da=document.getElementById('detailsAnchor');
-        if(da)da.scrollIntoView({behavior:'smooth',block:'start'});
+        if(da){const hdr=$('.header');const offset=(hdr?hdr.offsetHeight:60)+12;window.scrollTo({top:da.getBoundingClientRect().top+window.scrollY-offset,behavior:'smooth'});}
       }else{
         window.scrollTo({top:0,behavior:'smooth'});
       }
