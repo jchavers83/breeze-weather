@@ -1571,7 +1571,9 @@ function buildWearCard(c,daily,hourly,now){
       if((hourly.precipitation_probability[i]||0)>=50){extras.push('umbrella');extraEmojis.push('☂️');break;}
     }
   }
-  if(daily.uv_index_max[0]>=6&&c.is_day===1){extras.push('sunscreen');extraEmojis.push('🕶️');}
+  const _sunsetFrac=(()=>{const p=(daily.sunset[0].split('T')[1]||'');const[h,m]=p.split(':');return parseInt(h)+(parseInt(m)||0)/60;})();
+  const _hrsToSunset=Math.max(0,_sunsetFrac-now.getHours()-now.getMinutes()/60);
+  if(daily.uv_index_max[0]>=6&&c.is_day===1&&_hrsToSunset>2){extras.push('sunscreen');extraEmojis.push('🕶️');}
   if(c.wind_speed_10m>32){extras.push('windproof layer');extraEmojis.push('💨');}
   let sentence=clothing;
   if(extras.length===1)sentence+=` — bring a ${extras[0]}`;
@@ -2096,7 +2098,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
       else if(voice===1)parts.push(`Temps dip below freezing \u2014 full winter gear today, no shortcuts.`);
       else if(voice===2)parts.push(`It goes below freezing today. A hoodie is not a coat. A hoodie has never been a coat.`);
       else parts.push(`Below freezing. Dress for it.`);
-    }else if(isDaytime&&hoursUntilSunset>1&&uvMax>=7){
+    }else if(isDaytime&&hoursUntilSunset>2&&uvMax>=7){
       if(voice===0)parts.push(`UV is ${uvMax>=9?'extreme':'high'} today. Sunscreen.`);
       else if(voice===1)parts.push(`${uvMax>=9?'Extreme':'High'} UV today \u2014 worth the 30 seconds it takes to put on sunscreen.`);
       else if(voice===2)parts.push(`UV is ${uvMax>=9?'extreme':'high'} today. Your future skin will have opinions about this.`);
