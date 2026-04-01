@@ -229,7 +229,6 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .aqi-desc{font-size:13px;font-weight:500;color:var(--text)}
 
 /* Share button */
-.btn-share{background:none;border:none;cursor:pointer;padding:4px;color:var(--text-secondary);transition:transform 0.2s,color 0.2s;-webkit-tap-highlight-color:transparent;display:flex;align-items:center}
 .btn-share:active{transform:scale(1.3)}
 
 /* What to wear card */
@@ -1270,7 +1269,7 @@ function _updateAqiCard(){
   const aqi=state.airQuality.us_aqi;
   const info=aqiInfo(aqi);
   if(!info)return;
-  card.innerHTML=`<div class="aqi-header"><div class="aqi-label">Air Quality</div><div class="aqi-badge" style="background:${info.color}">${info.label}</div></div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div>`;
+  card.innerHTML=`<div class="aqi-header"><div class="aqi-label">Air Quality</div><div class="aqi-desc">${info.label}</div></div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div>`;
 }
 
 function shareWeather(){
