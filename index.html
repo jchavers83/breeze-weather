@@ -1273,7 +1273,7 @@ function _updateAqiCard(){
   const info=aqiInfo(aqi);
   if(!info)return;
   const ticks=[1,2,3,4,5,6,7,8,9,10].map(n=>`<span>${n}</span>`).join('');
-  card.innerHTML=`<div class="aqi-header"><div class="aqi-label">Air Quality</div><div class="aqi-desc">${info.label}</div></div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="aqi-ticks">${ticks}</div><div class="aqi-tip">${info.tip}</div>`;
+  card.innerHTML=`<div class="aqi-header"><div class="aqi-label">Air Quality</div></div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="aqi-ticks">${ticks}</div><div class="aqi-tip">${info.tip}</div>`;
 }
 
 function shareWeather(){
