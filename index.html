@@ -229,6 +229,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .aqi-ticks{display:flex;justify-content:space-between;margin-bottom:8px}
 .aqi-ticks span{font-size:10px;font-weight:600;color:var(--text-tertiary);line-height:1;width:18px;text-align:center}
 .aqi-desc{font-size:13px;font-weight:500;color:var(--text)}
+.aqi-tip{font-size:12px;font-weight:500;color:var(--text-secondary);margin-top:2px}
 
 /* Share button */
 .btn-share:active{transform:scale(1.3)}
@@ -1246,12 +1247,12 @@ function buildTopHourly(hourly,daily,now){
 
 function aqiInfo(aqi){
   if(aqi==null)return null;
-  if(aqi<=50)return{label:'Good',color:'#22c55e',pct:aqi/300*100};
-  if(aqi<=100)return{label:'Moderate',color:'#facc15',pct:aqi/300*100};
-  if(aqi<=150)return{label:'Sensitive Groups',color:'#f97316',pct:aqi/300*100};
-  if(aqi<=200)return{label:'Unhealthy',color:'#dc2626',pct:aqi/300*100};
-  if(aqi<=300)return{label:'Very Unhealthy',color:'#9333ea',pct:aqi/300*100};
-  return{label:'Hazardous',color:'#7f1d1d',pct:100};
+  if(aqi<=50)return{label:'Good',color:'#22c55e',pct:aqi/300*100,tip:'Outdoor air is excellent today'};
+  if(aqi<=100)return{label:'Moderate',color:'#facc15',pct:aqi/300*100,tip:'Air quality is acceptable'};
+  if(aqi<=150)return{label:'Sensitive Groups',color:'#f97316',pct:aqi/300*100,tip:'Sensitive groups limit time outside'};
+  if(aqi<=200)return{label:'Unhealthy',color:'#dc2626',pct:aqi/300*100,tip:'Limit extended outdoor activity'};
+  if(aqi<=300)return{label:'Very Unhealthy',color:'#9333ea',pct:aqi/300*100,tip:'Avoid outdoor activity today'};
+  return{label:'Hazardous',color:'#7f1d1d',pct:100,tip:'Stay indoors \u00b7 Wear a mask'};
 }
 
 async function fetchAirQuality(){
@@ -1272,7 +1273,7 @@ function _updateAqiCard(){
   const info=aqiInfo(aqi);
   if(!info)return;
   const ticks=[1,2,3,4,5,6,7,8,9,10].map(n=>`<span>${n}</span>`).join('');
-  card.innerHTML=`<div class="aqi-header"><div class="aqi-label">Air Quality</div><div class="aqi-desc">${info.label}</div></div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="aqi-ticks">${ticks}</div>`;
+  card.innerHTML=`<div class="aqi-header"><div class="aqi-label">Air Quality</div><div class="aqi-desc">${info.label}</div></div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="aqi-ticks">${ticks}</div><div class="aqi-tip">${info.tip}</div>`;
 }
 
 function shareWeather(){
