@@ -207,6 +207,8 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .wear-card{padding:16px 20px;margin-bottom:16px}
 .wear-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px}
 .wear-text{font-size:14px;font-weight:500;color:var(--text);line-height:1.45}
+.wear-quip{font-size:12px;color:var(--text-tertiary);margin-top:5px;font-style:italic;line-height:1.4}
+.wear-emojis{font-size:22px;margin-top:10px;letter-spacing:4px}
 
 /* Precipitation timeline */
 .precip-timeline{padding:16px 20px;margin-bottom:16px}
@@ -1173,30 +1175,57 @@ function rainNextHour(hourly,now){
 
 function buildWearCard(c,daily,hourly,now){
   const feelsF=toF(c.apparent_temperature);
-  let clothing='';
-  if(feelsF<25)clothing='Heavy coat, hat, and gloves';
-  else if(feelsF<35)clothing='Heavy coat';
-  else if(feelsF<45)clothing='Coat';
-  else if(feelsF<55)clothing='Light jacket';
-  else if(feelsF<65)clothing='Light layers';
-  else if(feelsF<75)clothing='T-shirt weather';
-  else if(feelsF<88)clothing='Dress light';
-  else clothing='Stay cool — dress as light as possible';
+  let clothing='',quip='',clothingEmoji='';
+  if(feelsF<25){
+    clothing='Heavy coat, hat, and gloves';
+    quip="You're basically dressing for an arctic expedition. Godspeed.";
+    clothingEmoji='❄️🧥🧤';
+  }else if(feelsF<35){
+    clothing='Heavy coat';
+    quip="The coat is non-negotiable. Your future self will thank you.";
+    clothingEmoji='🥶🧥';
+  }else if(feelsF<45){
+    clothing='Coat';
+    quip="Coat weather. No, really — don't talk yourself out of it.";
+    clothingEmoji='🧥';
+  }else if(feelsF<55){
+    clothing='Light jacket';
+    quip="That light jacket is about to earn its keep.";
+    clothingEmoji='🍂🧥';
+  }else if(feelsF<65){
+    clothing='Light layers';
+    quip="Peak layering season. The good kind of weather problem to have.";
+    clothingEmoji='🌤️👕';
+  }else if(feelsF<75){
+    clothing='T-shirt weather';
+    quip="The sweet spot. Enjoy it — it won't last forever.";
+    clothingEmoji='☀️👕';
+  }else if(feelsF<88){
+    clothing='Dress light';
+    quip="Sun's out. Keep it breezy, keep it easy.";
+    clothingEmoji='🌞🩴';
+  }else{
+    clothing='As little as socially acceptable';
+    quip="It's hot. Just accept it. Hydrate aggressively.";
+    clothingEmoji='🥵🌡️';
+  }
   const extras=[];
+  const extraEmojis=[];
   const nowMs=now.getTime();
   for(let i=0;i<hourly.time.length;i++){
     if(new Date(hourly.time[i]).getTime()>=nowMs&&new Date(hourly.time[i]).getTime()<nowMs+6*3600000){
-      if((hourly.precipitation_probability[i]||0)>=50){extras.push('umbrella');break;}
+      if((hourly.precipitation_probability[i]||0)>=50){extras.push('umbrella');extraEmojis.push('☂️');break;}
     }
   }
-  if(daily.uv_index_max[0]>=6&&c.is_day===1)extras.push('sunscreen');
-  if(c.wind_speed_10m>32)extras.push('windproof layer');
+  if(daily.uv_index_max[0]>=6&&c.is_day===1){extras.push('sunscreen');extraEmojis.push('🕶️');}
+  if(c.wind_speed_10m>32){extras.push('windproof layer');extraEmojis.push('💨');}
   let sentence=clothing;
   if(extras.length===1)sentence+=` — bring a ${extras[0]}`;
   else if(extras.length===2)sentence+=` — bring a ${extras[0]} and ${extras[1]}`;
   else if(extras.length>2)sentence+=` — ${extras.slice(0,-1).join(', ')}, and ${extras[extras.length-1]}`;
   sentence+='.';
-  return`<div class="wear-card glass"><div class="wear-label">What to Wear</div><div class="wear-text">${sentence}</div></div>`;
+  const allEmojis=clothingEmoji+(extraEmojis.length?' '+extraEmojis.join(''):'');
+  return`<div class="wear-card glass"><div class="wear-label">What to Wear</div><div class="wear-text">${sentence}</div><div class="wear-quip">${quip}</div><div class="wear-emojis">${allEmojis}</div></div>`;
 }
 
 function buildPrecipTimeline(hourly,now){
