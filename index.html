@@ -260,6 +260,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .sun-mid{text-align:center}
 .sun-mid .sun-label{font-size:11px;color:var(--text-tertiary);text-transform:uppercase;font-weight:600;letter-spacing:0.3px}
 .sun-mid .sun-time{font-size:16px;font-weight:600;margin-top:4px}
+.sun-mid .sun-moon{font-size:11px;color:var(--text-tertiary);margin-top:5px;font-weight:500}
 
 /* Wind compass */
 .wind-card{display:flex;align-items:center;gap:20px;padding:20px;margin-bottom:16px}
@@ -478,6 +479,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
       <svg id="iconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/></svg>
       <svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
     </button>
+    <button class="btn-icon btn-share" id="btnShareHeader" onclick="shareWeather()" title="Share weather" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>
   </header>
   <div id="savedBar" class="saved-bar" style="display:none"></div>
 
@@ -512,7 +514,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
           <div class="preview-card glass">
             <div class="preview-summary-mock">
               <span class="mock-vibe">&#9728;&#65039; Absolutely perfect out there</span>
-              "72&deg; and clear. Hard to ask for more. Clouds roll in later &mdash; get outside while it's this nice. The kind of day that makes you feel irrationally optimistic. &#9728;&#65039; Roll the windows down."
+              "Rain moving in this evening around 7 PM &mdash; pack an umbrella if you'll be out. Clear and 72&deg; right now. Hard to ask for more. Get outside while it lasts."
             </div>
           </div>
           <div class="preview-card glass">
@@ -1022,10 +1024,7 @@ function render(){
   const html=`
     <div class="location-bar">
       <div><h2>${state.name}</h2><p>${state.region}</p></div>
-      <div style="display:flex;align-items:center;gap:4px">
-        <button class="btn-share" onclick="shareWeather()" title="Share"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>
-        <button class="btn-save ${isSaved()?'saved':''}" id="btnSave" onclick="toggleSaveLocation()" title="Save location">${isSaved()?'★':'☆'}</button>
-      </div>
+      <button class="btn-save ${isSaved()?'saved':''}" id="btnSave" onclick="toggleSaveLocation()" title="Save location">${isSaved()?'★':'☆'}</button>
     </div>
     <div id="alertBanner" style="display:none"></div>
     <div class="desktop-layout">
@@ -1054,16 +1053,12 @@ function render(){
           <div class="sun-mid">
             <div class="sun-label">Daylight</div>
             <div class="sun-time">${daylightDuration(daily.sunrise[0],daily.sunset[0])}</div>
+            <div class="sun-moon">${getMoonPhase(now).emoji} ${getMoonPhase(now).name}</div>
           </div>
           <div class="sun-item">
             <div class="sun-icon">&#127751;</div>
             <div class="sun-label">Sunset</div>
             <div class="sun-time">${formatTime(daily.sunset[0])}</div>
-          </div>
-          <div class="sun-item">
-            <div class="sun-icon">${getMoonPhase(now).emoji}</div>
-            <div class="sun-label">Moon</div>
-            <div class="sun-time" style="font-size:10px">${getMoonPhase(now).name}</div>
           </div>
         </div>
       </div>
@@ -1167,6 +1162,8 @@ function render(){
   $('#content').innerHTML=html;
   _updateSummaryCard();
   _updateAqiCard();
+  const shareBtn=document.getElementById('btnShareHeader');
+  if(shareBtn)shareBtn.style.display='';
 
   // Scroll to top, then scroll today's hourly to current hour (horizontally only)
   window.scrollTo(0,0);
@@ -1373,7 +1370,7 @@ function buildWearCard(c,daily,hourly,now){
   else if(extras.length>2)sentence+=` — ${extras.slice(0,-1).join(', ')}, and ${extras[extras.length-1]}`;
   sentence+='.';
   const allEmojis=clothingEmoji+(extraEmojis.length?' '+extraEmojis.join(''):'');
-  return`<div class="wear-card glass"><div class="wear-label">What to Wear</div><div class="wear-text">${sentence}</div><div class="wear-quip">${quip}</div><div class="wear-emojis">${allEmojis}</div></div>`;
+  return`<div class="wear-card glass"><div class="wear-label">What to Wear</div><div class="wear-text">${sentence}</div><div class="wear-quip">${quip} <span style="font-size:16px;vertical-align:middle">${allEmojis}</span></div></div>`;
 }
 
 function buildPrecipTimeline(hourly,now){
@@ -1652,6 +1649,47 @@ function getHolidaySummary(now,weatherLine){
   return msgs[key]||null;
 }
 
+function getForwardLookLede(hourly,now,sunrise,sunset){
+  const THRESHOLD=40;
+  const nowMs=now.getTime();
+  const hrs=[];
+  for(let i=0;i<hourly.time.length;i++){
+    const t=new Date(hourly.time[i]);
+    const diff=(t-now)/3600000;
+    if(diff>=0&&diff<12)hrs.push({h:t.getHours(),prob:hourly.precipitation_probability[i]||0,code:hourly.weather_code[i]});
+  }
+  if(!hrs.length)return null;
+  function fmtH(h){if(h===0)return'midnight';if(h<12)return h+' AM';if(h===12)return'noon';return(h-12)+' PM';}
+  function period(h){if(h>=2&&h<6)return'overnight';if(h<12)return'this morning';if(h<17)return'this afternoon';if(h<21)return'this evening';return'tonight';}
+  // Storm check
+  const stormH=hrs.find(h=>[95,96,99].includes(h.code));
+  if(stormH)return`Storms expected ${period(stormH.h)} — stay weather-aware.`;
+  // Rain windows
+  const windows=[];let wStart=-1;
+  for(let i=0;i<=hrs.length;i++){
+    const wet=i<hrs.length&&hrs[i].prob>=THRESHOLD;
+    if(wet&&wStart===-1)wStart=i;
+    else if(!wet&&wStart!==-1){windows.push({s:hrs[wStart].h,e:hrs[i-1].h,si:wStart,ei:i-1});wStart=-1;}
+  }
+  if(!windows.length){
+    // Describe the clear window usefully
+    const endH=hrs[hrs.length-1].h;
+    const clearCount=hrs.filter(h=>[0,1].includes(h.code)).length;
+    if(clearCount>=hrs.length*0.6)return`Clear skies through ${period(endH)}.`;
+    return null; // let the main summary handle unremarkable windows
+  }
+  const w=windows[0];
+  const atStart=w.si===0;const atEnd=w.ei===hrs.length-1;
+  if(atStart&&atEnd)return`Rain likely the next 12 hours — pack an umbrella and plan accordingly.`;
+  if(atStart)return`Rain through ${fmtH(w.e+1<24?w.e+1:w.e)}, then clearing up.`;
+  if(atEnd){
+    const hrs2go=w.s-hrs[0].h;
+    if(hrs2go<=2)return`Rain arriving shortly — grab an umbrella before you head out.`;
+    return`Rain moving in ${period(w.s)}, around ${fmtH(w.s)}. Pack an umbrella if you'll be out.`;
+  }
+  return`Rain expected from ${fmtH(w.s)}\u2013${fmtH(w.e+1<24?w.e+1:w.e)}.${windows.length>1?' Another round later.':''}`;
+}
+
 function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
   function fracHour(s){if(!s)return null;const p=(s.split('T')[1]||'');const[h,m]=p.split(':');return parseInt(h)+(parseInt(m)||0)/60;}
   const sunriseH=fracHour(sunrise)||6;
@@ -1905,7 +1943,10 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
   const _wl=parts[0].replace(/^(?:[\u2600-\u27BF]|[\uD800-\uDBFF][\uDC00-\uDFFF])[\uFE0F\u20E3]?\s*/,'');
   const _hm=getHolidaySummary(now,_wl);
   if(_hm)return _hm;
-  return parts.slice(0,4).map(s=>s.replace(/^(?:[\u2600-\u27BF]|[\uD800-\uDBFF][\uDC00-\uDFFF])[\uFE0F\u20E3]?\s*/,'')).join(' ');
+  // Forward-looking lede: one actionable sentence about what's coming
+  const _lede=getForwardLookLede(hourly,now,sunrise,sunset);
+  const _body=parts.slice(0,4).map(s=>s.replace(/^(?:[\u2600-\u27BF]|[\uD800-\uDBFF][\uDC00-\uDFFF])[\uFE0F\u20E3]?\s*/,'')).join(' ');
+  return _lede?_lede+' '+_body:_body;
 }
 
 function getMoonPhase(date){
