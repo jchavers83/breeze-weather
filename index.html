@@ -524,11 +524,16 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
       <div class="preview-section">
         <div class="preview-cards">
 
-          <div class="preview-card glass" style="text-align:center;padding:22px 20px 18px">
-            <div style="font-size:58px;line-height:1;margin-bottom:10px">&#9728;&#65039;</div>
-            <div class="mock-temp">72&deg;</div>
-            <div style="font-size:15px;font-weight:600;color:var(--text-secondary);margin:6px 0 4px">Clear Sky</div>
-            <div style="font-size:12px;color:var(--text-tertiary);font-weight:500">Houston, TX &nbsp;&middot;&nbsp; H:78&deg; L:54&deg; &nbsp;&middot;&nbsp; Feels like 70&deg;</div>
+          <div class="preview-card glass">
+            <div style="display:flex;align-items:center;gap:14px">
+              <div style="font-size:52px;line-height:1;flex-shrink:0">&#9728;&#65039;</div>
+              <div class="mock-temp" style="flex-shrink:0">72&deg;</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Clear Sky</div>
+                <div style="font-size:12px;color:var(--text-secondary);font-weight:500;margin-top:3px">Houston, TX</div>
+                <div style="font-size:12px;color:var(--text-tertiary);font-weight:500;margin-top:2px">H:78&deg; &nbsp;L:54&deg; &nbsp;&middot;&nbsp; Feels 70&deg;</div>
+              </div>
+            </div>
           </div>
 
           <div class="preview-card glass">
