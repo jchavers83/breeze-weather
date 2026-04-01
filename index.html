@@ -373,6 +373,34 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .radar-overlay-bar::-webkit-scrollbar{display:none}
 .radar-overlay-btn{padding:7px 14px;border-radius:20px;border:1.5px solid var(--card-border);background:rgba(128,128,128,0.08);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s;flex-shrink:0}
 .radar-overlay-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ── Severe weather alert banner ── */
+.alert-banner{border-radius:var(--card-radius);margin-bottom:14px;overflow:hidden;cursor:pointer;transition:all 0.2s}
+.alert-warning{background:rgba(220,38,38,0.12);border:2px solid rgba(220,38,38,0.55);animation:alertPulse 2.4s ease-in-out infinite}
+.alert-watch{background:rgba(234,88,12,0.10);border:2px solid rgba(234,88,12,0.50)}
+.alert-advisory{background:rgba(202,138,4,0.08);border:2px solid rgba(202,138,4,0.38)}
+@keyframes alertPulse{0%,100%{border-color:rgba(220,38,38,0.55)}50%{border-color:rgba(220,38,38,1);box-shadow:0 0 16px rgba(220,38,38,0.35)}}
+.alert-main{padding:14px 16px}
+.alert-top-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.alert-badge-icon{font-size:22px;line-height:1;flex-shrink:0}
+.alert-event-name{font-size:15px;font-weight:800;flex:1}
+.alert-warning .alert-event-name{color:#dc2626}
+.alert-watch .alert-event-name{color:#ea580c}
+.alert-advisory .alert-event-name{color:#b45309}
+.alert-more-tag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:8px;background:rgba(128,128,128,0.15);color:var(--text-secondary)}
+.alert-chevron{font-size:13px;color:var(--text-tertiary);transition:transform 0.2s}
+.alert-chevron.open{transform:rotate(180deg)}
+.alert-headline{font-size:13px;color:var(--text-secondary);line-height:1.45;margin-bottom:3px}
+.alert-expires{font-size:11px;color:var(--text-tertiary);font-weight:600;letter-spacing:0.2px}
+.alert-details{border-top:1px solid rgba(128,128,128,0.15);padding:12px 16px 16px;display:none}
+.alert-details.open{display:block}
+.alert-item+.alert-item{border-top:1px solid rgba(128,128,128,0.12);margin-top:12px;padding-top:12px}
+.alert-item-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.alert-area{font-size:11px;color:var(--text-tertiary);font-weight:600;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px}
+.alert-desc{font-size:12px;color:var(--text-secondary);line-height:1.55;margin-bottom:8px;max-height:180px;overflow-y:auto}
+.alert-instruction{font-size:12px;color:var(--text);line-height:1.5;padding:9px 12px;border-radius:10px;border-left:3px solid #dc2626;background:rgba(220,38,38,0.07);font-weight:500}
+.alert-watch .alert-instruction{border-left-color:#ea580c;background:rgba(234,88,12,0.07)}
+.alert-advisory .alert-instruction{border-left-color:#b45309;background:rgba(202,138,4,0.07)}
 </style>
 </head>
 <body>
@@ -658,6 +686,121 @@ $('#btnDark').addEventListener('click',()=>{
 });
 
 // Fetch
+
+// ── Severe weather alerts (NWS API — US only, free, no key) ─────────────────
+const ALERT_CFG={
+  'Tornado Warning':          {icon:'\uD83C\uDF2A\uFE0F',cls:'alert-warning',p:1},
+  'Tornado Watch':            {icon:'\uD83C\uDF2A\uFE0F',cls:'alert-watch',p:2},
+  'Hurricane Warning':        {icon:'\uD83C\uDF00',cls:'alert-warning',p:3},
+  'Hurricane Watch':          {icon:'\uD83C\uDF00',cls:'alert-watch',p:4},
+  'Extreme Wind Warning':     {icon:'\uD83C\uDF2C\uFE0F',cls:'alert-warning',p:5},
+  'Flash Flood Emergency':    {icon:'\uD83D\uDEA8',cls:'alert-warning',p:6},
+  'Severe Thunderstorm Warning':{icon:'\u26C8\uFE0F',cls:'alert-warning',p:7},
+  'Flash Flood Warning':      {icon:'\uD83C\uDF0A',cls:'alert-warning',p:8},
+  'Tropical Storm Warning':   {icon:'\uD83C\uDF00',cls:'alert-warning',p:9},
+  'Blizzard Warning':         {icon:'\u2744\uFE0F',cls:'alert-warning',p:10},
+  'Ice Storm Warning':        {icon:'\uD83E\uDDE3',cls:'alert-warning',p:11},
+  'Winter Storm Warning':     {icon:'\u2744\uFE0F',cls:'alert-warning',p:12},
+  'Red Flag Warning':         {icon:'\uD83D\uDD25',cls:'alert-warning',p:13},
+  'Severe Thunderstorm Watch':{icon:'\u26C8\uFE0F',cls:'alert-watch',p:14},
+  'Tropical Storm Watch':     {icon:'\uD83C\uDF00',cls:'alert-watch',p:15},
+  'Hurricane Force Wind Watch':{icon:'\uD83C\uDF00',cls:'alert-watch',p:16},
+  'Flash Flood Watch':        {icon:'\uD83C\uDF0A',cls:'alert-watch',p:17},
+  'Winter Storm Watch':       {icon:'\u2744\uFE0F',cls:'alert-watch',p:18},
+  'Winter Weather Advisory':  {icon:'\uD83C\uDF28\uFE0F',cls:'alert-advisory',p:19},
+  'Wind Advisory':            {icon:'\uD83D\uDCA8',cls:'alert-advisory',p:20},
+  'Heat Advisory':            {icon:'\uD83C\uDF21\uFE0F',cls:'alert-advisory',p:21},
+  'Frost Advisory':           {icon:'\uD83C\uDF21\uFE0F',cls:'alert-advisory',p:22},
+  'Dense Fog Advisory':       {icon:'\uD83C\uDF2B\uFE0F',cls:'alert-advisory',p:23},
+  'Special Weather Statement':{icon:'\u26A0\uFE0F',cls:'alert-advisory',p:24},
+};
+
+function _alertCfg(event,severity){
+  if(ALERT_CFG[event])return ALERT_CFG[event];
+  // Fallback by NWS severity field
+  if(severity==='Extreme'||severity==='Severe')return{icon:'\u26A0\uFE0F',cls:'alert-warning',p:50};
+  if(severity==='Moderate')return{icon:'\u26A0\uFE0F',cls:'alert-watch',p:60};
+  return{icon:'\u2139\uFE0F',cls:'alert-advisory',p:70};
+}
+
+let _alertOpen=false;
+function _toggleAlert(){
+  const det=document.getElementById('alertDetails');
+  const chev=document.getElementById('alertChevron');
+  if(!det)return;
+  _alertOpen=!_alertOpen;
+  det.classList.toggle('open',_alertOpen);
+  if(chev)chev.classList.toggle('open',_alertOpen);
+}
+
+function _renderAlerts(features){
+  const banner=document.getElementById('alertBanner');
+  if(!banner)return;
+  if(!features||!features.length){banner.style.display='none';return;}
+
+  // Sort by priority
+  features.sort((a,b)=>{
+    const pa=_alertCfg(a.properties.event,a.properties.severity).p;
+    const pb=_alertCfg(b.properties.event,b.properties.severity).p;
+    return pa-pb;
+  });
+
+  const top=features[0].properties;
+  const cfg=_alertCfg(top.event,top.severity);
+  const extra=features.length>1?features.length-1:0;
+  let expStr='';
+  if(top.expires){
+    const ex=new Date(top.expires);
+    expStr='Until '+ex.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',timeZoneName:'short'});
+  }
+
+  const itemsHtml=features.map(f=>{
+    const p=f.properties;
+    const fc=_alertCfg(p.event,p.severity);
+    const desc=(p.description||'').replace(/\n\n/g,'\n').replace(/\n/g,' ').slice(0,600);
+    const instr=(p.instruction||'').replace(/\n/g,' ').trim();
+    return `<div class="alert-item">
+      <div class="alert-item-title">${fc.icon} ${p.event}</div>
+      ${p.areaDesc?`<div class="alert-area">${p.areaDesc}</div>`:''}
+      ${desc?`<div class="alert-desc">${desc}${p.description&&p.description.length>600?'&hellip;':''}</div>`:''}
+      ${instr?`<div class="alert-instruction">\u26A0\uFE0F ${instr}</div>`:''}
+    </div>`;
+  }).join('');
+
+  banner.className='alert-banner '+cfg.cls;
+  banner.style.display='block';
+  _alertOpen=false;
+  banner.innerHTML=`
+    <div class="alert-main" onclick="_toggleAlert()">
+      <div class="alert-top-row">
+        <span class="alert-badge-icon">${cfg.icon}</span>
+        <span class="alert-event-name">${top.event}</span>
+        ${extra?`<span class="alert-more-tag">+${extra} more</span>`:''}
+        <span class="alert-chevron" id="alertChevron">&#9660;</span>
+      </div>
+      <div class="alert-headline">${(top.headline||top.description||'').split('*')[0].trim().slice(0,120)}</div>
+      ${expStr?`<div class="alert-expires">${expStr}</div>`:''}
+    </div>
+    <div class="alert-details" id="alertDetails">${itemsHtml}</div>`;
+}
+
+async function fetchAlerts(){
+  const banner=document.getElementById('alertBanner');
+  if(!banner||state.lat===null)return;
+  try{
+    const r=await fetch(
+      `https://api.weather.gov/alerts/active?point=${state.lat.toFixed(4)},${state.lon.toFixed(4)}`,
+      {headers:{'User-Agent':'CirrusWeather/1.0'}}
+    );
+    if(!r.ok){banner.style.display='none';return;}
+    const data=await r.json();
+    const features=(data.features||[]).filter(f=>
+      f.properties&&(ALERT_CFG[f.properties.event]||
+        f.properties.severity==='Extreme'||f.properties.severity==='Severe')
+    );
+    _renderAlerts(features);
+  }catch(e){if(banner)banner.style.display='none';}
+}
 async function fetchWeather(){
   if(state.lat===null)return;
   const app=$('#app');
@@ -669,6 +812,7 @@ async function fetchWeather(){
     state.openDay=0;
     render();
     updateGradient();
+    fetchAlerts();
     $('#mobileNav').style.display='';
     renderSavedBar();
     // Animate hero temperature
@@ -709,6 +853,7 @@ function render(){
       <div><h2>${state.name}</h2><p>${state.region}</p></div>
       <button class="btn-save ${isSaved()?'saved':''}" id="btnSave" onclick="toggleSaveLocation()" title="Save location">${isSaved()?'★':'☆'}</button>
     </div>
+    <div id="alertBanner" style="display:none"></div>
     <div class="desktop-layout">
       <div class="left-panel">
         <div class="hero">
