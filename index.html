@@ -1270,7 +1270,7 @@ function _updateAqiCard(){
   const aqi=state.airQuality.us_aqi;
   const info=aqiInfo(aqi);
   if(!info)return;
-  card.innerHTML=`<div class="aqi-header"><div class="aqi-label">Air Quality</div><div class="aqi-badge" style="background:${info.color}">AQI ${aqi}</div></div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="aqi-desc">${info.label}</div>`;
+  card.innerHTML=`<div class="aqi-header"><div class="aqi-label">Air Quality</div><div class="aqi-badge" style="background:${info.color}">${info.label}</div></div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div>`;
 }
 
 function shareWeather(){
