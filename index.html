@@ -937,6 +937,179 @@ function getVibeTag(hourly,daily,currentCode,now,sunrise,sunset){
   return vpick(['\uD83C\uDF24\uFE0F Nothing wild. Just decent.','\uD83C\uDF24\uFE0F Mild and manageable','\uD83C\uDF24\uFE0F Low-drama day','\uD83C\uDF24\uFE0F Solid and unremarkable']);
 }
 
+
+function getHolidaySummary(now,weatherLine){
+  const m=now.getMonth()+1,d=now.getDate(),y=now.getFullYear(),dow=now.getDay(),hr=now.getHours();
+  function easterFor(yr){
+    const a=yr%19,b=Math.floor(yr/100),c=yr%100,dd=Math.floor(b/4),e=b%4,
+          f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),
+          h=(19*a+b-dd-g+15)%30,ii=Math.floor(c/4),k=c%4,
+          l=(32+2*e+2*ii-h-k)%7,mn=Math.floor((a+11*h+22*l)/451),
+          mo=Math.floor((h+l-7*mn+114)/31),dy=((h+l-7*mn+114)%31)+1;
+    return{mo,dy};
+  }
+  function tgiving(yr){return 1+((4-new Date(yr,10,1).getDay()+7)%7)+21;}
+  let key=null;
+  if(m===12&&d===31)key='nye';
+  else if(m===1&&d===1)key='nyd';
+  else if(m===2&&d===14)key='valentine';
+  else if(m===3&&d===17)key='stpatrick';
+  else if(m===7&&d===4)key='july4';
+  else if(m===10&&d===31)key='halloween';
+  else if(m===12&&d===24)key='xmaseve';
+  else if(m===12&&d===25)key='xmas';
+  else if(m===11&&d===tgiving(y))key='thanksgiving';
+  else{const e=easterFor(y);if(m===e.mo&&d===e.dy)key='easter';}
+  if(!key&&dow===5)key=hr>=12?'fri_pm':'fri_am';
+  if(!key)return null;
+  const W=weatherLine;
+  const s=(y*13+m*7+d)%97;
+  const pick=(arr)=>arr[s%arr.length];
+  const msgs={
+    nye:pick([
+      `New Year\u2019s Eve and ${W} Tonight is the one night nobody needs an excuse to stay out past midnight. Bundle up \u2014 the countdown hits different in the cold air. \uD83C\uDF86`,
+      `It\u2019s New Year\u2019s Eve. ${W} One last night to make this year mean something, or at least go out swinging. \uD83C\uDF86`,
+      `New Year\u2019s Eve. ${W} Big plans, questionable decisions, and a countdown to a clean slate. Worth every second. \uD83C\uDF86`,
+      `December 31st. ${W} The whole world is staying up past their bedtime tonight. You\u2019ve earned it. \uD83C\uDF86`,
+      `New Year\u2019s Eve. ${W} Whatever didn\u2019t happen this year \u2014 tonight you can let it go. See you on the other side. \uD83C\uDF86`,
+      `Last day of the year. ${W} Don\u2019t look at your phone at midnight. Actually look up. \uD83C\uDF86`,
+      `New Year\u2019s Eve. ${W} The one night where standing outside in the cold watching fireworks is a completely great idea. It is. \uD83C\uDF86`,
+      `New Year\u2019s Eve. ${W} One year ends, another starts. Tonight belongs to everyone who made it here. \uD83C\uDF86`,
+      `December 31st. ${W} The forecast is checked, the champagne is chilling, and midnight is coming regardless. Ready or not. \uD83C\uDF86`,
+    ]),
+    nyd:pick([
+      `Happy New Year. ${W} Fresh start, same weather app. Drink some water. \uD83C\uDF89`,
+      `Happy New Year. ${W} The slate\u2019s clean. Hydrate first, then do something with it. \uD83C\uDF89`,
+      `January 1st. ${W} New year, same sky. Drink water, eat something, and be kind to yourself today. \uD83C\uDF89`,
+      `Happy New Year. ${W} Whatever happened last night, the weather doesn\u2019t judge. Today\u2019s a new one. \uD83C\uDF89`,
+      `It\u2019s the first day of the year. ${W} Resolutions are optional. Hydration is not. \uD83C\uDF89`,
+      `Happy New Year! ${W} 365 fresh days ahead of you. No pressure. Start with today. \uD83C\uDF89`,
+      `January 1st. ${W} New year\u2019s resolution idea: go outside today. You\u2019ve already got the weather report. \uD83C\uDF89`,
+      `New Year\u2019s Day. ${W} The year is officially yours. Start it however feels right. Drink water. \uD83C\uDF89`,
+      `Happy New Year. ${W} Day one of three hundred and sixty-five. The weather\u2019s ready. Are you? \uD83C\uDF89`,
+    ]),
+    valentine:pick([
+      `Happy Valentine\u2019s Day. ${W} Romantic enough if you try. Terrible excuse not to go outside with someone you love. \u2764\uFE0F`,
+      `Happy Valentine\u2019s Day. ${W} The forecast isn\u2019t the most romantic thing you\u2019ll see today, but it\u2019s a start. \u2764\uFE0F`,
+      `It\u2019s Valentine\u2019s Day. ${W} Whether you\u2019re celebrating with someone or flying solo, the weather belongs to everyone. \u2764\uFE0F`,
+      `Happy Valentine\u2019s Day. ${W} A walk outside counts as a date if you want it to. \u2764\uFE0F`,
+      `Valentine\u2019s Day. ${W} Nobody\u2019s ever regretted taking someone for a walk on a day like this. \u2764\uFE0F`,
+      `Happy Valentine\u2019s Day. ${W} Send the flowers. Make the reservation. The weather will cooperate if you do the rest. \u2764\uFE0F`,
+      `February 14th. ${W} The only acceptable reason to stay inside today is if you\u2019re cooking for someone. \u2764\uFE0F`,
+      `Happy Valentine\u2019s Day. ${W} Good weather for a stroll, a drive, or doing absolutely nothing together. All valid. \u2764\uFE0F`,
+      `Valentine\u2019s Day. ${W} Love languages include going outside together. Especially in weather like this. \u2764\uFE0F`,
+      `Happy Valentine\u2019s Day. ${W} Even if your plans are zero, the weather is still showing up for you today. \u2764\uFE0F`,
+    ]),
+    stpatrick:pick([
+      `Happy St. Patrick\u2019s Day. ${W} Wear green or take your chances. Basically Ireland weather, so you\u2019re already halfway there. \uD83C\uDF40`,
+      `Happy St. Patrick\u2019s Day. ${W} Green is the only color that matters today. Plan accordingly. \uD83C\uDF40`,
+      `It\u2019s St. Patrick\u2019s Day. ${W} The luck of the Irish may or may not apply to the forecast. Worth finding out. \uD83C\uDF40`,
+      `Happy St. Patrick\u2019s Day. ${W} Could be worse \u2014 at least you\u2019re not dealing with actual Irish weather. Actually, never mind. \uD83C\uDF40`,
+      `St. Patrick\u2019s Day. ${W} Somewhere in Ireland right now, someone is having a pint in weather like this and calling it grand. They\u2019re right. \uD83C\uDF40`,
+      `Happy St. Patrick\u2019s Day. ${W} Wear green, find a parade, blame the weather on the leprechauns. \uD83C\uDF40`,
+      `March 17th. ${W} The Irish say there\u2019s no bad weather, only the wrong clothes. Dress accordingly and go find a pub. \uD83C\uDF40`,
+      `Happy St. Paddy\u2019s Day. ${W} The green beer is optional. The green outfit is not. You know the rules. \uD83C\uDF40`,
+      `Happy St. Patrick\u2019s Day. ${W} May the road rise to meet you and the wind be at your back. Check the forecast first though. \uD83C\uDF40`,
+      `Happy St. Patrick\u2019s Day. ${W} One day a year the whole world decides it\u2019s Irish. The weather doesn\u2019t get a vote. \uD83C\uDF40`,
+    ]),
+    easter:pick([
+      `Happy Easter. ${W} Good egg hunting conditions. The Easter Bunny apparently checked the forecast. \uD83D\uDC23`,
+      `Happy Easter. ${W} Perfect conditions for finding hidden eggs and pretending chocolate is a reasonable breakfast. It is. \uD83D\uDC23`,
+      `It\u2019s Easter. ${W} The Easter Bunny has been busy. Don\u2019t let the good weather go to waste. \uD83D\uDC23`,
+      `Happy Easter. ${W} Somewhere nearby, a basket full of candy is waiting. The weather\u2019s on your side. \uD83D\uDC23`,
+      `Easter Sunday. ${W} Good day to be outside, if the egg hunt doesn\u2019t already have that covered. \uD83D\uDC23`,
+      `Happy Easter. ${W} The Easter Bunny worked in any conditions. You can handle this. \uD83D\uDC23`,
+      `Easter Sunday. ${W} Whether you\u2019re celebrating the holiday, the candy, or both \u2014 today is a good one. \uD83D\uDC23`,
+      `Happy Easter. ${W} Egg hunt conditions: checked. Candy situation: handled. You\u2019re ready. \uD83D\uDC23`,
+      `Happy Easter. ${W} The one day of the year where candy before noon is not only acceptable but encouraged. \uD83D\uDC23`,
+    ]),
+    july4:pick([
+      `Happy Fourth of July. ${W} The fireworks are going to go absolutely crazy tonight. \uD83C\uDDFA\uD83C\uDDF8`,
+      `Happy Fourth of July. ${W} The grills are firing up and the fireworks go until someone\u2019s HOA sends a strongly worded letter. Worth it. \uD83C\uDDFA\uD83C\uDDF8`,
+      `Happy Independence Day. ${W} Tonight the whole sky belongs to everyone. \uD83C\uDDFA\uD83C\uDDF8`,
+      `It\u2019s the Fourth of July. ${W} Sunscreen, water, good viewing spot for tonight. In that order. \uD83C\uDDFA\uD83C\uDDF8`,
+      `Happy Fourth of July. ${W} Someone nearby is about to light something that probably shouldn\u2019t be lit. It\u2019s tradition. \uD83C\uDDFA\uD83C\uDDF8`,
+      `Independence Day. ${W} Great day to be outside, followed by a great night to look up. \uD83C\uDDFA\uD83C\uDDF8`,
+      `Fourth of July. ${W} The fireworks don\u2019t care about the forecast. Neither should you tonight. \uD83C\uDDFA\uD83C\uDDF8`,
+      `Happy Fourth. ${W} Hot dogs, cold drinks, and a sky full of fireworks tonight. The weather can only help. \uD83C\uDDFA\uD83C\uDDF8`,
+      `Happy Fourth of July. ${W} America decided to celebrate its birthday with fireworks. Honestly one of its better ideas. \uD83C\uDDFA\uD83C\uDDF8`,
+      `Happy Independence Day. ${W} Somewhere someone is already lighting fireworks and it\u2019s barely noon. America. \uD83C\uDDFA\uD83C\uDDF8`,
+    ]),
+    halloween:pick([
+      `Happy Halloween. ${W} This is exactly the weather Halloween deserves. Layer under the costume. Do not skip the candy. \uD83C\uDF83`,
+      `Happy Halloween. ${W} Costume on, candy ready, weather checked. Fully prepared for tonight. \uD83C\uDF83`,
+      `It\u2019s Halloween. ${W} Layer underneath the costume. Nobody wants to explain a weather-related wardrobe failure mid-trick-or-treat. \uD83C\uDF83`,
+      `Happy Halloween. ${W} The only night where showing up in full costume at a stranger\u2019s door for free candy is completely normal. Lean into it. \uD83C\uDF83`,
+      `Halloween. ${W} The forecast is doing its part. The costume, the candy, the general chaos \u2014 that\u2019s all on you. \uD83C\uDF83`,
+      `Happy Halloween. ${W} Great night to be out. Even better night to be in with a bowl of candy and the porch light off. Your call. \uD83C\uDF83`,
+      `October 31st. ${W} The kids don\u2019t care about the temperature. The candy is calling. Get out there. \uD83C\uDF83`,
+      `Happy Halloween. ${W} The weather is setting the mood. The rest is up to you and however many bags of candy you actually bought. \uD83C\uDF83`,
+      `Happy Halloween. ${W} Spooky season peaks tonight. Dress warm under that costume and make it a good one. \uD83C\uDF83`,
+      `Halloween. ${W} One night a year where a child in a shark costume rings your doorbell and it\u2019s completely fine. Cherish it. \uD83C\uDF83`,
+    ]),
+    thanksgiving:pick([
+      `Happy Thanksgiving. ${W} Good driving weather if you\u2019re headed somewhere. Eat well. Safe travels. \uD83C\uDF42`,
+      `Happy Thanksgiving. ${W} The turkey isn\u2019t going anywhere. The weather\u2019s not your problem today \u2014 the traffic is. \uD83C\uDF42`,
+      `It\u2019s Thanksgiving. ${W} Drive safe, eat well, and take a walk before the second plate. You\u2019ll thank yourself. \uD83C\uDF42`,
+      `Happy Thanksgiving. ${W} A good day to be grateful for decent weather, good food, and people worth driving to see. \uD83C\uDF42`,
+      `Thanksgiving Day. ${W} The forecast is the least of your worries today. The seating chart is another story entirely. \uD83C\uDF42`,
+      `Happy Thanksgiving. ${W} The only thing you need to check today is whether the oven\u2019s preheated. The weather is handled. \uD83C\uDF42`,
+      `Thanksgiving. ${W} Perfect parade watching conditions. Even more perfect nap conditions immediately after. \uD83C\uDF42`,
+      `Happy Thanksgiving. ${W} Eat the pie. Take a walk outside. Be the person who says they\u2019re thankful and actually means it. \uD83C\uDF42`,
+      `Happy Thanksgiving. ${W} Today is for gratitude, gravy, and gracefully avoiding the one topic everyone\u2019s avoiding. Safe travels. \uD83C\uDF42`,
+      `Thanksgiving. ${W} Somewhere a Macy\u2019s float is fighting the wind and losing. You\u2019ve got the forecast sorted. \uD83C\uDF42`,
+    ]),
+    xmaseve:pick([
+      `Christmas Eve and ${W} Light snow would be a very plausible cover story for the reindeer. \uD83C\uDF85`,
+      `It\u2019s Christmas Eve. ${W} The presents are wrapped, the cookies are out, and the skies are doing their part. \uD83C\uDF85`,
+      `Christmas Eve. ${W} Tonight\u2019s the one night it\u2019s acceptable to listen for hoofbeats on the roof. \uD83C\uDF85`,
+      `Christmas Eve. ${W} One more sleep. The weather report has been filed with the North Pole. \uD83C\uDF85`,
+      `It\u2019s Christmas Eve. ${W} Everything\u2019s in place. All that\u2019s left is the waiting \u2014 and maybe one more cookie. \uD83C\uDF85`,
+      `December 24th. ${W} Leave out the cookies. He checked the forecast and he\u2019s coming anyway. \uD83C\uDF85`,
+      `Christmas Eve. ${W} Cozy night in, candles lit, the sky looking exactly right for a night like this. \uD83C\uDF85`,
+      `Christmas Eve. ${W} Light snow would close the case on the whole reindeer situation once and for all. \uD83C\uDF85`,
+      `Christmas Eve. ${W} The magic is either in the air tonight or it\u2019s just the weather. Either way \u2014 stay up, look out the window. \uD83C\uDF85`,
+      `December 24th. ${W} Whether you\u2019re excited, exhausted, or both \u2014 the skies are doing their part tonight. \uD83C\uDF85`,
+    ]),
+    xmas:pick([
+      `Merry Christmas! ${W} \uD83C\uDF84`,
+      `Merry Christmas. ${W} Hope the day is as good as the forecast. \uD83C\uDF84`,
+      `It\u2019s Christmas Day. ${W} Open the presents. Eat something unreasonable. Enjoy every minute of it. \uD83C\uDF84`,
+      `Merry Christmas. ${W} Whatever today looks like for you, hope it\u2019s a good one. \uD83C\uDF84`,
+      `Christmas Day. ${W} Best day of the year to do absolutely nothing and feel completely right about it. \uD83C\uDF84`,
+      `Merry Christmas. ${W} Wherever you are and whoever you\u2019re with, hope today is everything you wanted. \uD83C\uDF84`,
+      `It\u2019s Christmas. ${W} The wrapping paper won\u2019t clean itself, but it can wait. Go enjoy the day first. \uD83C\uDF84`,
+      `Merry Christmas! ${W} Santa delivered. Now it\u2019s your turn \u2014 go enjoy the day. \uD83C\uDF84`,
+      `Merry Christmas. ${W} The weather, the food, the people \u2014 today all of it counts. \uD83C\uDF84`,
+      `Happy Christmas! ${W} The forecast is a gift. The day is yours. \uD83C\uDF84`,
+    ]),
+    fri_pm:pick([
+      `It\u2019s Friday afternoon. ${W} Time to relax, kick back, and enjoy the weekend. You earned it. \uD83C\uDF7B`,
+      `Happy Friday. ${W} Whatever the week threw at you, it\u2019s behind you now. The weekend starts here. \uD83C\uDF7B`,
+      `Friday. ${W} The best weather to have on a Friday is any weather, because it\u2019s Friday. \uD83C\uDF7B`,
+      `Happy Friday. ${W} Close the laptop. Put down the phone. The weekend is officially open for business. \uD83C\uDF7B`,
+      `It\u2019s Friday afternoon. ${W} The week is done. The weekend has entered the chat. \uD83C\uDF7B`,
+      `Happy Friday. ${W} Five days of effort, two days of yours. This is the handoff. Make it count. \uD83C\uDF7B`,
+      `It\u2019s Friday. ${W} Whatever was stressful this week can wait until Monday. The weekend disagrees with your inbox. \uD83C\uDF7B`,
+      `Friday. ${W} The finish line of the work week. Cross it, then forget where it was. \uD83C\uDF7B`,
+      `Happy Friday. ${W} Go somewhere. Do something. Be a person who exists outside of responsibilities for 48 hours. \uD83C\uDF7B`,
+      `It\u2019s Friday afternoon. ${W} Weekend mode is now active. Plans or no plans, you\u2019ve earned the time. \uD83C\uDF7B`,
+    ]),
+    fri_am:pick([
+      `Happy Friday. ${W} One last push and the weekend is all yours. \uD83C\uDF7B`,
+      `It\u2019s Friday. ${W} The weekend is right there. Just a few more hours. \uD83C\uDF7B`,
+      `Friday. ${W} You can already smell the weekend from here. \uD83C\uDF7B`,
+      `Happy Friday. ${W} The week is almost done. The finish line is in sight. \uD83C\uDF7B`,
+      `It\u2019s Friday. ${W} Best day of the work week, obviously. The weekend is coming. \uD83C\uDF7B`,
+      `Friday morning. ${W} The week is on its last legs. You\u2019re not. \uD83C\uDF7B`,
+      `Happy Friday. ${W} Today has that specific Friday energy. You know the one. \uD83C\uDF7B`,
+      `It\u2019s Friday. ${W} Whatever you\u2019ve been saving for the weekend \u2014 today is finally the day before it. \uD83C\uDF7B`,
+      `Friday. ${W} The week ran out of runway. The weekend is next. \uD83C\uDF7B`,
+    ]),
+  };
+  return msgs[key]||null;
+}
+
 function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
   function fracHour(s){if(!s)return null;const p=(s.split('T')[1]||'');const[h,m]=p.split(':');return parseInt(h)+(parseInt(m)||0)/60;}
   const sunriseH=fracHour(sunrise)||6;
@@ -1186,6 +1359,10 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
   // Quip
   parts.push(getWeatherQuip(maxT,minT,rainHours.length,clearHours.length,cloudyHours.length,windyHours.length,isNight,nowHour,isPredomNight,outdoorWorthy,niceOutdoor,sunsetH));
 
+  // Holiday & Friday override — injects special copy around the core weather line
+  const _wl=parts[0].replace(/^(?:[\u2600-\u27BF]|[\uD800-\uDBFF][\uDC00-\uDFFF])[\uFE0F\u20E3]?\s*/,'');
+  const _hm=getHolidaySummary(now,_wl);
+  if(_hm)return _hm;
   return parts.slice(0,4).map(s=>s.replace(/^(?:[\u2600-\u27BF]|[\uD800-\uDBFF][\uDC00-\uDFFF])[\uFE0F\u20E3]?\s*/,'')).join(' ');
 }
 
