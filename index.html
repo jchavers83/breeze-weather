@@ -753,10 +753,11 @@ const ALERT_CFG={
 // ── Severe alert summary card override ──────────────────────────────────────
 const SEVERE_OVERRIDE_STACK=[
   'Tornado Warning','Hurricane Warning','Tornado Watch','Hurricane Watch',
+  'Extreme Wind Warning','Flash Flood Emergency',
   'Severe Thunderstorm Warning','Flash Flood Warning','Tropical Storm Warning',
   'Severe Thunderstorm Watch','Flash Flood Watch','Tropical Storm Watch'
 ];
-const _SEVERE_WARNINGS=new Set(['Tornado Warning','Hurricane Warning','Severe Thunderstorm Warning','Flash Flood Warning','Tropical Storm Warning']);
+const _SEVERE_WARNINGS=new Set(['Tornado Warning','Hurricane Warning','Extreme Wind Warning','Flash Flood Emergency','Severe Thunderstorm Warning','Flash Flood Warning','Tropical Storm Warning']);
 
 function _parseStormName(alerts,alertType){
   const f=alerts.find(a=>a.properties&&a.properties.event===alertType);
@@ -764,6 +765,11 @@ function _parseStormName(alerts,alertType){
   const text=(f.properties.headline||'')+' '+(f.properties.description||'');
   const m=text.match(/(?:Hurricane|Tropical Storm)\s+([A-Z][a-z]+)/);
   return m?m[1]:null;
+}
+function _isPDS(alerts,alertType){
+  const f=alerts.find(a=>a.properties&&a.properties.event===alertType);
+  if(!f)return false;
+  return /Particularly Dangerous Situation/i.test((f.properties.headline||'')+' '+(f.properties.description||''));
 }
 
 function getSevereAlertOverride(){
@@ -780,10 +786,16 @@ function getSevereAlertOverride(){
       const n=_parseStormName(alerts,alertType);
       text=n?`A Hurricane Warning is in effect for your area. ${n} may bring life-threatening conditions. Follow instructions from local officials. Complete preparations now and evacuate if ordered.`:'A Hurricane Warning is in effect for your area. Life-threatening conditions are expected. Follow instructions from local officials. Complete preparations now and evacuate if ordered.';
     }else if(alertType==='Tornado Watch'){
-      text='A Tornado Watch is in effect for your area. Conditions are favorable for tornado development. Monitor local alerts and be ready to take shelter immediately.';
+      text=_isPDS(alerts,alertType)
+        ?'A Tornado Watch — Particularly Dangerous Situation — is in effect for your area. Conditions are exceptionally favorable for strong, long-track tornadoes. Take shelter preparations seriously and be ready to act immediately.'
+        :'A Tornado Watch is in effect for your area. Conditions are favorable for tornado development. Monitor local alerts and be ready to take shelter immediately.';
     }else if(alertType==='Hurricane Watch'){
       const n=_parseStormName(alerts,alertType);
       text=n?`A Hurricane Watch is in effect for your area. ${n} could affect this region within 48 hours. Follow local officials and media. Begin preparations now.`:'A Hurricane Watch is in effect for your area. Hurricane conditions could affect this region within 48 hours. Follow local officials and media. Begin preparations now.';
+    }else if(alertType==='Extreme Wind Warning'){
+      text='An Extreme Wind Warning is in effect for your area. Catastrophic wind gusts are expected. Do not go outside. Seek sturdy shelter immediately and stay away from windows.';
+    }else if(alertType==='Flash Flood Emergency'){
+      text='A Flash Flood Emergency is in effect for your area. This is an extremely dangerous and life-threatening situation. Move to higher ground immediately. Do not attempt to travel.';
     }else if(alertType==='Severe Thunderstorm Warning'){
       text='A Severe Thunderstorm Warning is in effect for your area. Expect damaging winds, large hail, and dangerous lightning. Stay indoors and away from windows.';
     }else if(alertType==='Flash Flood Warning'){
@@ -792,7 +804,9 @@ function getSevereAlertOverride(){
       const n=_parseStormName(alerts,alertType);
       text=n?`A Tropical Storm Warning is in effect for your area. ${n} is expected to bring tropical storm conditions. Secure loose objects, stay indoors, and monitor local officials and media.`:'A Tropical Storm Warning is in effect for your area. Tropical storm conditions are expected. Secure loose objects, stay indoors, and monitor local officials and media.';
     }else if(alertType==='Severe Thunderstorm Watch'){
-      text='A Severe Thunderstorm Watch is in effect for your area. Conditions are favorable for severe thunderstorms. Stay weather-aware and be prepared to take shelter quickly.';
+      text=_isPDS(alerts,alertType)
+        ?'A Severe Thunderstorm Watch — Particularly Dangerous Situation — is in effect for your area. Conditions are favorable for extremely dangerous severe thunderstorms, including very large hail and destructive winds. Stay weather-aware and be prepared to take shelter quickly.'
+        :'A Severe Thunderstorm Watch is in effect for your area. Conditions are favorable for severe thunderstorms. Stay weather-aware and be prepared to take shelter quickly.';
     }else if(alertType==='Flash Flood Watch'){
       text='A Flash Flood Watch is in effect for your area. Heavy rainfall may cause flooding. Avoid low-lying areas and be prepared to move quickly if conditions worsen.';
     }else if(alertType==='Tropical Storm Watch'){
