@@ -183,7 +183,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Location label */
 .location-bar{text-align:center;padding:8px 0 4px}
-.location-bar h2{font-size:22px;font-weight:700;letter-spacing:-0.3px}
+.location-bar h2{font-size:22px;font-weight:700;letter-spacing:-0.3px;background:linear-gradient(110deg,var(--text) 40%,var(--accent) 130%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .location-bar p{font-size:13px;color:var(--text-secondary);margin-top:2px}
 
 /* Hero */
@@ -362,13 +362,16 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .preview-section{margin-top:8px}
 .preview-label{font-size:11px;color:var(--text-tertiary);text-transform:uppercase;font-weight:700;letter-spacing:0.8px;margin-bottom:14px}
 .preview-cards{display:flex;flex-direction:column;gap:10px}
-.preview-card{padding:16px 20px;text-align:left;opacity:0;animation:fadeSlideUp 0.6s ease forwards}
-.preview-card:nth-child(1){animation-delay:0.15s}
-.preview-card:nth-child(2){animation-delay:0.28s}
-.preview-card:nth-child(3){animation-delay:0.41s}
-.preview-card:nth-child(4){animation-delay:0.54s}
-.preview-card:nth-child(5){animation-delay:0.67s}
-.preview-card:nth-child(6){animation-delay:0.80s}
+.preview-card{padding:16px 20px;text-align:left;opacity:0;transform:translateY(16px);transition:opacity 0.55s ease,transform 0.55s ease}
+.preview-card.visible{opacity:1;transform:translateY(0)}
+.preview-card:nth-child(2).visible{transition-delay:0.07s}
+.preview-card:nth-child(3).visible{transition-delay:0.14s}
+.preview-card:nth-child(4).visible{transition-delay:0.21s}
+.preview-card:nth-child(5).visible{transition-delay:0.28s}
+.preview-card:nth-child(6).visible{transition-delay:0.35s}
+.preview-dark-toggle{display:inline-flex;align-items:center;gap:7px;background:var(--card-bg);border:1.5px solid var(--card-border);border-radius:20px;padding:8px 18px;font-size:12px;font-weight:700;color:var(--text-secondary);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.2s;font-family:inherit;margin-bottom:28px}
+.preview-dark-toggle svg{width:13px;height:13px;flex-shrink:0}
+.preview-dark-toggle:active{transform:scale(0.95)}
 .preview-wear-mock{font-size:13px;color:var(--text-secondary);line-height:1.5}
 .preview-wear-mock .mock-wear-title{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px}
 .preview-wear-mock .mock-wear-quip{font-size:12px;color:var(--text-tertiary);margin-top:5px}
@@ -512,24 +515,30 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
         <div class="breeze-line"></div>
       </div>
       <div class="landing-divider"><span>Preview</span></div>
+      <div style="text-align:center">
+        <button class="preview-dark-toggle" id="previewDarkToggle" onclick="togglePreviewDark()">
+          <svg id="previewDarkIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
+          <span id="previewDarkLabel">Try dark mode</span>
+        </button>
+      </div>
       <div class="preview-section">
         <div class="preview-cards">
-          <div class="preview-card glass">
-            <div class="preview-hero-mock">
-              <span class="mock-icon">&#9728;&#65039;</span>
-              <span class="mock-temp">72&deg;</span>
-              <div class="mock-details">
-                <div class="mock-desc">Clear Sky</div>
-                <div class="mock-hilo">H:78&deg; &nbsp;L:54&deg; &nbsp;Feels like 70&deg;</div>
-              </div>
-            </div>
+
+          <div class="preview-card glass" style="text-align:center;padding:22px 20px 18px">
+            <div style="font-size:58px;line-height:1;margin-bottom:10px">&#9728;&#65039;</div>
+            <div class="mock-temp">72&deg;</div>
+            <div style="font-size:15px;font-weight:600;color:var(--text-secondary);margin:6px 0 4px">Clear Sky</div>
+            <div style="font-size:12px;color:var(--text-tertiary);font-weight:500">Houston, TX &nbsp;&middot;&nbsp; H:78&deg; L:54&deg; &nbsp;&middot;&nbsp; Feels like 70&deg;</div>
           </div>
+
           <div class="preview-card glass">
             <div class="preview-summary-mock">
+              <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Next 12 Hours</div>
               <span class="mock-vibe">&#9728;&#65039; Absolutely perfect out there</span>
-              "Rain moving in this evening around 7 PM &mdash; pack an umbrella if you'll be out. Clear and 72&deg; right now. Hard to ask for more. Get outside while it lasts."
+              &ldquo;Rain moving in this evening around 7 PM &mdash; pack an umbrella if you&rsquo;ll be out. Clear and 72&deg; right now. Hard to ask for more. Get outside while it lasts.&rdquo;
             </div>
           </div>
+
           <div class="preview-card glass">
             <div class="preview-wear-mock">
               <div class="mock-wear-title">What to Wear</div>
@@ -537,38 +546,71 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
               <div class="mock-wear-quip">Looking sharp out there &#128085; &#128115;</div>
             </div>
           </div>
+
+          <div class="preview-card glass">
+            <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px">Precipitation</div>
+            <div style="font-size:14px;font-weight:500;color:var(--text);line-height:1.45;margin-bottom:12px">Rain expected starting around 7 PM.</div>
+            <div style="display:flex;gap:3px">
+              <div style="flex:1;height:20px;border-radius:4px;background:rgba(128,128,128,0.11)"></div>
+              <div style="flex:1;height:20px;border-radius:4px;background:rgba(128,128,128,0.11)"></div>
+              <div style="flex:1;height:20px;border-radius:4px;background:rgba(128,128,128,0.11)"></div>
+              <div style="flex:1;height:20px;border-radius:4px;background:rgba(128,128,128,0.11)"></div>
+              <div style="flex:1;height:20px;border-radius:4px;background:rgba(128,128,128,0.11)"></div>
+              <div style="flex:1;height:20px;border-radius:4px;background:rgba(58,143,212,0.28)"></div>
+              <div style="flex:1;height:20px;border-radius:4px;background:rgba(58,143,212,0.45)"></div>
+              <div style="flex:1;height:20px;border-radius:4px;background:rgba(58,143,212,0.60)"></div>
+              <div style="flex:1;height:20px;border-radius:4px;background:rgba(58,143,212,0.75)"></div>
+              <div style="flex:1;height:20px;border-radius:4px;background:rgba(58,143,212,0.88)"></div>
+              <div style="flex:1;height:20px;border-radius:4px;background:rgba(58,143,212,0.95)"></div>
+              <div style="flex:1;height:20px;border-radius:4px;background:rgba(58,143,212,1.0)"></div>
+            </div>
+            <div style="display:flex;gap:3px;margin-top:5px">
+              <span style="flex:1;font-size:9px;font-weight:600;color:var(--text-tertiary);text-align:center">Now</span>
+              <span style="flex:1"></span><span style="flex:1"></span>
+              <span style="flex:1;font-size:9px;font-weight:600;color:var(--text-tertiary);text-align:center">4 PM</span>
+              <span style="flex:1"></span><span style="flex:1"></span>
+              <span style="flex:1;font-size:9px;font-weight:600;color:var(--text-tertiary);text-align:center">7 PM</span>
+              <span style="flex:1"></span><span style="flex:1"></span>
+              <span style="flex:1;font-size:9px;font-weight:600;color:var(--text-tertiary);text-align:center">10 PM</span>
+              <span style="flex:1"></span><span style="flex:1"></span>
+            </div>
+            <div style="font-size:12px;font-weight:500;color:var(--text-secondary);margin-top:10px;padding-top:10px;border-top:1px solid var(--card-border)">Next hour &middot; 2% &middot; Very unlikely</div>
+          </div>
+
           <div class="preview-card glass">
             <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">5-Day Forecast</div>
-            <div class="preview-forecast-mock" style="margin-bottom:8px">
-              <span class="pf-day">Today</span><span class="pf-icon">&#9728;&#65039;</span><span class="pf-desc">Clear Sky</span><span class="pf-temps">78&deg; <span>54&deg;</span></span>
-            </div>
-            <div class="preview-forecast-mock" style="margin-bottom:8px">
-              <span class="pf-day">Thu</span><span class="pf-icon">&#9925;</span><span class="pf-desc">Partly Cloudy</span><span class="pf-temps">74&deg; <span>58&deg;</span></span>
-            </div>
-            <div class="preview-forecast-mock" style="margin-bottom:8px">
-              <span class="pf-day">Fri</span><span class="pf-icon">&#127783;&#65039;</span><span class="pf-desc">Rain Showers</span><span class="pf-temps">65&deg; <span>52&deg;</span></span>
-            </div>
-            <div class="preview-forecast-mock" style="margin-bottom:8px">
-              <span class="pf-day">Sat</span><span class="pf-icon">&#9729;&#65039;</span><span class="pf-desc">Overcast</span><span class="pf-temps">68&deg; <span>55&deg;</span></span>
-            </div>
-            <div class="preview-forecast-mock">
-              <span class="pf-day">Sun</span><span class="pf-icon">&#127780;&#65039;</span><span class="pf-desc">Mostly Sunny</span><span class="pf-temps">76&deg; <span>57&deg;</span></span>
-            </div>
+            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Today</span><span class="pf-icon">&#9728;&#65039;</span><span class="pf-desc">Clear Sky</span><span class="pf-temps">78&deg; <span>54&deg;</span></span></div>
+            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Thu</span><span class="pf-icon">&#9925;</span><span class="pf-desc">Partly Cloudy</span><span class="pf-temps">74&deg; <span>58&deg;</span></span></div>
+            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Fri</span><span class="pf-icon">&#127783;&#65039;</span><span class="pf-desc">Rain Showers</span><span style="font-size:12px;color:#3a8fd4;font-weight:700;margin-right:4px">60%</span><span class="pf-temps">65&deg; <span>52&deg;</span></span></div>
+            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Sat</span><span class="pf-icon">&#9729;&#65039;</span><span class="pf-desc">Overcast</span><span class="pf-temps">68&deg; <span>55&deg;</span></span></div>
+            <div class="preview-forecast-mock"><span class="pf-day">Sun</span><span class="pf-icon">&#127780;&#65039;</span><span class="pf-desc">Mostly Sunny</span><span class="pf-temps">76&deg; <span>57&deg;</span></span></div>
           </div>
+
           <div class="preview-card glass">
             <div class="preview-stats-mock">
               <div class="ms-item"><div class="ms-label">Humidity</div><div class="ms-val">48%</div><div class="ms-sub">Comfortable</div></div>
-              <div class="ms-item"><div class="ms-label">UV Index</div><div class="ms-val">6</div><div class="ms-sub">High · SPF</div></div>
+              <div class="ms-item">
+                <div class="ms-label">UV Index</div>
+                <div class="ms-val">6</div>
+                <div style="width:100%;height:4px;border-radius:2px;background:linear-gradient(to right,#4ade80,#facc15,#f97316,#dc2626,#9333ea);position:relative;margin:4px auto 3px;max-width:48px">
+                  <div style="position:absolute;left:46%;top:50%;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.3)"></div>
+                </div>
+                <div class="ms-sub">High · SPF</div>
+              </div>
               <div class="ms-item"><div class="ms-label">Wind</div><div class="ms-val">9</div><div class="ms-sub">mph SW</div></div>
             </div>
-          </div>
-          <div class="preview-card glass">
-            <div class="preview-aqi-mock">
-              <div class="mock-aqi-label">Air Quality &nbsp;&middot;&nbsp; <span style="font-size:18px;font-weight:700;color:var(--text);text-transform:none">2</span></div>
-              <div class="mock-aqi-bar"><div style="position:absolute;left:12%;top:50%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,0.25)"></div></div>
-              <div class="mock-aqi-tip">Outdoor air is excellent today</div>
+            <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--card-border)">
+              <div class="preview-aqi-mock">
+                <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+                  <div class="mock-aqi-label">Air Quality</div>
+                  <div style="font-size:20px;font-weight:700;color:var(--text)">2</div>
+                </div>
+                <div class="mock-aqi-bar"><div style="position:absolute;left:12%;top:50%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,0.25)"></div></div>
+                <div class="mock-aqi-tip">Outdoor air is excellent today</div>
+              </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -2510,6 +2552,30 @@ function _destroyNowcast(){
   _ncLayers.forEach(f=>f.layer.remove());_ncLayers=[];
   document.getElementById('nowcastView').style.display='none';
 }
+
+// Preview dark mode toggle
+function togglePreviewDark(){
+  $('#btnDark').click();
+  const btn=document.getElementById('previewDarkToggle');
+  const lbl=document.getElementById('previewDarkLabel');
+  const ico=document.getElementById('previewDarkIcon');
+  if(!btn)return;
+  if(state.dark){
+    lbl.textContent='Back to light mode';
+    ico.innerHTML='<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/>';
+  }else{
+    lbl.textContent='Try dark mode';
+    ico.innerHTML='<path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>';
+  }
+}
+
+// Scroll-triggered preview card animations
+(function(){
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
+  },{threshold:0.08});
+  document.querySelectorAll('.preview-card').forEach(c=>obs.observe(c));
+})();
 </script>
 </body>
 </html>
