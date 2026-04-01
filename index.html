@@ -170,6 +170,8 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .suggestion-item:last-child{border:none}
 .suggestion-item:hover,.suggestion-item:active{background:rgba(58,143,212,0.1)}
 .suggestion-item small{color:var(--text-tertiary);display:block;margin-top:2px;font-size:12px}
+.suggestion-item.suggestion-recent{display:flex;align-items:center;gap:10px}
+.suggestion-item.suggestion-recent .recent-icon{font-size:13px;color:var(--text-tertiary);flex-shrink:0;opacity:0.7}
 .btn-icon{width:44px;height:44px;border:1px solid var(--card-border);border-radius:14px;background:var(--card-bg);backdrop-filter:blur(var(--card-blur));-webkit-backdrop-filter:blur(var(--card-blur));color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;flex-shrink:0}
 .btn-icon:hover{background:rgba(255,255,255,0.55)}
 .dark .btn-icon:hover{background:rgba(255,255,255,0.14)}
@@ -559,12 +561,42 @@ function updateGradient(){
   document.documentElement.style.setProperty('--bg-to',to);
 }
 
+// Recent searches
+function getRecentSearches(){try{return JSON.parse(localStorage.getItem('cirrusRecent')||'[]');}catch{return[];}}
+function addRecentSearch(loc){
+  let recents=getRecentSearches();
+  recents=recents.filter(r=>!(Math.abs(r.lat-loc.lat)<0.01&&Math.abs(r.lon-loc.lon)<0.01));
+  recents.unshift(loc);
+  if(recents.length>5)recents.pop();
+  localStorage.setItem('cirrusRecent',JSON.stringify(recents));
+}
+function showRecentSearches(){
+  const recents=getRecentSearches();
+  const sg=$('#suggestions');
+  if(!recents.length){sg.classList.remove('show');return;}
+  sg.innerHTML=recents.map((r,i)=>
+    `<div class="suggestion-item suggestion-recent" data-ri="${i}"><span class="recent-icon">&#8635;</span><div><strong>${r.name}</strong><small>${r.region}</small></div></div>`
+  ).join('');
+  sg.classList.add('show');
+  sg.querySelectorAll('.suggestion-recent').forEach((el,i)=>{
+    el.addEventListener('click',()=>{
+      const r=recents[i];
+      state.lat=r.lat;state.lon=r.lon;state.isGPS=false;
+      state.name=r.name;state.region=r.region;
+      sg.classList.remove('show');
+      $('#searchInput').value='';
+      fetchWeather();
+    });
+  });
+}
+
 // Search
 let searchTimeout;
+$('#searchInput').addEventListener('focus',()=>{if($('#searchInput').value.trim().length<2)showRecentSearches();});
 $('#searchInput').addEventListener('input',e=>{
   clearTimeout(searchTimeout);
   const q=e.target.value.trim();
-  if(q.length<2){$('#suggestions').classList.remove('show');return}
+  if(q.length<2){showRecentSearches();return}
   // Show a "searching..." hint immediately so the dropdown feels instant
   const sg=$('#suggestions');
   sg.innerHTML='<div class="suggestion-item" style="color:var(--text-tertiary);font-style:italic">Searching\u2026</div>';
@@ -596,6 +628,7 @@ async function searchCity(q){
         state.name=p.name||p.city||p.town||p.village||'Unknown';
         state.region=[p.state||p.county,p.country].filter(Boolean).join(', ');
         autoUnit(p.country||'');
+        addRecentSearch({name:state.name,region:state.region,lat:state.lat,lon:state.lon});
         sg.classList.remove('show');
         $('#searchInput').value='';
         fetchWeather();
