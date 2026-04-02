@@ -32,9 +32,9 @@
   const sc=s/180; // scale factor (design is in 180px coords)
   function p(v){return v*sc;}
 
-  // Background gradient
+  // Background — deep sky blue matching the app's clear-day palette
   const bg=x.createLinearGradient(0,0,s,s);
-  bg.addColorStop(0,'#5ec7f0');bg.addColorStop(1,'#52d4a0');
+  bg.addColorStop(0,'#38bdf8');bg.addColorStop(1,'#1a6ed8');
   x.fillStyle=bg;x.fillRect(0,0,s,s);
 
   // Sun body
@@ -51,8 +51,10 @@
   ];
   rays.forEach(([x1,y1,x2,y2])=>{x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);x.stroke();});
 
-  // Cloud — single closed path for clean puffy shape, no fillRect box
-  x.fillStyle='white';
+  // Cloud — gradient fill matching the CIRRUS wordmark: light blue-white → accent blue
+  const cg=x.createLinearGradient(p(37),p(98),p(119),p(125));
+  cg.addColorStop(0,'#e8f4ff');cg.addColorStop(1,'#b8d8f8');
+  x.fillStyle=cg;
   x.beginPath();
   x.moveTo(p(37),p(125));
   x.arc(p(54),p(108),p(17),Math.PI,0);
@@ -62,15 +64,15 @@
   x.closePath();
   x.fill();
 
-  // Wind lines — tapered opacity
+  // Wind lines — light blue-white, echoing the cloud gradient start
   x.lineCap='round';
   [
-    {y1:p(130),y2:p(128),cp1x:p(72),cp1y:p(120),ep:p(155),w:p(5.5),op:0.70},
-    {y1:p(145),y2:p(143),cp1x:p(68),cp1y:p(135),ep:p(148),w:p(4.5),op:0.50},
-    {y1:p(159),y2:p(157),cp1x:p(70),cp1y:p(150),ep:p(140),w:p(3.5),op:0.32}
+    {y1:p(130),y2:p(128),cp1x:p(72),cp1y:p(120),ep:p(155),w:p(5.5),op:0.72},
+    {y1:p(145),y2:p(143),cp1x:p(68),cp1y:p(135),ep:p(148),w:p(4.5),op:0.52},
+    {y1:p(159),y2:p(157),cp1x:p(70),cp1y:p(150),ep:p(140),w:p(3.5),op:0.34}
   ].forEach(({y1,y2,cp1x,cp1y,ep,w,op})=>{
     x.globalAlpha=op;
-    x.strokeStyle='white';x.lineWidth=w;
+    x.strokeStyle='#e8f4ff';x.lineWidth=w;
     x.beginPath();x.moveTo(p(28),y1);x.quadraticCurveTo(cp1x,cp1y,ep,y2);x.stroke();
   });
   x.globalAlpha=1;
@@ -99,9 +101,11 @@
      [lp(81),lp(35),lp(75),lp(29)],[lp(135),lp(89),lp(141),lp(95)],
      [lp(135),lp(35),lp(141),lp(29)],[lp(81),lp(89),lp(75),lp(95)]]
     .forEach(([x1,y1,x2,y2])=>{lx.beginPath();lx.moveTo(x1,y1);lx.lineTo(x2,y2);lx.stroke();});
-    // Cloud — single closed path: bumps on top, clean curved base, no fillRect box
+    // Cloud — gradient fill matching the CIRRUS wordmark
     lx.shadowColor='rgba(0,90,150,0.22)';lx.shadowBlur=lp(7);lx.shadowOffsetY=lp(4);
-    lx.fillStyle='white';
+    const lcg=lx.createLinearGradient(lp(37),lp(98),lp(119),lp(125));
+    lcg.addColorStop(0,'#e8f4ff');lcg.addColorStop(1,'#b8d8f8');
+    lx.fillStyle=lcg;
     lx.beginPath();
     lx.moveTo(lp(37),lp(125));                              // bottom-left
     lx.arc(lp(54),lp(108),lp(17),Math.PI,0);               // left bump
@@ -117,7 +121,7 @@
      {y1:lp(154),y2:lp(152),cpx:lp(68),cpy:lp(145),ep:lp(148),w:lp(4.5),op:0.50},
      {y1:lp(165),y2:lp(163),cpx:lp(70),cpy:lp(156),ep:lp(140),w:lp(3.5),op:0.32}]
     .forEach(({y1,y2,cpx,cpy,ep,w,op})=>{
-      lx.globalAlpha=op;lx.strokeStyle='white';lx.lineWidth=w;
+      lx.globalAlpha=op;lx.strokeStyle='#e8f4ff';lx.lineWidth=w;
       lx.beginPath();lx.moveTo(lp(28),y1);lx.quadraticCurveTo(cpx,cpy,ep,y2);lx.stroke();
     });
     lx.globalAlpha=1;
