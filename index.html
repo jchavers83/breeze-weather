@@ -1135,6 +1135,7 @@ function render(){
   const vibeTag=getVibeTag(hourly,daily,c.weather_code,now,daily.sunrise[0],daily.sunset[0]);
 
   const html=`
+    <div class="landing-title" style="text-align:center;margin:12px 0 0;padding-bottom:2px">CIRRUS</div>
     <div class="location-bar">
       <div><h2>${state.name}</h2><p>${state.region}</p></div>
       <button class="btn-save ${isSaved()?'saved':''}" id="btnSave" onclick="toggleSaveLocation()" title="Save location">${isSaved()?'★':'☆'}</button>
@@ -1476,6 +1477,67 @@ async function shareWeather(){
   vign.addColorStop(0,'rgba(0,0,0,0)');vign.addColorStop(1,lightBg?'rgba(0,0,0,0.06)':'rgba(0,0,0,0.22)');
   ctx.fillStyle=vign;ctx.fillRect(0,0,W,H);
 
+  // ── WEATHER PARTICLE LAYER ───────────────────────────
+  // Seeded RNG so particles are consistent for the same city (not random every render)
+  (function(){
+    function sr(seed){let s=seed|0;return()=>{s=Math.imul(s^(s>>>16),0x45d9f3b);s=Math.imul(s^(s>>>11),0xac4d1f);s^=s>>>16;return(s>>>0)/0x100000000;};}
+    const rng=sr(Math.round(Math.abs((state.lat||0)+(state.lon||0))*137));
+
+    if(isNight&&!isRain&&!isSnow&&!isStorm){
+      // Stars — small scattered dots, brighter near the top
+      for(let i=0;i<90;i++){
+        const sx=rng()*W,sy=rng()*H*0.75;
+        const sr=rng()*1.5+0.4;
+        const sa=(rng()*0.55+0.25).toFixed(2);
+        ctx.fillStyle=`rgba(255,255,255,${sa})`;
+        ctx.beginPath();ctx.arc(sx,sy,sr,0,Math.PI*2);ctx.fill();
+      }
+      // A handful of brighter "twinkle" stars
+      for(let i=0;i<10;i++){
+        const sx=rng()*W,sy=rng()*H*0.65;
+        ctx.fillStyle='rgba(255,255,255,0.90)';
+        ctx.beginPath();ctx.arc(sx,sy,1.8,0,Math.PI*2);ctx.fill();
+      }
+    } else if(isRain||isStorm){
+      // Rain streaks — diagonal, slightly translucent
+      ctx.save();ctx.lineCap='round';
+      for(let i=0;i<60;i++){
+        const rx=rng()*W,ry=rng()*H;
+        const rl=rng()*22+12;
+        ctx.globalAlpha=rng()*0.22+0.08;
+        ctx.strokeStyle='rgba(180,220,255,1)';
+        ctx.lineWidth=0.9;
+        ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(rx-5,ry+rl);ctx.stroke();
+      }
+      ctx.restore();
+    } else if(isSnow){
+      // Snowflakes — soft white circles of varying sizes
+      for(let i=0;i<60;i++){
+        const sx=rng()*W,sy=rng()*H;
+        const sr2=rng()*3+1;
+        const sa=(rng()*0.45+0.15).toFixed(2);
+        ctx.fillStyle=`rgba(255,255,255,${sa})`;
+        ctx.beginPath();ctx.arc(sx,sy,sr2,0,Math.PI*2);ctx.fill();
+      }
+    } else if(!isNight){
+      // Clear/partly-cloudy day — soft sun rays from top-right corner
+      ctx.save();ctx.lineCap='round';
+      const sunX=W+20,sunY=-30;
+      for(let i=0;i<14;i++){
+        const angle=Math.PI*(0.55+i*0.035);
+        const r1=50,r2=rng()*220+180;
+        ctx.globalAlpha=rng()*0.055+0.025;
+        ctx.strokeStyle='rgba(255,240,120,1)';
+        ctx.lineWidth=rng()*24+8;
+        ctx.beginPath();
+        ctx.moveTo(sunX+Math.cos(angle)*r1,sunY+Math.sin(angle)*r1);
+        ctx.lineTo(sunX+Math.cos(angle)*r2,sunY+Math.sin(angle)*r2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  })();
+
   // Helpers
   function rRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();}
   // Accent gradient (reused throughout)
@@ -1574,7 +1636,7 @@ async function shareWeather(){
   const stats=[
     {label:'FEELS LIKE',value:`${formatTemp(c.apparent_temperature)}\u00b0`},
     {label:'WIND',value:`${windSpeed(c.wind_speed_10m)} ${windUnit()}`},
-    {label:'RAIN CHANCE',value:precipNext>0?`${precipNext}%`:'\u2014'},
+    {label:'RAIN · NEXT HR',value:precipNext>0?`${precipNext}%`:'\u2014'},
   ];
   const sW=W/stats.length;
   stats.forEach((s,i)=>{
