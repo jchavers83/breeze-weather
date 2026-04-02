@@ -1529,6 +1529,7 @@ function shareWeather(){
 
 function buildWearCard(c,daily,hourly,now){
   const feelsF=toF(c.apparent_temperature);
+  const isAfterSunset=c.is_day===0;
   let clothing='',quip='',clothingEmoji='';
   if(feelsF<25){
     clothing='Heavy coat, hat, and gloves';
@@ -1548,19 +1549,19 @@ function buildWearCard(c,daily,hourly,now){
     clothingEmoji='🍂🧥';
   }else if(feelsF<65){
     clothing='Light layers';
-    quip="Peak layering season. The good kind of weather problem to have.";
-    clothingEmoji='🌤️👕';
+    quip=isAfterSunset?"Nice evening for a walk. Grab a light layer just in case.":"Peak layering season. The good kind of weather problem to have.";
+    clothingEmoji=isAfterSunset?'🌙👕':'🌤️👕';
   }else if(feelsF<75){
     clothing='T-shirt weather';
-    quip="The sweet spot. Enjoy it — it won't last forever.";
-    clothingEmoji='☀️👕';
+    quip=isAfterSunset?"Perfect evening weather. Get outside while it lasts.":"The sweet spot. Enjoy it — it won't last forever.";
+    clothingEmoji=isAfterSunset?'🌙👕':'☀️👕';
   }else if(feelsF<88){
     clothing='Dress light';
-    quip="Sun's out. Keep it breezy, keep it easy.";
-    clothingEmoji='🌞🩴';
+    quip=isAfterSunset?"Warm evening — light clothes, windows open, good night for it.":"Sun's out. Keep it breezy, keep it easy.";
+    clothingEmoji=isAfterSunset?'🌙🩴':'🌞🩴';
   }else{
     clothing='As little as socially acceptable';
-    quip="It's hot. Just accept it. Hydrate aggressively.";
+    quip=isAfterSunset?"Still hot out. Hydrate and find the AC.":"It's hot. Just accept it. Hydrate aggressively.";
     clothingEmoji='🥵🌡️';
   }
   const extras=[];
