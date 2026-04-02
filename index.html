@@ -1378,7 +1378,7 @@ function _updateAqiCard(){
   card.innerHTML=`<div class="label">Air Quality</div><div class="value">${aqiScore}</div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="sub">${info.tip}</div>`;
 }
 
-function shareWeather(){
+async function shareWeather(){
   if(!state.data)return;
   const c=state.data.current;
   const daily=state.data.daily;
@@ -1387,10 +1387,23 @@ function shareWeather(){
   const now=new Date();
   const curUV=c.uv_index!=null?c.uv_index:0;
 
-  // One punchy sentence from the AI summary
+  // Decode HTML entities so canvas gets real Unicode emoji
+  function htmlDecode(s){const t=document.createElement('textarea');t.innerHTML=s;return t.value;}
+  const emojiChar=htmlDecode(wi.icon);
+
+  // Preload app icon image (async — data URL needs one event loop tick)
+  const _appIconEl=document.getElementById('appIcon');
+  const _iconImg=_appIconEl?.href?await new Promise(res=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>res(null);i.src=_appIconEl.href;}):null;
+
+  // Up to 3 sentences from the AI summary
   const fullSum=generateSummary(hourly,daily,c.weather_code,now.getHours(),daily.sunrise[0],daily.sunset[0],{feelsLike:c.apparent_temperature,tempActual:c.temperature_2m,dewPoint:c.dew_point_2m,humidity:c.relative_humidity_2m,isDay:c.is_day});
-  const dotIdx=fullSum.search(/[.!?]/);
-  let shortSum=dotIdx>0&&dotIdx<120?fullSum.slice(0,dotIdx+1):fullSum.slice(0,100).trimEnd()+'…';
+  const sents=(fullSum.match(/[^.!?]*[.!?]+/g)||[fullSum]);
+  let shortSum=sents.slice(0,3).join(' ').trim();
+  if(shortSum.length>220)shortSum=shortSum.slice(0,217).trimEnd()+'…';
+
+  // Next-hour precipitation probability
+  const nowMs=now.getTime();let precipNext=0;
+  for(let i=0;i<hourly.time.length;i++){if(new Date(hourly.time[i]).getTime()>=nowMs){precipNext=hourly.precipitation_probability[i]||0;break;}}
 
   // ── Condition palette ─────────────────────────────────
   const wc=c.weather_code,isNight=!c.is_day;
@@ -1417,28 +1430,31 @@ function shareWeather(){
 
   // ── Pre-measure summary text ──────────────────────────
   const W=900;
-  const SUM_FONT='500 18px system-ui,-apple-system,sans-serif';
-  const SUM_LH=28;
-  const SUM_MAX_W=680;
+  const SUM_FONT='500 16px Outfit,system-ui,-apple-system,sans-serif';
+  const SUM_LH=25;
+  const SUM_MAX_W=700;
   const _mc=document.createElement('canvas').getContext('2d');
   _mc.font=SUM_FONT;
   const _ww=shortSum.split(' ');let _ll='';const _ls=[];
   for(const w of _ww){const t=_ll+(_ll?' ':'')+w;if(_mc.measureText(t).width>SUM_MAX_W&&_ll){_ls.push(_ll);_ll=w;}else{_ll=t;}}
   if(_ll)_ls.push(_ll);
-  const sumPillH=_ls.length*SUM_LH+36;
+  const sumPillH=Math.max(52,_ls.length*SUM_LH+38);
 
   // ── Layout constants ──────────────────────────────────
-  const TOP_BAR=46;       // app name bar height
-  const EMO_BASE=TOP_BAR+92;   // emoji baseline
-  const TEMP_BASE=EMO_BASE+128; // temperature baseline (120px font)
+  // Header: icon+CIRRUS lockup + URL
+  const CIRRUS_Y=60;    // CIRRUS baseline
+  const URL_Y=78;       // cirrusweather.app below CIRRUS
+  const SEP_Y=92;       // separator line
+  const EMO_BASE=SEP_Y+82;     // emoji baseline
+  const TEMP_BASE=EMO_BASE+118; // temp baseline (108px font)
   const COND_Y=TEMP_BASE+30;
-  const CITY_Y=COND_Y+28;
-  const HL_Y=CITY_Y+24;
-  const PILL_TOP=HL_Y+22;
-  const STATS_TOP=PILL_TOP+sumPillH+20;
-  const STATS_H=54;
-  const FOOT_Y=STATS_TOP+STATS_H+18;
-  const H=FOOT_Y+42;
+  const CITY_Y=COND_Y+27;
+  const HL_Y=CITY_Y+22;
+  const PILL_TOP=HL_Y+20;
+  const STATS_TOP=PILL_TOP+sumPillH+18;
+  const STATS_H=52;
+  const FOOT_Y=STATS_TOP+STATS_H+16;
+  const H=FOOT_Y+38;
 
   const dpr=Math.min(window.devicePixelRatio||1,2);
   const canvas=document.createElement('canvas');
@@ -1462,36 +1478,49 @@ function shareWeather(){
 
   // Helpers
   function rRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();}
-  // Decode HTML entities so canvas gets the real Unicode emoji character
-  function htmlDecode(s){const t=document.createElement('textarea');t.innerHTML=s;return t.value;}
-  const emojiChar=htmlDecode(wi.icon);
-
   // Accent gradient (reused throughout)
   const AG=ctx.createLinearGradient(0,0,W,0);
   AG.addColorStop(0,'#38bdf8');AG.addColorStop(0.5,'#818cf8');AG.addColorStop(1,'#c084fc');
 
-  // ── TOP BAR ──────────────────────────────────────────
-  // Thin accent line at very top
+  // ── TOP BAR: Icon + CIRRUS lockup ────────────────────
   ctx.fillStyle=AG;ctx.fillRect(0,0,W,3);
 
-  // CIRRUS wordmark — gradient fill
-  ctx.font='800 16px system-ui,-apple-system,sans-serif';
-  ctx.fillStyle=AG;
-  ctx.textAlign='center';
-  ctx.fillText('CIRRUS WEATHER',W/2,32);
-  ctx.textAlign='left';
+  // Measure CIRRUS text width so we can center the icon+text lockup
+  if('letterSpacing' in ctx)ctx.letterSpacing='6px';
+  ctx.font='800 46px Outfit,system-ui,-apple-system,sans-serif';
+  const cirrusTextW=ctx.measureText('CIRRUS').width+30; // 5 gaps × 6px
+  if('letterSpacing' in ctx)ctx.letterSpacing='0px';
+  const ICON_SZ=46;
+  const LOCK_GAP=10;
+  const lockupW=ICON_SZ+LOCK_GAP+cirrusTextW;
+  const lockX=Math.round((W-lockupW)/2);
 
-  // URL — right side, subtle
+  // App icon — preloaded above as _iconImg
+  if(_iconImg){ctx.drawImage(_iconImg,lockX,CIRRUS_Y-ICON_SZ+6,ICON_SZ,ICON_SZ);}
+
+  // CIRRUS wordmark — gradient matching landing page
+  const cirGradX=lockX+ICON_SZ+LOCK_GAP;
+  const cirGrad=ctx.createLinearGradient(cirGradX,CIRRUS_Y-36,cirGradX+cirrusTextW,CIRRUS_Y);
+  cirGrad.addColorStop(0,lightBg?'#182838':'#ddeeff');
+  cirGrad.addColorStop(1,lightBg?'#1a90e4':'#4ab8f8');
+  if('letterSpacing' in ctx)ctx.letterSpacing='6px';
+  ctx.font='800 46px Outfit,system-ui,-apple-system,sans-serif';
+  ctx.fillStyle=cirGrad;
+  ctx.textAlign='left';
+  ctx.fillText('CIRRUS',cirGradX,CIRRUS_Y);
+  if('letterSpacing' in ctx)ctx.letterSpacing='0px';
+
+  // URL below lockup, centered
   ctx.fillStyle=tMuted;
-  ctx.font='500 12px system-ui,-apple-system,sans-serif';
-  ctx.textAlign='right';
-  ctx.fillText('cirrusweather.app',W-36,32);
+  ctx.font='500 12px Outfit,system-ui,-apple-system,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('cirrusweather.app',W/2,URL_Y);
   ctx.textAlign='left';
 
-  // Separator under top bar
-  ctx.strokeStyle=lightBg?'rgba(10,30,70,0.12)':'rgba(255,255,255,0.10)';
+  // Separator
+  ctx.strokeStyle=lightBg?'rgba(10,30,70,0.10)':'rgba(255,255,255,0.10)';
   ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(36,TOP_BAR);ctx.lineTo(W-36,TOP_BAR);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(60,SEP_Y);ctx.lineTo(W-60,SEP_Y);ctx.stroke();
 
   // ── HERO: EMOJI + TEMP (centered) ────────────────────
   ctx.textAlign='center';
@@ -1545,7 +1574,7 @@ function shareWeather(){
   const stats=[
     {label:'FEELS LIKE',value:`${formatTemp(c.apparent_temperature)}\u00b0`},
     {label:'WIND',value:`${windSpeed(c.wind_speed_10m)} ${windUnit()}`},
-    {label:'UV INDEX',value:curUV>0?curUV.toFixed(0):'\u2014'},
+    {label:'RAIN CHANCE',value:precipNext>0?`${precipNext}%`:'\u2014'},
   ];
   const sW=W/stats.length;
   stats.forEach((s,i)=>{
