@@ -1256,11 +1256,14 @@ function render(){
         <div class="value" style="font-size:18px">${c.cloud_cover}%</div>
         <div class="sub">${c.cloud_cover<=10?'Clear':c.cloud_cover<=25?'Mostly clear':c.cloud_cover<=60?'Partly cloudy':c.cloud_cover<=85?'Mostly cloudy':'Overcast'}</div>
       </div>
-      <div class="detail-card glass">
-        <div class="label">Visibility</div>
-        <div class="value" style="font-size:18px">${visUnit(visibility)}</div>
-        <div class="sub">${visibility>=16?'Excellent':visibility>=8?'Good':visibility>=2?'Moderate':'Poor'}</div>
-      </div>
+      ${(()=>{
+        if(night){
+          const mp=getMoonPhase(now);
+          const illumSub=mp.illum<=5?'Dark sky \u00b7 great for stargazing':mp.illum<=25?'Slim crescent \u00b7 mostly dark':mp.illum<=50?'Quarter lit \u00b7 soft shadows':mp.illum<=75?'Mostly lit \u00b7 noticeable glow':mp.illum<=95?'Nearly full \u00b7 bright night':'Full moon \u00b7 bright as it gets';
+          return`<div class="detail-card glass"><div class="label">Moon Illumination</div><div class="value" style="font-size:18px">${mp.emoji} ${mp.illum}%</div><div class="sub">${illumSub}</div></div>`;
+        }
+        return`<div class="detail-card glass"><div class="label">Visibility</div><div class="value" style="font-size:18px">${visUnit(visibility)}</div><div class="sub">${visibility>=16?'Excellent':visibility>=8?'Good':visibility>=2?'Moderate':'Poor'}</div></div>`;
+      })()}
     </div>
     <div class="refresh-bar">Auto-refreshes every 10 min &middot; Updated ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
   `;
@@ -2573,15 +2576,17 @@ function getMoonPhase(date){
   const cycle=29.53058770576;
   const diff=(date.getTime()-known.getTime())/86400000;
   const phase=((diff%cycle)+cycle)%cycle;
-  if(phase<1.85)return{name:'New Moon',emoji:'\uD83C\uDF11'};
-  if(phase<5.53)return{name:'Waxing Crescent',emoji:'\uD83C\uDF12'};
-  if(phase<9.22)return{name:'First Quarter',emoji:'\uD83C\uDF13'};
-  if(phase<12.91)return{name:'Waxing Gibbous',emoji:'\uD83C\uDF14'};
-  if(phase<16.61)return{name:'Full Moon',emoji:'\uD83C\uDF15'};
-  if(phase<20.30)return{name:'Waning Gibbous',emoji:'\uD83C\uDF16'};
-  if(phase<23.99)return{name:'Last Quarter',emoji:'\uD83C\uDF17'};
-  if(phase<27.68)return{name:'Waning Crescent',emoji:'\uD83C\uDF18'};
-  return{name:'New Moon',emoji:'\uD83C\uDF11'};
+  // Illumination: 0% at new moon, 100% at full moon
+  const illum=Math.round((1-Math.cos(2*Math.PI*phase/cycle))/2*100);
+  if(phase<1.85)return{name:'New Moon',emoji:'\uD83C\uDF11',illum};
+  if(phase<5.53)return{name:'Waxing Crescent',emoji:'\uD83C\uDF12',illum};
+  if(phase<9.22)return{name:'First Quarter',emoji:'\uD83C\uDF13',illum};
+  if(phase<12.91)return{name:'Waxing Gibbous',emoji:'\uD83C\uDF14',illum};
+  if(phase<16.61)return{name:'Full Moon',emoji:'\uD83C\uDF15',illum};
+  if(phase<20.30)return{name:'Waning Gibbous',emoji:'\uD83C\uDF16',illum};
+  if(phase<23.99)return{name:'Last Quarter',emoji:'\uD83C\uDF17',illum};
+  if(phase<27.68)return{name:'Waning Crescent',emoji:'\uD83C\uDF18',illum};
+  return{name:'New Moon',emoji:'\uD83C\uDF11',illum};
 }
 
 function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,isNight,hour,isPredomNight,outdoorWorthy,niceOutdoor,sunsetH){
