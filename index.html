@@ -1001,8 +1001,8 @@ function _updateSummaryCard(){
   const summary=generateSummary(d.hourly,d.daily,d.current.weather_code,now.getHours()+now.getMinutes()/60,d.daily.sunrise[0],d.daily.sunset[0],{feelsLike:d.current.apparent_temperature,tempActual:d.current.temperature_2m,dewPoint:d.current.dew_point_2m,humidity:d.current.relative_humidity_2m,isDay:d.current.is_day});
   const vibeTag=getVibeTag(d.hourly,d.daily,d.current.weather_code,now,d.daily.sunrise[0],d.daily.sunset[0]);
   card.className='summary-card glass';
-  const _vm=vibeTag.match(/^([\uD800-\uDBFF][\uDC00-\uDFFF][\uFE0F\u20E3]?)/);
-  const _ve=_vm?_vm[1]:'';const _vt=vibeTag.slice(_ve.length).trimStart();
+  const _vm=vibeTag.match(/^([^A-Za-z]+)/);
+  const _ve=_vm?_vm[1].trimEnd():'';const _vt=vibeTag.slice(_vm?_vm[1].length:0);
   card.innerHTML=`<div class="summary-label">Next 12 Hours</div><div class="vibe-tag">${_ve}${_ve?' ':''}<span class="vibe-text">${_vt}</span></div><div class="summary-text">${summary}</div>`;
 }
 
@@ -1162,7 +1162,7 @@ function render(){
     </div>
     <div class="summary-card glass" id="summaryCard">
       <div class="summary-label">Next 12 Hours</div>
-      <div class="vibe-tag">${(m=>m?m[1]+' ':'')(vibeTag.match(/^([\uD800-\uDBFF][\uDC00-\uDFFF][\uFE0F\u20E3]?)/))||''}<span class="vibe-text">${vibeTag.replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF][\uFE0F\u20E3]?\s*/,'')}</span></div>
+      <div class="vibe-tag">${(m=>m?m[1].trimEnd()+' ':'')(vibeTag.match(/^([^A-Za-z]+)/))}<span class="vibe-text">${vibeTag.replace(/^[^A-Za-z]+/,'')}</span></div>
       <div class="summary-text">${summary}</div>
     </div>
     ${buildWearCard(c,daily,hourly,now)}
