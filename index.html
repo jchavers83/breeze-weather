@@ -241,8 +241,8 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .precip-timeline{padding:16px 20px;margin-bottom:16px}
 .precip-tl-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px}
 .precip-sentence{font-size:14px;font-weight:500;color:var(--text);line-height:1.45;margin-bottom:12px}
-.precip-dots{display:flex;gap:3px;align-items:flex-end}
-.precip-dot{flex:1;height:20px;border-radius:4px}
+.precip-dots{display:flex;gap:3px;align-items:flex-end;height:44px}
+.precip-dot{flex:1;border-radius:3px 3px 0 0;min-height:3px}
 .precip-hours{display:flex;gap:3px;margin-top:5px}
 .precip-hours span{flex:1;font-size:9px;font-weight:600;color:var(--text-tertiary);text-align:center;overflow:hidden;white-space:nowrap}
 .precip-next-hour{font-size:12px;font-weight:500;color:var(--text-secondary);margin-top:10px;padding-top:10px;border-top:1px solid var(--card-border)}
@@ -413,7 +413,8 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 /* Summary card */
 .summary-card{padding:18px 20px;margin-bottom:16px}
 .summary-card .summary-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
-.summary-card .vibe-tag{font-size:16px;font-weight:800;margin-bottom:10px;letter-spacing:-0.3px;line-height:1.2;background:linear-gradient(110deg,var(--text) 40%,var(--accent) 130%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.summary-card .vibe-tag{font-size:16px;font-weight:800;margin-bottom:10px;letter-spacing:-0.3px;line-height:1.2;color:var(--text)}
+.summary-card .vibe-tag .vibe-text{background:linear-gradient(110deg,var(--text) 40%,var(--accent) 130%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .summary-card .summary-text{font-size:14px;line-height:1.55;font-weight:500;color:var(--text)}
 
 /* Refresh indicator */
@@ -1000,7 +1001,9 @@ function _updateSummaryCard(){
   const summary=generateSummary(d.hourly,d.daily,d.current.weather_code,now.getHours()+now.getMinutes()/60,d.daily.sunrise[0],d.daily.sunset[0],{feelsLike:d.current.apparent_temperature,tempActual:d.current.temperature_2m,dewPoint:d.current.dew_point_2m,humidity:d.current.relative_humidity_2m,isDay:d.current.is_day});
   const vibeTag=getVibeTag(d.hourly,d.daily,d.current.weather_code,now,d.daily.sunrise[0],d.daily.sunset[0]);
   card.className='summary-card glass';
-  card.innerHTML=`<div class="summary-label">Next 12 Hours</div><div class="vibe-tag">${vibeTag}</div><div class="summary-text">${summary}</div>`;
+  const _vm=vibeTag.match(/^([\uD800-\uDBFF][\uDC00-\uDFFF][\uFE0F\u20E3]?)/);
+  const _ve=_vm?_vm[1]:'';const _vt=vibeTag.slice(_ve.length).trimStart();
+  card.innerHTML=`<div class="summary-label">Next 12 Hours</div><div class="vibe-tag">${_ve}${_ve?' ':''}<span class="vibe-text">${_vt}</span></div><div class="summary-text">${summary}</div>`;
 }
 
 function _alertCfg(event,severity){
@@ -1159,7 +1162,7 @@ function render(){
     </div>
     <div class="summary-card glass" id="summaryCard">
       <div class="summary-label">Next 12 Hours</div>
-      <div class="vibe-tag">${vibeTag}</div>
+      <div class="vibe-tag">${(m=>m?m[1]+' ':'')(vibeTag.match(/^([\uD800-\uDBFF][\uDC00-\uDFFF][\uFE0F\u20E3]?)/))||''}<span class="vibe-text">${vibeTag.replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF][\uFE0F\u20E3]?\s*/,'')}</span></div>
       <div class="summary-text">${summary}</div>
     </div>
     ${buildWearCard(c,daily,hourly,now)}
@@ -1785,21 +1788,15 @@ function buildPrecipTimeline(hourly,now,isNight,isDark){
     if(windows.length>1){const l2=precipLabel(windows[1].code);sentence+=` Another round of ${l2.toLowerCase()} near ${fmtH(windows[1].start)}.`;}
   }
   function precipChanceLabel(p){if(p===0)return'None';if(p<=15)return'Very unlikely';if(p<=35)return'Unlikely';if(p<=55)return'Possible';if(p<=75)return'Likely';return'Very likely';}
-  // Match the CIRRUS wordmark gradient: --text → --accent
-  function accentDot(i,total){
-    function hexRgb(h){h=h.replace('#','');const n=parseInt(h,16);return[n>>16&255,n>>8&255,n&255];}
-    const textHex=isNight?(isDark?'#e8f0f8':'#f0f6fc'):'#182838';
-    const accentHex=isDark?'#4ab8f8':'#1a90e4';
-    const [r1,g1,b1]=hexRgb(textHex);
-    const [r2,g2,b2]=hexRgb(accentHex);
-    const t=i/Math.max(total-1,1);
-    return`rgba(${Math.round(r1+(r2-r1)*t)},${Math.round(g1+(g2-g1)*t)},${Math.round(b1+(b2-b1)*t)},0.65)`;
-  }
   const dots=hrs.map((h,i)=>{
-    const wet=h.prob>=THRESHOLD;
-    const alpha=wet?Math.max(0.35,Math.min(1,(h.prob-THRESHOLD)/(100-THRESHOLD)*0.65+0.35)).toFixed(2):1;
-    const bg=wet?`rgba(58,143,212,${alpha})`:accentDot(i,hrs.length);
-    return`<div class="precip-dot" style="background:${bg}" title="${fmtH(h.h)} \u2014 ${h.prob}%"></div>`;
+    const p=h.prob;
+    const barH=Math.max(3,Math.round(p*0.40)); // 0%→3px, 100%→40px
+    let bg;
+    if(p>=60)bg=`rgba(58,143,212,${(0.65+(p-60)/40*0.30).toFixed(2)})`;
+    else if(p>=35)bg=`rgba(58,143,212,0.55)`;
+    else if(p>=15)bg=`rgba(58,143,212,0.30)`;
+    else bg=isDark?'rgba(255,255,255,0.10)':'rgba(0,0,0,0.08)';
+    return`<div class="precip-dot" style="height:${barH}px;background:${bg}" title="${fmtH(h.h)} \u2014 ${p}%"></div>`;
   }).join('');
   const hourLabels=hrs.map((h,i)=>`<span>${i===0?'Now':i%3===0?fmtH(h.h):''}</span>`).join('');
   const nextProb=hrs[0]?hrs[0].prob:0;
