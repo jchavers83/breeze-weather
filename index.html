@@ -1393,11 +1393,9 @@ function shareWeather(){
   const emojiChar=htmlDecode(wi.icon);
 
 
-  // Up to 3 sentences from the AI summary
+  // Full AI summary — same text as the app
   const fullSum=generateSummary(hourly,daily,c.weather_code,now.getHours(),daily.sunrise[0],daily.sunset[0],{feelsLike:c.apparent_temperature,tempActual:c.temperature_2m,dewPoint:c.dew_point_2m,humidity:c.relative_humidity_2m,isDay:c.is_day});
-  const sents=(fullSum.match(/[^.!?]*[.!?]+/g)||[fullSum]);
-  let shortSum=sents.slice(0,3).join(' ').trim();
-  if(shortSum.length>220)shortSum=shortSum.slice(0,217).trimEnd()+'…';
+  const shortSum=fullSum;
 
   // Next-hour precipitation probability
   const nowMs=now.getTime();let precipNext=0;
