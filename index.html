@@ -708,8 +708,13 @@ function getWeatherInfo(code,night){const w=WMO_CODES[code]||WMO_CODES[0];return
 
 function updateGradient(){
   if(!state.data)return;
-  const code=state.data.current.weather_code;
-  const night=!state.data.current.is_day;
+  const _h=state.data.hourly,_c=state.data.current;
+  const _nowMs2=getCityNow().getTime();
+  let _ci=0;for(let i=0;i<_h.time.length;i++){if(new Date(_h.time[i]).getTime()>=_nowMs2-1800000){_ci=i;break;}}
+  const _pp=_h.precipitation_probability[_ci]||0;
+  const _ipc=c=>c>=51&&c<=67||c>=80&&c<=86||c>=95;
+  const code=(_ipc(_c.weather_code)&&_pp<25)?(_h.weather_code[_ci]||_c.weather_code):_c.weather_code;
+  const night=!_c.is_day;
   document.body.classList.toggle('night',night);
   if(window.setWeatherAnim)setWeatherAnim(code,night);
   let from,to;
@@ -1157,15 +1162,26 @@ function render(){
   const hourly=d.hourly;
   const now=getCityNow();
   const night=!c.is_day;
-  const wi=getWeatherInfo(c.weather_code,night);
+  // Reconcile current weather_code against actual hourly precipitation probability.
+  // current.weather_code reflects model grid (can show rain from nearby cells).
+  // hourly.precipitation_probability is hyper-local. If the code says precip but
+  // probability is low (<25%), trust the hourly code for the current slot instead.
+  const _nowMs=now.getTime();
+  let _curHrIdx=0;
+  for(let i=0;i<hourly.time.length;i++){if(new Date(hourly.time[i]).getTime()>=_nowMs-1800000){_curHrIdx=i;break;}}
+  const _curProb=hourly.precipitation_probability[_curHrIdx]||0;
+  const _isPrecipCode=c=>c>=51&&c<=67||c>=80&&c<=86||c>=95;
+  const effectiveCode=(_isPrecipCode(c.weather_code)&&_curProb<25)?
+    (hourly.weather_code[_curHrIdx]||c.weather_code):c.weather_code;
+  const wi=getWeatherInfo(effectiveCode,night);
 
   const visibility=(c.visibility!=null?c.visibility/1000:10); // API returns meters, convert to km
   // Use real-time uv_index (not daily max) so evening/morning shows accurate low UV
   const curUV=c.uv_index!=null?c.uv_index:0;
   const uvEmo=(!c.is_day||curUV<1)?'':curUV<=3?'\u{1F324}\uFE0F':curUV<=5?'\u{1F60E}':'\u{1F9F4}';
-  const uvSub=!c.is_day?'None \u00b7 Nighttime':curUV<0.5?(c.weather_code>=51?'None \u00b7 Rain blocking UV':c.weather_code>=3?'None \u00b7 Cloud cover':'None \u00b7 Minimal'):(uvEmo?uvEmo+' ':'')+uvLabel(curUV);
-  const summary=generateSummary(hourly,daily,c.weather_code,now.getHours()+now.getMinutes()/60,daily.sunrise[0],daily.sunset[0],{feelsLike:c.apparent_temperature,tempActual:c.temperature_2m,dewPoint:c.dew_point_2m,humidity:c.relative_humidity_2m,isDay:c.is_day});
-  const vibeTag=getVibeTag(hourly,daily,c.weather_code,now,daily.sunrise[0],daily.sunset[0]);
+  const uvSub=!c.is_day?'None \u00b7 Nighttime':curUV<0.5?(effectiveCode>=51?'None \u00b7 Rain blocking UV':effectiveCode>=3?'None \u00b7 Cloud cover':'None \u00b7 Minimal'):(uvEmo?uvEmo+' ':'')+uvLabel(curUV);
+  const summary=generateSummary(hourly,daily,effectiveCode,now.getHours()+now.getMinutes()/60,daily.sunrise[0],daily.sunset[0],{feelsLike:c.apparent_temperature,tempActual:c.temperature_2m,dewPoint:c.dew_point_2m,humidity:c.relative_humidity_2m,isDay:c.is_day});
+  const vibeTag=getVibeTag(hourly,daily,effectiveCode,now,daily.sunrise[0],daily.sunset[0]);
 
   const html=`
     <div class="landing-title" style="text-align:center;margin:12px 0 0;padding-bottom:2px">CIRRUS</div>
