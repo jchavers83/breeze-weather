@@ -2192,10 +2192,10 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
   let contrastOpener=null;
   if(isSoup&&isDaytime){
     contrastOpener=pick([
-      `Dew point of ${dewF}\u00b0. The air is soup. Actual soup.`,
-      `${humidity}% humidity and a dew point of ${dewF}\u00b0 — stepping outside feels like walking through a warm wet towel.`,
-      city?`${city} is serving full swamp energy today. The humidity is the whole story.`:`The dew point is ${dewF}\u00b0. Everything is sticky. Everything is always sticky.`,
-      `The air contains approximately ${humidity}% water. You'll know it immediately when you step outside.`,
+      `The air is soup out there. Actual soup.`,
+      `${humidity}% humidity — stepping outside feels like walking through a warm wet towel.`,
+      city?`${city} is serving full swamp energy today. The humidity is the whole story.`:`Everything is sticky. Everything is always sticky.`,
+      `The air is basically wearing itself today. You'll feel it the second you step outside.`,
     ]);
   }else if(isOppressive&&isDaytime&&feelsGap>=6){
     contrastOpener=pick([
@@ -2371,20 +2371,20 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
     const laterRef=isLateEvening?'by morning':isEvening?'later tonight':'later on';
     const uvMax=daily.uv_index_max[0];
 
-    // Humidity/dew point (priority — it changes everything about how a day feels)
+    // Humidity (priority — it changes everything about how a day feels)
     if(isSoup&&isDaytime&&!contrastOpener){
       parts.push(pick([
-        `Dew point of ${dewF}\u00b0 — the air is legitimately wet. Your body will work twice as hard to cool down.`,
+        `The air is legitimately wet out there. Your body will work twice as hard to cool down.`,
         `${humidity}% humidity. Everything is sticky, nothing dries, and your hair has its own agenda now.`,
-        city?`${city} humidity is doing its absolute most today. Dew point ${dewF}\u00b0.`:`The humidity is the weather today. The temperature is just context.`,
-        `Dew point ${dewF}\u00b0. The kind of humidity that turns a short walk into an event.`,
+        city?`${city} humidity is doing its absolute most today.`:`The humidity is the weather today. The temperature is just context.`,
+        `The kind of muggy that turns a short walk into an event. Stay hydrated.`,
       ]));
     }else if(isOppressive&&isDaytime&&!contrastOpener){
       parts.push(pick([
-        `Dew point's up at ${dewF}\u00b0 — sticky and draining. Shade matters more than it normally would.`,
-        `${humidity}% humidity with a dew point of ${dewF}\u00b0. You'll feel it the second you step outside.`,
-        `The humidity is carrying today. ${dewF}\u00b0 dew point means it feels worse than the number suggests.`,
-        `Oppressive out there. The dew point of ${dewF}\u00b0 is doing the heavy lifting on the misery index.`,
+        `It's sticky and draining out there. Shade matters more than it normally would.`,
+        `${humidity}% humidity — you'll feel it the second you step outside.`,
+        `The humidity is carrying today. It feels worse than the number suggests.`,
+        `Oppressive out there. The mugginess is doing the heavy lifting on the misery index.`,
       ]));
     }else if(isHumid&&isDaytime&&maxT>=85&&!contrastOpener){
       parts.push(pick([
