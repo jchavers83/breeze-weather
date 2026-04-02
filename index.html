@@ -133,8 +133,8 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-/* Light cyan top → brand blue bottom: airy feel with brand cohesion */
---bg-from:#52c8f0;--bg-to:#1a9fd8;
+/* Cyan top → blue-teal bottom: original freshness, no mint */
+--bg-from:#5ec7f0;--bg-to:#1aa8c8;
 --card-bg:rgba(255,255,255,0.66);--card-border:rgba(255,255,255,0.88);
 --text:#182838;--text-secondary:#2e5060;--text-tertiary:#5a7e90;
 --accent:#1a90e4;--card-radius:20px;--card-blur:20px;
@@ -357,14 +357,14 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .landing-cta:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(26,144,228,0.5)}
 .landing-cta:active{transform:scale(0.97)}
 .landing-cta svg{width:18px;height:18px}
-.landing-or{font-size:13px;color:rgba(255,255,255,0.60);margin-bottom:32px}
+.landing-or{font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:32px}
 .landing-divider{display:flex;align-items:center;gap:12px;margin-bottom:32px}
 .landing-divider::before,.landing-divider::after{content:'';flex:1;height:1px;background:var(--card-border)}
 .landing-divider span{font-size:12px;color:var(--text-tertiary);font-weight:600;text-transform:uppercase;letter-spacing:1px}
 
 /* Preview cards */
 .preview-section{margin-top:8px}
-.preview-label{font-size:11px;color:rgba(255,255,255,0.50);text-transform:uppercase;font-weight:700;letter-spacing:0.8px;margin-bottom:14px}
+.preview-label{font-size:11px;color:rgba(255,255,255,0.68);text-transform:uppercase;font-weight:700;letter-spacing:0.8px;margin-bottom:14px}
 .preview-cards{display:flex;flex-direction:column;gap:10px}
 .preview-card{padding:16px 20px;text-align:left;opacity:0;transform:translateY(16px);transition:opacity 0.55s ease,transform 0.55s ease}
 .preview-card.visible{opacity:1;transform:translateY(0)}
@@ -695,14 +695,17 @@ function dayName(iso,i){if(i===0)return 'Today';const[y,mo,dy]=iso.split('-').ma
 function daylightDuration(rise,set){const ms=new Date(set)-new Date(rise);const h=Math.floor(ms/3600000);const m=Math.floor((ms%3600000)/60000);return h+'h '+m+'m'}
 
 function isNight(d,sunrise,sunset){if(!sunrise||!sunset)return false;return d<new Date(sunrise)||d>new Date(sunset)}
+// Returns a Date adjusted to the searched city's local time using the API's utc_offset_seconds.
+// This makes (new Date(apiTimeStr) - getCityNow()) give correct hour diffs for city-local strings,
+// and .getHours()/.getMinutes() return the city's actual local time.
+function getCityNow(){const off=(state.data&&state.data.utc_offset_seconds)||0;return new Date(Date.now()+off*1000+new Date().getTimezoneOffset()*60000);}
 
 function getWeatherInfo(code,night){const w=WMO_CODES[code]||WMO_CODES[0];return{desc:w.desc,icon:night?w.night:w.icon}}
 
 function updateGradient(){
   if(!state.data)return;
   const code=state.data.current.weather_code;
-  const now=new Date();
-  const night=isNight(now,state.data.daily.sunrise[0],state.data.daily.sunset[0]);
+  const night=!state.data.current.is_day;
   document.body.classList.toggle('night',night);
   if(window.setWeatherAnim)setWeatherAnim(code,night);
   let from,to;
@@ -991,8 +994,8 @@ function _updateSummaryCard(){
     return;
   }
   const d=state.data;
-  const now=new Date();
-  const summary=generateSummary(d.hourly,d.daily,d.current.weather_code,now.getHours(),d.daily.sunrise[0],d.daily.sunset[0],{feelsLike:d.current.apparent_temperature,tempActual:d.current.temperature_2m,dewPoint:d.current.dew_point_2m,humidity:d.current.relative_humidity_2m,isDay:d.current.is_day});
+  const now=getCityNow();
+  const summary=generateSummary(d.hourly,d.daily,d.current.weather_code,now.getHours()+now.getMinutes()/60,d.daily.sunrise[0],d.daily.sunset[0],{feelsLike:d.current.apparent_temperature,tempActual:d.current.temperature_2m,dewPoint:d.current.dew_point_2m,humidity:d.current.relative_humidity_2m,isDay:d.current.is_day});
   const vibeTag=getVibeTag(d.hourly,d.daily,d.current.weather_code,now,d.daily.sunrise[0],d.daily.sunset[0]);
   card.className='summary-card glass';
   card.innerHTML=`<div class="summary-label">Next 12 Hours</div><div class="vibe-tag">${vibeTag}</div><div class="summary-text">${summary}</div>`;
@@ -1126,7 +1129,7 @@ function render(){
   const c=d.current;
   const daily=d.daily;
   const hourly=d.hourly;
-  const now=new Date();
+  const now=getCityNow();
   const night=!c.is_day;
   const wi=getWeatherInfo(c.weather_code,night);
 
@@ -1135,7 +1138,7 @@ function render(){
   const curUV=c.uv_index!=null?c.uv_index:0;
   const uvEmo=(!c.is_day||curUV<1)?'':curUV<=3?'\u{1F324}\uFE0F':curUV<=5?'\u{1F60E}':'\u{1F9F4}';
   const uvSub=(!c.is_day||curUV<0.5)?'None \u00b7 Nighttime':(uvEmo?uvEmo+' ':'')+uvLabel(curUV);
-  const summary=generateSummary(hourly,daily,c.weather_code,now.getHours(),daily.sunrise[0],daily.sunset[0],{feelsLike:c.apparent_temperature,tempActual:c.temperature_2m,dewPoint:c.dew_point_2m,humidity:c.relative_humidity_2m,isDay:c.is_day});
+  const summary=generateSummary(hourly,daily,c.weather_code,now.getHours()+now.getMinutes()/60,daily.sunrise[0],daily.sunset[0],{feelsLike:c.apparent_temperature,tempActual:c.temperature_2m,dewPoint:c.dew_point_2m,humidity:c.relative_humidity_2m,isDay:c.is_day});
   const vibeTag=getVibeTag(hourly,daily,c.weather_code,now,daily.sunrise[0],daily.sunset[0]);
 
   const html=`
@@ -1392,7 +1395,7 @@ function shareWeather(){
   const daily=state.data.daily;
   const hourly=state.data.hourly;
   const wi=getWeatherInfo(c.weather_code,!c.is_day);
-  const now=new Date();
+  const now=getCityNow();
   const curUV=c.uv_index!=null?c.uv_index:0;
 
   // Decode HTML entities so canvas gets real Unicode emoji
@@ -1401,7 +1404,7 @@ function shareWeather(){
 
 
   // Full AI summary — same text as the app
-  const fullSum=generateSummary(hourly,daily,c.weather_code,now.getHours(),daily.sunrise[0],daily.sunset[0],{feelsLike:c.apparent_temperature,tempActual:c.temperature_2m,dewPoint:c.dew_point_2m,humidity:c.relative_humidity_2m,isDay:c.is_day});
+  const fullSum=generateSummary(hourly,daily,c.weather_code,now.getHours()+now.getMinutes()/60,daily.sunrise[0],daily.sunset[0],{feelsLike:c.apparent_temperature,tempActual:c.temperature_2m,dewPoint:c.dew_point_2m,humidity:c.relative_humidity_2m,isDay:c.is_day});
   const shortSum=fullSum;
 
   // Next-hour precipitation probability
@@ -2088,7 +2091,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
   const isDaytime=nowHour>=sunriseH&&nowHour<sunsetH;
   const hoursUntilSunset=Math.max(0,sunsetH-nowHour);
 
-  const now=new Date();
+  const now=getCityNow();
   const hours=[];
   hourly.time.forEach((t,i)=>{
     const d=new Date(t);const diff=(d-now)/3600000;
