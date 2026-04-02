@@ -1380,139 +1380,207 @@ function _updateAqiCard(){
 
 function shareWeather(){
   if(!state.data)return;
-  const c=state.data.current;const daily=state.data.daily;
+  const c=state.data.current;
+  const daily=state.data.daily;
+  const hourly=state.data.hourly;
   const wi=getWeatherInfo(c.weather_code,!c.is_day);
-  const W=800,H=460,dpr=Math.min(window.devicePixelRatio||1,2);
+  const now=new Date();
+  const curUV=c.uv_index!=null?c.uv_index:0;
+
+  // Generate the AI summary for the card
+  const cardSummary=generateSummary(hourly,daily,c.weather_code,now.getHours(),daily.sunrise[0],daily.sunset[0],{feelsLike:c.apparent_temperature,tempActual:c.temperature_2m,dewPoint:c.dew_point_2m,humidity:c.relative_humidity_2m,isDay:c.is_day});
+  // Truncate to ~240 chars to keep it tight on the card
+  const summaryText=cardSummary.length>240?cardSummary.slice(0,237).trimEnd()+'…':cardSummary;
+
+  // ── Pre-calculate dynamic canvas height ──────────────
+  const W=900,PAD=44;
+  const SUMMARY_FONT='500 16px system-ui,-apple-system,sans-serif';
+  const SUMMARY_LINE_H=26;
+  const CARD_INNER_W=W-PAD*2-48;
+  // Measure wrapped lines using a temp canvas
+  const _mc=document.createElement('canvas').getContext('2d');
+  _mc.font=SUMMARY_FONT;
+  const _words=summaryText.split(' ');let _line='';const _lines=[];
+  for(const _w of _words){const _t=_line+(_line?' ':'')+_w;if(_mc.measureText(_t).width>CARD_INNER_W&&_line){_lines.push(_line);_line=_w;}else{_line=_t;}}
+  if(_line)_lines.push(_line);
+  const cardH=Math.max(88,_lines.length*SUMMARY_LINE_H+44);
+  const statsY=170+cardH+28;
+  const footY=statsY+60;
+  const H=footY+48; // canvas height fits content exactly
+
+  const dpr=Math.min(window.devicePixelRatio||1,2);
   const canvas=document.createElement('canvas');
   canvas.width=W*dpr;canvas.height=H*dpr;
   const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
 
-  // Current UV (real-time, not daily max)
-  const curUV=c.uv_index!=null?c.uv_index:0;
-
-  // Background gradient based on conditions
+  // ── BACKGROUND ───────────────────────────────────────
   const wc=c.weather_code,isNight=!c.is_day;
   const isSnow=wc>=71&&wc<=77;
   const isRain=(wc>=51&&wc<=67)||(wc>=80&&wc<=82);
   const isStorm=wc>=95;
   const isCloudy=wc>=2&&wc<=48;
   let b0,b1;
-  if(isNight){b0='#0c0f1e';b1='#1a1f40';}
-  else if(isStorm){b0='#1c2030';b1='#2d3358';}
-  else if(isRain){b0='#1a3050';b1='#1e3f6a';}
-  else if(isSnow){b0='#cadced';b1='#a5c0da';}
-  else if(isCloudy){b0='#3a5a78';b1='#527898';}
-  else{b0='#1268bf';b1='#0a90d5';}
+  if(isNight){b0='#080c1c';b1='#121830';}
+  else if(isStorm){b0='#10141f';b1='#1e2438';}
+  else if(isRain){b0='#0e1e34';b1='#163050';}
+  else if(isSnow){b0='#9ab8d0';b1='#6e9ab8';}
+  else if(isCloudy){b0='#243c58';b1='#325270';}
+  else{b0='#0c56a8';b1='#0680c2';}
 
-  // Fill background
-  const bgGrad=ctx.createLinearGradient(0,0,W*0.7,H);
+  const bgGrad=ctx.createLinearGradient(0,0,W,H);
   bgGrad.addColorStop(0,b0);bgGrad.addColorStop(1,b1);
   ctx.fillStyle=bgGrad;ctx.fillRect(0,0,W,H);
 
-  // Radial glow (right half)
-  const glow=ctx.createRadialGradient(W*0.82,H*0.38,0,W*0.82,H*0.38,260);
-  glow.addColorStop(0,isNight?'rgba(90,110,210,0.22)':isSnow?'rgba(180,210,250,0.28)':'rgba(255,255,255,0.14)');
-  glow.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
+  // Radial ambient light (top-centre)
+  const amb=ctx.createRadialGradient(W*0.5,-40,0,W*0.5,-40,H*1.1);
+  amb.addColorStop(0,isNight?'rgba(80,100,220,0.18)':isSnow?'rgba(200,225,255,0.22)':'rgba(255,255,255,0.10)');
+  amb.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=amb;ctx.fillRect(0,0,W,H);
 
-  // Text palette (always on dark/rich background)
+  // Text palette
   const tMain='rgba(255,255,255,0.96)';
-  const tMid='rgba(255,255,255,0.72)';
-  const tMuted='rgba(255,255,255,0.46)';
+  const tMid='rgba(255,255,255,0.68)';
+  const tMuted='rgba(255,255,255,0.40)';
 
-  // ── LEFT COLUMN ──────────────────────────────────────
-  // Branding
-  ctx.fillStyle=tMuted;
-  ctx.font='600 11px -apple-system,system-ui,sans-serif';
-  ctx.fillText('CIRRUS  WEATHER',50,52);
+  // Helpers
+  function rRect(x,y,w,h,r){
+    ctx.beginPath();ctx.moveTo(x+r,y);
+    ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+    ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+    ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+    ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
+  }
+
+  // ── TOP ROW: location + temperature ──────────────────
+  // Emoji — explicit color emoji font stack for cross-platform rendering
+  ctx.font='54px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  ctx.fillText(wi.icon,PAD,86);
 
   // City name
   ctx.fillStyle=tMain;
-  ctx.font='700 30px -apple-system,system-ui,sans-serif';
-  ctx.fillText(state.name,50,98);
+  ctx.font='700 28px system-ui,-apple-system,sans-serif';
+  ctx.fillText(state.name||'',PAD+72,62);
 
-  // Region
-  ctx.fillStyle=tMuted;
-  ctx.font='400 14px -apple-system,system-ui,sans-serif';
-  ctx.fillText(state.region||'',50,122);
-
-  // Condition description (sits above the big temp)
-  ctx.fillStyle=tMid;
-  ctx.font='500 20px -apple-system,system-ui,sans-serif';
-  ctx.fillText(wi.desc,50,172);
-
-  // Temperature — hero number
-  ctx.fillStyle=tMain;
-  ctx.font='700 118px -apple-system,system-ui,sans-serif';
-  ctx.fillText(`${formatTemp(c.temperature_2m)}\u00b0`,44,302);
-
-  // High / Low
-  const hiVal=daily.temperature_2m_max?`${formatTemp(daily.temperature_2m_max[0])}\u00b0`:'--';
-  const loVal=daily.temperature_2m_min?`${formatTemp(daily.temperature_2m_min[0])}\u00b0`:'--';
-  ctx.fillStyle=tMuted;
-  ctx.font='500 15px -apple-system,system-ui,sans-serif';
-  ctx.fillText(`H: ${hiVal}  \u00b7  L: ${loVal}`,50,348);
-
-  // ── RIGHT PANEL ──────────────────────────────────────
-  const px=490,py=52,pw=272,ph=346,pr=18;
-  // Glass card
-  ctx.fillStyle='rgba(255,255,255,0.10)';
-  ctx.beginPath();
-  ctx.moveTo(px+pr,py);
-  ctx.lineTo(px+pw-pr,py);ctx.arcTo(px+pw,py,px+pw,py+pr,pr);
-  ctx.lineTo(px+pw,py+ph-pr);ctx.arcTo(px+pw,py+ph,px+pw-pr,py+ph,pr);
-  ctx.lineTo(px+pr,py+ph);ctx.arcTo(px,py+ph,px,py+ph-pr,pr);
-  ctx.lineTo(px,py+pr);ctx.arcTo(px,py,px+pr,py,pr);
-  ctx.closePath();ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();
-
-  // Weather emoji — centered at top of panel
-  ctx.font='76px sans-serif';
-  const emW=ctx.measureText(wi.icon).width;
-  ctx.fillText(wi.icon,px+pw/2-emW/2,py+90);
-
-  // Divider under emoji
-  ctx.strokeStyle='rgba(255,255,255,0.14)';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(px+18,py+106);ctx.lineTo(px+pw-18,py+106);ctx.stroke();
-
-  // 4 stats in 2×2 grid inside panel
-  const stats=[
-    ['Feels Like',`${formatTemp(c.apparent_temperature)}\u00b0`],
-    ['Humidity',`${c.relative_humidity_2m}%`],
-    ['Wind',`${windSpeed(c.wind_speed_10m)} ${windUnit()}`],
-    ['UV Index',curUV>0?curUV.toFixed(0):'\u2014'],
-  ];
-  const colW=pw/2;
-  stats.forEach((s,i)=>{
-    const col=i%2,row=Math.floor(i/2);
-    const sx=px+22+col*colW,sy=py+140+row*82;
-    if(i===2){
-      ctx.strokeStyle='rgba(255,255,255,0.10)';ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(px+18,sy-18);ctx.lineTo(px+pw-18,sy-18);ctx.stroke();
-    }
+  // Region / state
+  if(state.region){
     ctx.fillStyle=tMuted;
-    ctx.font='600 10px -apple-system,system-ui,sans-serif';
-    ctx.fillText(s[0].toUpperCase(),sx,sy);
-    ctx.fillStyle=tMain;
-    ctx.font='600 22px -apple-system,system-ui,sans-serif';
-    ctx.fillText(s[1],sx,sy+28);
+    ctx.font='400 13px system-ui,-apple-system,sans-serif';
+    ctx.fillText(state.region,PAD+72,82);
+  }
+
+  // Condition · H/L
+  const hiV=daily.temperature_2m_max?`${formatTemp(daily.temperature_2m_max[0])}\u00b0`:'--';
+  const loV=daily.temperature_2m_min?`${formatTemp(daily.temperature_2m_min[0])}\u00b0`:'--';
+  ctx.fillStyle=tMid;
+  ctx.font='500 14px system-ui,-apple-system,sans-serif';
+  ctx.fillText(`${wi.desc}\u2002\u00b7\u2002H:${hiV}\u2003L:${loV}`,PAD+72,104);
+
+  // Temperature (right-aligned, large)
+  ctx.fillStyle=tMain;
+  ctx.font='700 100px system-ui,-apple-system,sans-serif';
+  ctx.textAlign='right';
+  ctx.fillText(`${formatTemp(c.temperature_2m)}\u00b0`,W-PAD,112);
+
+  // Feels like (right-aligned, under temp)
+  ctx.fillStyle=tMuted;
+  ctx.font='400 13px system-ui,-apple-system,sans-serif';
+  ctx.fillText(`Feels like ${formatTemp(c.apparent_temperature)}\u00b0`,W-PAD,134);
+  ctx.textAlign='left';
+
+  // ── DIVIDER ──────────────────────────────────────────
+  ctx.strokeStyle='rgba(255,255,255,0.10)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(PAD,154);ctx.lineTo(W-PAD,154);ctx.stroke();
+
+  // ── AI SUMMARY CARD ───────────────────────────────────
+  const cardY=170;
+  const cardX=PAD;
+  const cardW=W-PAD*2;
+
+  // Glass card fill
+  ctx.fillStyle='rgba(255,255,255,0.07)';
+  rRect(cardX,cardY,cardW,cardH,14);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.13)';ctx.lineWidth=1;
+  rRect(cardX,cardY,cardW,cardH,14);ctx.stroke();
+
+  // Quote mark accent
+  ctx.fillStyle='rgba(255,255,255,0.12)';
+  ctx.font='700 52px system-ui,-apple-system,sans-serif';
+  ctx.fillText('\u201C',cardX+18,cardY+46);
+
+  // Summary text lines (uses pre-calculated _lines from height pass)
+  ctx.fillStyle=tMid;
+  ctx.font=SUMMARY_FONT;
+  _lines.forEach((line,i)=>{
+    ctx.fillText(line,cardX+24,cardY+28+i*SUMMARY_LINE_H);
   });
 
-  // ── BOTTOM ACCENT STRIP ───────────────────────────────
-  const accentGrad=ctx.createLinearGradient(0,0,W,0);
+  // ── ACCENT GRADIENT (reusable) ────────────────────────
+  const accentGrad=ctx.createLinearGradient(cardX,0,cardX+cardW,0);
   accentGrad.addColorStop(0,'#38bdf8');
   accentGrad.addColorStop(0.5,'#818cf8');
   accentGrad.addColorStop(1,'#c084fc');
-  ctx.fillStyle=accentGrad;
-  ctx.fillRect(0,H-7,W,7);
 
-  // Date — bottom right
-  const ds=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  // Gradient border on summary card (top edge only, as a color pop)
+  ctx.strokeStyle=accentGrad;ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(cardX+14,cardY);ctx.lineTo(cardX+cardW-14,cardY);ctx.stroke();
+
+  // ── STATS ROW — 3 stats, pill-style ──────────────────
+  // Drop humidity; keep Feels Like, Wind, UV — show condition emoji too
+  const stats=[
+    {emoji:'🌡️',label:'FEELS LIKE',value:`${formatTemp(c.apparent_temperature)}\u00b0`},
+    {emoji:'💨',label:'WIND',value:`${windSpeed(c.wind_speed_10m)} ${windUnit()}`},
+    {emoji:'☀️',label:'UV INDEX',value:curUV>0?curUV.toFixed(0):'\u2014'},
+  ];
+  const statW=cardW/stats.length;
+  // Pill background behind entire stats row
+  ctx.fillStyle='rgba(255,255,255,0.05)';
+  rRect(cardX,statsY-16,cardW,58,12);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;
+  rRect(cardX,statsY-16,cardW,58,12);ctx.stroke();
+
+  stats.forEach((s,i)=>{
+    const cx=cardX+i*statW+statW/2;
+    // Divider
+    if(i>0){
+      ctx.strokeStyle='rgba(255,255,255,0.10)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(cardX+i*statW,statsY-4);ctx.lineTo(cardX+i*statW,statsY+30);ctx.stroke();
+    }
+    ctx.textAlign='center';
+    // Label
+    ctx.fillStyle=tMuted;
+    ctx.font='500 10px system-ui,-apple-system,sans-serif';
+    ctx.fillText(s.label,cx,statsY+2);
+    // Value — gradient text via temp canvas trick
+    ctx.fillStyle=tMain;
+    ctx.font='700 20px system-ui,-apple-system,sans-serif';
+    ctx.fillText(s.value,cx,statsY+26);
+    ctx.textAlign='left';
+  });
+
+  // ── FOOTER ───────────────────────────────────────────
+  // Gradient wordmark
+  ctx.font='700 13px system-ui,-apple-system,sans-serif';
+  ctx.fillStyle=accentGrad;
+  ctx.fillText('CIRRUS',PAD,footY+20);
+  const cirrusW=ctx.measureText('CIRRUS').width;
   ctx.fillStyle=tMuted;
-  ctx.font='400 12px -apple-system,system-ui,sans-serif';
+  ctx.font='400 12px system-ui,-apple-system,sans-serif';
+  ctx.fillText('  \u00b7  cirrus.weather',PAD+cirrusW,footY+20);
+
+  const ds=now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  ctx.fillStyle=tMuted;
+  ctx.font='400 11px system-ui,-apple-system,sans-serif';
   ctx.textAlign='right';
-  ctx.fillText(ds,W-26,H-18);
+  ctx.fillText(ds,W-PAD,footY+20);
   ctx.textAlign='left';
+
+  // ── ACCENT STRIP (bottom edge) ────────────────────────
+  const stripGrad=ctx.createLinearGradient(0,0,W,0);
+  stripGrad.addColorStop(0,'#38bdf8');
+  stripGrad.addColorStop(0.5,'#818cf8');
+  stripGrad.addColorStop(1,'#c084fc');
+  ctx.fillStyle=stripGrad;
+  ctx.fillRect(0,H-6,W,6);
 
   canvas.toBlob(blob=>{
     const file=new File([blob],`cirrus-${state.name}.png`,{type:'image/png'});
