@@ -1776,10 +1776,21 @@ function buildPrecipTimeline(hourly,now){
     if(windows.length>1){const l2=precipLabel(windows[1].code);sentence+=` Another round of ${l2.toLowerCase()} near ${fmtH(windows[1].start)}.`;}
   }
   function precipChanceLabel(p){if(p===0)return'None';if(p<=15)return'Very unlikely';if(p<=35)return'Unlikely';if(p<=55)return'Possible';if(p<=75)return'Likely';return'Very likely';}
+  // Sky-tone color for each hour when dry — makes the bar feel alive even with no rain
+  function skyTone(h){
+    if(h<5||h>=22)return'rgba(60,70,160,0.38)';   // deep night — indigo
+    if(h<7)return'rgba(210,120,140,0.45)';          // dawn — rose
+    if(h<10)return'rgba(90,170,230,0.50)';          // morning — sky blue
+    if(h<15)return'rgba(56,189,248,0.52)';          // midday — bright cyan-blue
+    if(h<17)return'rgba(100,175,235,0.48)';         // afternoon — softer blue
+    if(h<19)return'rgba(240,160,70,0.48)';          // golden hour — amber
+    if(h<21)return'rgba(180,110,180,0.42)';         // dusk — mauve
+    return'rgba(80,70,150,0.38)';                   // evening — deep violet
+  }
   const dots=hrs.map(h=>{
     const wet=h.prob>=THRESHOLD;
-    const alpha=wet?Math.max(0.28,Math.min(1,(h.prob-THRESHOLD)/(100-THRESHOLD)*0.72+0.28)).toFixed(2):0.11;
-    const bg=wet?`rgba(58,143,212,${alpha})`:`rgba(128,128,128,${alpha})`;
+    const alpha=wet?Math.max(0.35,Math.min(1,(h.prob-THRESHOLD)/(100-THRESHOLD)*0.65+0.35)).toFixed(2):1;
+    const bg=wet?`rgba(58,143,212,${alpha})`:skyTone(h.h);
     return`<div class="precip-dot" style="background:${bg}" title="${fmtH(h.h)} \u2014 ${h.prob}%"></div>`;
   }).join('');
   const hourLabels=hrs.map((h,i)=>`<span>${i===0?'Now':i%3===0?fmtH(h.h):''}</span>`).join('');
