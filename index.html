@@ -1680,7 +1680,7 @@ function getVibeTag(hourly,daily,currentCode,now,sunrise,sunset){
   const isPredomNight=dayHours<hours.length*0.35;
   const niceOutdoor=maxT>=62&&maxT<=92&&rainCount===0&&stormCount===0&&!isPredomNight&&isDaytime;
 
-  const seed=(now.getDate()*31+nowHour)%7;
+  const cityHash=(state.name||'').split('').reduce((a,c)=>(a*31+c.charCodeAt(0))&0xffff,0);const seed=((now.getDate()*31+nowHour)*7+cityHash)%13;
   const vpick=(arr)=>arr[seed%arr.length];
   if(stormCount>0)return vpick(['\u26A1 Stay inside','\u26A1 Shelter up','\u26A1 Not a good time to be outside','\u26A1 Storm watch']);
   if(snowCount>2&&maxT<32)return vpick(['\u2744\uFE0F Full winter mode','\u2744\uFE0F Deep freeze','\u2744\uFE0F Bundle everything','\u2744\uFE0F Serious cold']);
@@ -1968,98 +1968,154 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
   const city=(!state.isGPS&&state.name)?state.name.split(',')[0]:'';
   const month=now.toLocaleString('en-US',{month:'long'});
   const timeframe=isNight?'tonight':isMorning?'this morning':isAfternoon?'this afternoon':isEvening?'this evening':'ahead';
-  const seed=(now.getDate()*31+nowHour)%7;
+  const cityHash=(state.name||'').split('').reduce((a,c)=>(a*31+c.charCodeAt(0))&0xffff,0);
+  const seed=((now.getDate()*31+nowHour)*7+cityHash)%13;
   const pick=(arr)=>arr[seed%arr.length];
+  const pick2=(arr)=>arr[(seed+5)%arr.length];
 
   const parts=[];
 
-  // Part 1: Core condition
+  // ── PART 1: Core condition ──────────────────────────────────
   if(stormHours.length>0){
-    if(voice===0)parts.push(isNight?`Thunderstorms tonight. Stay inside.`:`Thunderstorms in the mix ${timeframe}. If you hear thunder, you're close enough.`);
-    else if(voice===1)parts.push(isNight?`Storms rolling through tonight \u2014 the right call is staying in.`:`Storms are in the forecast ${timeframe}. Keep an eye on the sky and stay flexible with any outdoor plans.`);
-    else if(voice===2)parts.push(city?`Thunderstorms ${timeframe}, because ${city} wasn't done keeping things interesting.`:`Thunderstorms ${timeframe}. The sky has opinions today.`);
-    else parts.push(`Storms ${timeframe}. Stay inside.`);
+    parts.push(pick([
+      isNight?`Thunderstorms overnight. Charge your phone and stay put.`:`Thunderstorms in the mix ${timeframe}. If you can hear it, you're close enough — go inside.`,
+      isNight?`The sky is having a whole moment tonight. Inside is the right answer.`:`Storms today. Cancel, reschedule, or get very wet. Those are the options.`,
+      city?`${city}'s getting some dramatic weather ${timeframe}. Stay sharp and stay inside.`:`The sky has strong opinions ${timeframe}. Yield to them.`,
+      isNight?`Lightning's doing its thing out there. Get comfortable — you're staying in.`:`Thunderstorms on the way. Your outdoor plans are suggestions, not commitments.`,
+      `Storms rolling through. This is the weather app telling you to charge your phone and find a couch.`,
+      `Real storm energy ${timeframe}. Not a drill. Inside is the correct location.`,
+      isNight?`Pouring and stormy out there tonight. The bed wins.`:`Thunderstorms ${timeframe}. The weather made your decision for you — you're welcome.`,
+    ]));
   }else if(snowHours.length>2){
-    if(voice===0)parts.push(isNight?`Snow overnight with temps dropping to ${minTDisp}\u00b0. The morning commute will be slow.`:`Snow moving in around ${minTDisp}\u00b0. Roads will be slow \u2014 plan for it.`);
-    else if(voice===1)parts.push(isNight?`Snow coming in overnight with lows around ${minTDisp}\u00b0 \u2014 give yourself extra time in the morning.`:`Snow on the way with temps near ${minTDisp}\u00b0. Drive like you've got nowhere to be.`);
-    else if(voice===2)parts.push(city?`Snow in ${city} today at ${minTDisp}\u00b0. The roads will separate the prepared from everyone else.`:`${minTDisp}\u00b0 and snowing. The roads will be a thing.`);
-    else parts.push(`Snow. ${minTDisp}\u00b0. Slow down.`);
+    parts.push(pick([
+      isNight?`Snowing overnight, down to ${minTDisp}\u00b0. The morning commute is already plotting against you.`:`Snow moving in at ${minTDisp}\u00b0. The roads will have opinions. Drive accordingly.`,
+      `${minTDisp}\u00b0 and snowing. Everything takes longer, looks prettier, and feels slightly more dangerous. Plan for all three.`,
+      isNight?`Snow overnight with lows around ${minTDisp}\u00b0. Set your alarm early and act like you expected this.`:`Snow at ${minTDisp}\u00b0. Drive like you've got nowhere to be, because you probably shouldn't.`,
+      city?`${city}'s getting snow today. The roads will separate the prepared from everyone else.`:`Snow moving through. Beautiful to look at, inconvenient to drive in.`,
+      `It's snowing. Your schedule would like a word with the weather, but the weather isn't listening.`,
+      `${minTDisp}\u00b0 and snow. The kind of day that makes your commute an adventure nobody signed up for.`,
+    ]));
   }else if(heavyRain.length>2){
-    if(voice===0)parts.push(isNight?`Heavy rain all night. Just stay in.`:`Steady rain ${timeframe}. The umbrella isn't optional.`);
-    else if(voice===1)parts.push(isNight?`Pouring tonight \u2014 crack a window and let it be your soundtrack.`:`Heavy rain moving in. The umbrella earns its keep today.`);
-    else if(voice===2)parts.push(isNight?`Pouring tonight, which is honestly excellent sleeping weather.`:`Heavy rain ${timeframe}. The umbrella is load-bearing today.`);
-    else parts.push(isNight?`Heavy rain tonight.`:`Heavy rain ${timeframe}.`);
+    parts.push(isNight?pick([
+      `It's really coming down tonight. Perfect excuse to do absolutely nothing.`,
+      `Pouring outside — crack a window, fall asleep to it. You've earned it.`,
+      `Heavy rain all night. The weather made your plans for you. Embrace it.`,
+      `Full-send rain tonight. The couch and something to watch are the only correct answers.`,
+      `Pouring out there tonight. Genuinely excellent sleeping weather if you let it be.`,
+    ]):pick([
+      `Heavy rain ${timeframe}. The umbrella is structural today, not decorative.`,
+      `It's coming down out there. Everything outside is getting wet, including your confidence.`,
+      `Real rain today. No umbrella is a bold choice — bold and incorrect.`,
+      `The kind of rain that laughs at a hood. Umbrella or stay in. Those are the options.`,
+      `Heavy rain on the way. Waterproof your plans or cancel them.`,
+      city?`${city}'s getting a proper soaking ${timeframe}. The umbrella earns its keep today.`:`Heavy rain incoming. The umbrella earns its keep today.`,
+    ]));
   }else if(rainHours.length>0){
     const rainStart=rainHours[0].h;
-    let when;if(rainStart<6)when='early this morning';else if(rainStart<12)when='this morning';else if(rainStart<17)when='this afternoon';else if(rainStart<20)when='this evening';else when='tonight';
-    if(voice===0)parts.push(`Showers possible ${when}. Umbrella in the bag.`);
-    else if(voice===1)parts.push(`A few showers could pop up ${when} \u2014 not a washout, but worth keeping the umbrella handy.`);
-    else if(voice===2)parts.push(`Rain might show up ${when}. Classic "you'll wish you had it" umbrella situation.`);
-    else parts.push(`Showers ${when}. Bring an umbrella.`);
+    const when=rainStart<6?'early this morning':rainStart<12?'this morning':rainStart<17?'this afternoon':rainStart<20?'this evening':'tonight';
+    parts.push(pick([
+      `Showers possible ${when}. Classic "should I bring the umbrella" weather. Yes. Bring the umbrella.`,
+      `Rain moving in around ${when}. That umbrella in your car? Now's the time.`,
+      `A little rain ${when} — not a washout, just annoying without an umbrella.`,
+      `The radar has ${when} circled. Pack accordingly.`,
+      `Showers sliding in ${when}. Not catastrophic. Just the universe testing you a little.`,
+      `Umbrella situation ${when}. The weather app is nudging you. Take the hint.`,
+    ]));
   }else if(clearHours.length>hours.length*0.7){
     if(isPredomNight){
       if(minT>65){
-        if(voice===0)parts.push(`Clear and ${minTDisp}\u00b0 tonight. Windows-open weather.`);
-        else if(voice===1)parts.push(`Mild and clear tonight at ${minTDisp}\u00b0 \u2014 windows open, ceiling fan on, good sleeping weather.`);
-        else if(voice===2)parts.push(city?`${minTDisp}\u00b0 and clear tonight in ${city}. Sleeping with the windows open is essentially required.`:`${minTDisp}\u00b0 and clear tonight. Sleeping with the windows open is essentially required.`);
-        else parts.push(`Clear. ${minTDisp}\u00b0. Open the windows.`);
+        parts.push(pick([
+          `Clear and ${minTDisp}\u00b0 tonight. That's windows-open, ceiling-fan-on weather. Don't overthink it.`,
+          `${minTDisp}\u00b0 and clear overnight. Open the windows. You'll sleep better.`,
+          `Mild, clear night at ${minTDisp}\u00b0. The kind of night that makes you glad you're exactly where you are.`,
+          `${minTDisp}\u00b0 with clear skies overnight. Windows open, good sleep, no notes.`,
+        ]));
       }else if(minT>45){
-        if(voice===0)parts.push(`Clear and ${minTDisp}\u00b0 tonight. Quiet out.`);
-        else if(voice===1)parts.push(`Cool and clear tonight at ${minTDisp}\u00b0 \u2014 the kind of still, crisp air that's easy to sleep through.`);
-        else if(voice===2)parts.push(`${minTDisp}\u00b0 and clear. That particular nighttime quiet.`);
-        else parts.push(`Clear. ${minTDisp}\u00b0.`);
+        parts.push(pick([
+          `Clear and ${minTDisp}\u00b0 tonight. Crisp, quiet, and exactly what a night should be.`,
+          `${minTDisp}\u00b0 and clear out there. The good kind of still.`,
+          `Cool, clear, and calm tonight at ${minTDisp}\u00b0. Perfect do-nothing weather.`,
+          `Clear night ahead. ${minTDisp}\u00b0 — crisp enough to sleep great.`,
+        ]));
       }else{
-        if(voice===0)parts.push(`Clear but cold tonight \u2014 ${minTDisp}\u00b0 overnight. Extra blanket is correct.`);
-        else if(voice===1)parts.push(`Crystal clear tonight, but ${minTDisp}\u00b0 \u2014 the kind of cold that makes your bed feel like a reward.`);
-        else if(voice===2)parts.push(`Clear and ${minTDisp}\u00b0 tonight. Beautiful from inside.`);
-        else parts.push(`Clear. Cold. ${minTDisp}\u00b0.`);
+        parts.push(pick([
+          `Clear but ${minTDisp}\u00b0 tonight. Gorgeous from inside. Extra blanket is mandatory.`,
+          `${minTDisp}\u00b0 and crystal clear. Beautiful to look at, cold to be in.`,
+          `Cold night, clear skies. Your bed just became the best seat in the house.`,
+          `Clear and ${minTDisp}\u00b0 tonight. The stars are out. So is the cold.`,
+        ]));
       }
-    }else if(maxT>90){
-      if(voice===0)parts.push(`${maxTDisp}\u00b0 with full sun. Sunscreen and water.`);
-      else if(voice===1)parts.push(`Hot and sunny at ${maxTDisp}\u00b0 \u2014 the sun is serious today. Stay hydrated.`);
-      else if(voice===2)parts.push(city?`${maxTDisp}\u00b0 and sunny in ${city}. Didn't ask for an outdoor sauna, but here we are.`:`${maxTDisp}\u00b0 and not a cloud in sight. You didn't ask for an outdoor sauna.`);
-      else parts.push(`${maxTDisp}\u00b0. Sunny. Drink water.`);
+    }else if(maxT>92){
+      parts.push(pick([
+        `${maxTDisp}\u00b0 and full sun. The water bottle is load-bearing today. Non-negotiable.`,
+        `The sun is fully committed at ${maxTDisp}\u00b0. Shade isn't a luxury — it's a strategy.`,
+        city?`${maxTDisp}\u00b0 in ${city} today. Didn't ask for an outdoor sauna, but here it is.`:`${maxTDisp}\u00b0 and not a cloud helping you out. Hydrate or regret it.`,
+        `Hot enough that stepping outside for a minute counts as a commitment. ${maxTDisp}\u00b0.`,
+        `${maxTDisp}\u00b0 with full sun. Your body would like water, shade, and a serious conversation about your outdoor plans.`,
+        `${maxTDisp}\u00b0 today. The sun came to work and brought everything.`,
+      ]));
     }else if(maxT>80){
-      if(voice===0)parts.push(`${maxTDisp}\u00b0 and sunny. A good day.`);
-      else if(voice===1)parts.push(`Warm and beautiful out there at ${maxTDisp}\u00b0 \u2014 the kind of day that makes you feel good for no particular reason.`);
-      else if(voice===2)parts.push(city?`${maxTDisp}\u00b0 and gorgeous in ${city}. What did you do to deserve this? Enjoy it.`:`${maxTDisp}\u00b0 with clear skies. What did you do to deserve this? Enjoy it.`);
-      else parts.push(`${maxTDisp}\u00b0. Sunny.`);
+      parts.push(pick([
+        `${maxTDisp}\u00b0 and gorgeous out there. Whatever you did to deserve this — keep doing it.`,
+        `Clear skies, ${maxTDisp}\u00b0. The weather did its part. The rest is up to you.`,
+        city?`${maxTDisp}\u00b0 and sunny in ${city} today. Hard to complain.`:`${maxTDisp}\u00b0 with clear skies. The forecast equivalent of a high five.`,
+        `Beautiful day — ${maxTDisp}\u00b0 and cloudless. Your indoor plans just became negotiable.`,
+        `The sun showed up today. ${maxTDisp}\u00b0 and clear. Go get some of it.`,
+        `${maxTDisp}\u00b0 with nothing in the way. Days like this are why people check the weather.`,
+      ]));
     }else if(maxT>65){
-      if(voice===0)parts.push(`${maxTDisp}\u00b0 and clear. Hard to ask for more.`);
-      else if(voice===1)parts.push(`Really nice out there \u2014 ${maxTDisp}\u00b0 with clear skies. The kind of weather people move to new cities chasing.`);
-      else if(voice===2)parts.push(city?`${maxTDisp}\u00b0 and clear in ${city} in ${month}. Feels slightly unearned. Enjoy it anyway.`:`${maxTDisp}\u00b0 and sunny in ${month}. The forecast equivalent of a blank check.`);
-      else parts.push(`${maxTDisp}\u00b0. Clear.`);
+      parts.push(pick([
+        `${maxTDisp}\u00b0 and clear. Honestly perfect. Don't waste it.`,
+        `This is the weather people move to new cities chasing. ${maxTDisp}\u00b0 and sunny.`,
+        city?`${city}'s having a really nice one today — ${maxTDisp}\u00b0 and clear.`:`${maxTDisp}\u00b0 with clear skies. The weather app is genuinely happy about this one.`,
+        `Clear and ${maxTDisp}\u00b0. The kind of day that makes you feel irrationally optimistic about everything.`,
+        `Textbook perfect weather. ${maxTDisp}\u00b0, no clouds, no drama, no complaints.`,
+        `${maxTDisp}\u00b0 and gorgeous in ${month}. Feels almost too good. Enjoy it before you overthink it.`,
+      ]));
     }else if(maxT>50){
-      if(voice===0)parts.push(`${maxTDisp}\u00b0 and sunny. Jacket weather, but the good kind.`);
-      else if(voice===1)parts.push(`Cool and clear at ${maxTDisp}\u00b0 \u2014 crisp enough to feel alive, warm enough not to complain.`);
-      else if(voice===2)parts.push(city?`${maxTDisp}\u00b0 with full sun in ${city}. Technically cold, actually lovely.`:`${maxTDisp}\u00b0 with full sun. Technically cold, actually lovely.`);
-      else parts.push(`${maxTDisp}\u00b0. Sunny. Wear a jacket.`);
+      parts.push(pick([
+        `${maxTDisp}\u00b0 and bright. Crisp enough to feel alive, warm enough not to complain.`,
+        `Cool and clear at ${maxTDisp}\u00b0. The jacket earns its keep, but the sun makes it worth it.`,
+        `${maxTDisp}\u00b0 with full sun. Technically chilly, objectively lovely.`,
+        `Brisk and clear today — ${maxTDisp}\u00b0. The kind of weather that makes coffee taste better outside.`,
+        `${maxTDisp}\u00b0 and sunny. Dress for it and you'll love it. Skip the layers and you'll regret it.`,
+      ]));
     }else{
-      if(voice===0)parts.push(`Sunny and ${maxTDisp}\u00b0. Cold. The sun is moral support only.`);
-      else if(voice===1)parts.push(`Clear skies, but ${maxTDisp}\u00b0 \u2014 beautiful to look at from inside. Dress properly if you're going out.`);
-      else if(voice===2)parts.push(`${maxTDisp}\u00b0 and sunny. Gorgeous from inside.`);
-      else parts.push(`${maxTDisp}\u00b0. Cold. Sunny.`);
+      parts.push(pick([
+        `${maxTDisp}\u00b0 and sunny. The sun is purely decorative today — beautiful, zero warmth.`,
+        `Clear skies, ${maxTDisp}\u00b0. Gorgeous from inside. Bundle up if you're heading out.`,
+        `Sunny and ${maxTDisp}\u00b0 — the kind of cold that looks warm through the window. Don't be fooled.`,
+        `${maxTDisp}\u00b0 with full sun. The light is lying to you. That's a coat situation.`,
+      ]));
     }
   }else if(cloudyHours.length>hours.length*0.5){
     if(isPredomNight){
-      if(voice===0)parts.push(`Overcast and ${minTDisp}\u00b0 tonight. Quiet out.`);
-      else if(voice===1)parts.push(`Cloudy overnight with temps near ${minTDisp}\u00b0 \u2014 nothing dramatic, perfectly fine sleeping weather.`);
-      else if(voice===2)parts.push(`Overcast and ${minTDisp}\u00b0 overnight. A perfectly forgettable night in the best way.`);
-      else parts.push(`Cloudy. ${minTDisp}\u00b0.`);
+      parts.push(pick([
+        `Overcast and ${minTDisp}\u00b0 overnight. Low drama. Sleep well.`,
+        `Clouds moving through tonight at ${minTDisp}\u00b0. Nothing exciting, nothing terrible.`,
+        `${minTDisp}\u00b0 and overcast tonight. A perfectly forgettable night in the best way.`,
+        `Cloudy and ${minTDisp}\u00b0 tonight. Quiet out. Sleep easy.`,
+      ]));
     }else{
-      if(voice===0)parts.push(`${maxTDisp}\u00b0 with cloud cover. Not a postcard, but not a problem either.`);
-      else if(voice===1)parts.push(`Gray and ${maxTDisp}\u00b0 out there \u2014 overcast, but dry is dry.`);
-      else if(voice===2)parts.push(city?`Overcast in ${city} at ${maxTDisp}\u00b0. The sun took a personal day.`:`${maxTDisp}\u00b0 and cloudy. The sun is taking the day off.`);
-      else parts.push(`${maxTDisp}\u00b0. Cloudy.`);
+      parts.push(pick([
+        `${maxTDisp}\u00b0 with cloud cover. The sun took a personal day. Dry though.`,
+        `Gray skies at ${maxTDisp}\u00b0, but no rain. Overcast and honestly fine.`,
+        city?`Overcast in ${city} at ${maxTDisp}\u00b0. At least it's not raining.`:`${maxTDisp}\u00b0 and cloudy. The sky's being dramatic. Ignore it.`,
+        `Clouds are in charge today. ${maxTDisp}\u00b0, dry, moodily lit. Carry on.`,
+        `${maxTDisp}\u00b0 under cloud cover. Not a postcard. Not a problem either.`,
+        `Overcast today. The lighting is moody, the weather is fine.`,
+      ]));
     }
   }else{
-    if(voice===0)parts.push(`${minTDisp}\u00b0 to ${maxTDisp}\u00b0 with shifting skies. Just kind of a day.`);
-    else if(voice===1)parts.push(`Mixed conditions today \u2014 ${minTDisp}\u00b0 to ${maxTDisp}\u00b0 with some clouds, some breaks. Nothing dramatic.`);
-    else if(voice===2)parts.push(`${minTDisp}\u00b0 to ${maxTDisp}\u00b0 and the sky can't quite make up its mind. Relatable.`);
-    else parts.push(`${minTDisp}\u00b0\u2013${maxTDisp}\u00b0. Mixed.`);
+    parts.push(pick([
+      `${minTDisp}\u00b0 to ${maxTDisp}\u00b0 and the sky can't quite decide what it wants to do. Relatable.`,
+      `Mixed conditions today — ${minTDisp}\u2013${maxTDisp}\u00b0 with the sky keeping everyone guessing.`,
+      `${minTDisp}\u00b0 to ${maxTDisp}\u00b0 with shifting clouds. Not dramatic, just inconsistent.`,
+      `The forecast is giving "undecided" energy today. ${minTDisp}\u2013${maxTDisp}\u00b0 and kind of a mixed bag.`,
+    ]));
   }
 
-  // Part 2: Notable shift or practical note (only if genuinely useful)
+  // ── PART 2: Notable shift or detail ──────────────────────────
   if(parts.length<3){
     const firstHalf=hours.slice(0,6);
     const secondHalf=hours.slice(6);
@@ -2070,100 +2126,139 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
     const laterRef=isNight?'by morning':isEvening?'later tonight':'later on';
     const uvMax=daily.uv_index_max[0];
     if(firstRain>1&&secondRain===0){
-      if(voice===0)parts.push(`Clears out ${laterRef}.`);
-      else if(voice===1)parts.push(`It clears up ${laterRef} once the rain moves through.`);
-      else if(voice===2)parts.push(`Gets better ${laterRef}. Patience.`);
-      else parts.push(`Clears ${laterRef}.`);
+      parts.push(pick([
+        `Clears out ${laterRef}. Patience is the whole strategy.`,
+        `Gets better ${laterRef} once it moves through.`,
+        `It improves ${laterRef}. Hang tight.`,
+        `The rain moves on ${laterRef}. Good news is coming.`,
+      ]));
     }else if(firstRain===0&&secondRain>1){
-      if(voice===0)parts.push(`Dry for now. Rain moves in ${laterRef}.`);
-      else if(voice===1)parts.push(`Enjoy the dry window while it lasts \u2014 rain arrives ${laterRef}.`);
-      else if(voice===2)parts.push(`Nice now, but rain is coming ${laterRef}. Enjoy the false sense of security.`);
-      else parts.push(`Rain later.`);
+      parts.push(pick([
+        `Dry for now, but rain's coming ${laterRef}. Enjoy the false sense of security.`,
+        `Nice window right now — rain moves in ${laterRef}.`,
+        `Good news: it's clear now. Less good news: rain ${laterRef}.`,
+        `Make the most of the dry stretch. Rain arrives ${laterRef}.`,
+      ]));
     }else if(firstClear>4&&secondClear<2){
-      if(voice===0)parts.push(`Clouds build in ${laterRef}. Enjoy the sun while you have it.`);
-      else if(voice===1)parts.push(`Clouds roll in ${laterRef} \u2014 get outside while it's this nice.`);
-      else if(voice===2)parts.push(`Sky closes up ${laterRef}. Make the most of the good part.`);
-      else parts.push(`Clouds later.`);
+      parts.push(pick([
+        `Clouds build in ${laterRef}. Get outside while it's this nice.`,
+        `Sky closes up ${laterRef} — the good part is right now.`,
+        `Enjoy the sunshine. Clouds move in ${laterRef}.`,
+        `Clear now, clouds ${laterRef}. The math is clear: go out now.`,
+      ]));
     }else if(windyHours.length>2){
-      if(voice===0)parts.push(`Gusts up to ${maxWindDisp} ${windUnitStr}. Your hair won't cooperate.`);
-      else if(voice===1)parts.push(`Breezy out there with gusts to ${maxWindDisp} ${windUnitStr} \u2014 hold onto anything that can blow away.`);
-      else if(voice===2)parts.push(`${maxWindDisp} ${windUnitStr} gusts. The hair is a lost cause today.`);
-      else parts.push(`Windy. ${maxWindDisp} ${windUnitStr}.`);
+      parts.push(pick([
+        `Gusts up to ${maxWindDisp} ${windUnitStr}. Your hair has already given up. Accept it.`,
+        `${maxWindDisp} ${windUnitStr} gusts today. Hold onto anything that can become a projectile.`,
+        `Breezy out there — ${maxWindDisp} ${windUnitStr} gusts. Secure the patio furniture.`,
+        `The wind has opinions today: ${maxWindDisp} ${windUnitStr}. Yours don't matter much.`,
+      ]));
     }else if(maxT-minT>20){
-      if(voice===0)parts.push(`${minTDisp}\u00b0 to ${maxTDisp}\u00b0 is a big swing. Layers.`);
-      else if(voice===1)parts.push(`Big temperature range today \u2014 what you wear this morning won't cut it later. Layers are the move.`);
-      else if(voice===2)parts.push(`${minTDisp}\u00b0 to ${maxTDisp}\u00b0 swing. Dress in layers and feel smug about it later.`);
-      else parts.push(`Layer up.`);
+      parts.push(pick([
+        `${minTDisp}\u00b0 to ${maxTDisp}\u00b0 is a real swing. Layers are the only correct answer.`,
+        `Big temperature range — ${minTDisp}\u00b0 to ${maxTDisp}\u00b0. What you wear this morning won't cut it later.`,
+        `${minTDisp}\u2013${maxTDisp}\u00b0 spread. Dress in layers and feel smug when everyone else is cold.`,
+        `Morning and evening feel completely different today. Your closet would appreciate a heads-up.`,
+      ]));
     }else if(minT<32&&!isPredomNight){
-      if(voice===0)parts.push(`Sub-freezing temps today. Real coat, gloves, the whole thing.`);
-      else if(voice===1)parts.push(`Temps dip below freezing \u2014 full winter gear today, no shortcuts.`);
-      else if(voice===2)parts.push(`It goes below freezing today. A hoodie is not a coat. A hoodie has never been a coat.`);
-      else parts.push(`Below freezing. Dress for it.`);
+      parts.push(pick([
+        `It goes below freezing today. A hoodie is not a coat. A hoodie has never been a coat.`,
+        `Sub-freezing temps today. Real coat, gloves, the whole thing.`,
+        `${minTDisp}\u00b0 is below freezing. Dress like you know that.`,
+        `Freezing temps in the mix. No shortcuts on the layers today.`,
+      ]));
     }else if(isDaytime&&hoursUntilSunset>2&&uvMax>=7){
-      if(voice===0)parts.push(`UV is ${uvMax>=9?'extreme':'high'} today. Sunscreen.`);
-      else if(voice===1)parts.push(`${uvMax>=9?'Extreme':'High'} UV today \u2014 worth the 30 seconds it takes to put on sunscreen.`);
-      else if(voice===2)parts.push(`UV is ${uvMax>=9?'extreme':'high'} today. Your future skin will have opinions about this.`);
-      else parts.push(`${uvMax>=9?'Extreme':'High'} UV. Sunscreen.`);
+      parts.push(pick([
+        `UV is ${uvMax>=9?'extreme':'seriously high'} today. Your future skin will have opinions about sunscreen.`,
+        `${uvMax>=9?'Extreme':'High'} UV on the agenda. The 30 seconds to apply sunscreen is worth it.`,
+        `High UV today. The weather app is peer-pressuring you into sunscreen. Listen to it.`,
+      ]));
     }else if(maxWind>35){
-      if(voice===0)parts.push(`Winds are serious today \u2014 secure anything loose.`);
-      else if(voice===1)parts.push(`Legitimately windy at ${maxWindDisp} ${windUnitStr} \u2014 hold onto anything that can fly away.`);
-      else if(voice===2)parts.push(`${maxWindDisp} ${windUnitStr} gusts. Anything not nailed down is now a projectile.`);
-      else parts.push(`Very windy. ${maxWindDisp} ${windUnitStr}.`);
+      parts.push(pick([
+        `Winds are legitimately serious — ${maxWindDisp} ${windUnitStr}. Secure anything that can fly.`,
+        `${maxWindDisp} ${windUnitStr} gusts. Anything not nailed down is now a projectile.`,
+        `Big wind today: ${maxWindDisp} ${windUnitStr}. Don't park near trees.`,
+      ]));
     }else if(niceOutdoor){
-      if(voice===0)parts.push(`The weather is doing its part. The rest is up to you.`);
-      else if(voice===1)parts.push(`Conditions are genuinely great today \u2014 don't let them go to waste.`);
-      else if(voice===2)parts.push(`Weather this good doesn't come around every day. Do something with it.`);
-      else parts.push(`Go outside.`);
+      parts.push(pick([
+        `The weather is doing its part. The rest is on you.`,
+        `Conditions are genuinely great. Don't waste them.`,
+        `Weather this good doesn't come around every day. Do something with it.`,
+        `Go outside. It won't always be this nice.`,
+        `The forecast passed the vibe check. Now go live in it.`,
+      ]));
     }else if((isPredomNight||isNight)&&rainHours.length>3){
-      if(voice===0)parts.push(`Rain all night. Good sleeping weather.`);
-      else if(voice===1)parts.push(`Rain through the night \u2014 the good kind, where you're inside and it's not your problem.`);
-      else if(voice===2)parts.push(`Pouring tonight. The universe is handing you permission to do nothing. Take it.`);
-      else parts.push(`Rain all night.`);
+      parts.push(pick([
+        `Rain all night. The universe is handing you permission to do nothing. Take it.`,
+        `Good sleeping weather if you let it be. The rain handles the rest.`,
+        `Pouring tonight — the kind where being inside feels intentional.`,
+      ]));
     }
   }
 
-  // Part 3: Personality sign-off (rotates with voice)
+  // ── PART 3: Sign-off ─────────────────────────────────────────
   if(parts.length<4){
     if(niceOutdoor){
-      if(voice===0)parts.push(pick([`The weather is doing its part.`,`No excuses today.`,`It won't always be this nice.`]));
-      else if(voice===1)parts.push(pick([`Honestly, go enjoy it.`,`Make the most of it.`,`Days like this are worth savoring.`]));
-      else if(voice===2)parts.push(pick([`The kind of day that makes you feel irrationally optimistic.`,`If the weather were filing taxes it would get a full refund.`,city?`${city} is having a good day. You should too.`:`Even the forecast looks happy about this.`]));
-      else parts.push(`Go outside.`);
+      parts.push(pick2([
+        `The weather passed the vibe check. Now go live in it.`,
+        `No excuses today. The weather is doing everything right.`,
+        `It won't always be this nice. Enjoy the part where it is.`,
+        `Genuinely beautiful out there. Don't spend it all inside.`,
+        `Days this nice are limited. The forecast told you so.`,
+        `Get outside. You'll be glad you did.`,
+      ]));
     }else if(stormHours.length>0){
-      if(voice===0)parts.push(pick([`Stay sharp out there.`,`Not a day to be cavalier about it.`]));
-      else if(voice===1)parts.push(pick([`Stay safe and don't push your luck outside.`,`Hope the rest of your day is warmer and drier.`]));
-      else if(voice===2)parts.push(pick([`The sky is basically doing a whole thing right now.`,`Mother Nature is going through something today.`]));
-      else parts.push(`Stay inside.`);
+      parts.push(pick2([
+        `Stay sharp out there.`,
+        `Not a day to be cavalier about the weather.`,
+        `The sky is running a whole thing today. Give it space.`,
+        `Stay safe. Inside is winning today.`,
+      ]));
     }else if(rainHours.length>3){
-      if(voice===0)parts.push(pick([`Rain days have their uses.`,`Indoor energy is appropriate here.`]));
-      else if(voice===1)parts.push(pick([`Good day to lean into the cozy.`,`Not all days need to be outside days.`]));
-      else if(voice===2)parts.push(pick([`The rain is not your fault and it's not personal.`,`Someone, somewhere, is thrilled about this weather.`]));
-      else parts.push(`Stay in.`);
+      parts.push(pick2([
+        `Rain days have their uses. Lean into them.`,
+        `Not all days need to be outside days. This is one of those.`,
+        `Good day to lean into the cozy.`,
+        `The rain is not your fault and not personal. Just be inside.`,
+      ]));
     }else if(snowHours.length>2){
-      if(voice===0)parts.push(pick([`Everything takes longer in the snow. Budget for that.`,`Winter is doing winter things today.`]));
-      else if(voice===1)parts.push(pick([`At least it's pretty.`,`There's something kind of peaceful about a snowy day, if you can stay off the roads.`]));
-      else if(voice===2)parts.push(pick([`Snow has a way of making everything quiet and beautiful and also slightly dangerous.`,`The snow looks great. The roads, less so.`]));
-      else parts.push(`Budget extra time.`);
+      parts.push(pick2([
+        `Everything takes longer in the snow. Budget for it.`,
+        `At least it's pretty.`,
+        `The snow looks great. The roads, less so.`,
+        `Winter is doing winter things today.`,
+      ]));
     }else if(isNight||isPredomNight){
-      if(voice===0)parts.push(pick([`Rest up.`,`Night's doing its thing out there.`]));
-      else if(voice===1)parts.push(pick([`Hope the evening treats you well.`,`Quiet night — enjoy the downtime.`]));
-      else if(voice===2)parts.push(pick([`The night shift of the atmosphere is clocked in.`,`Nights like this make good excuses for doing absolutely nothing.`]));
-      else parts.push(`Good night.`);
+      parts.push(pick2([
+        `Rest up.`,
+        `Good night out there.`,
+        `The night shift of the atmosphere is clocked in. You should be too.`,
+        `Quiet night. The good kind of nothing.`,
+        `Get some rest. Tomorrow has weather too.`,
+      ]));
     }else if(maxT>88){
-      if(voice===0)parts.push(pick([`Shade and water. That's the whole strategy.`,`The heat doesn't care how tough you are.`]));
-      else if(voice===1)parts.push(pick([`Take it easy out there — the heat is real today.`,`Your body will thank you for going slow in this.`]));
-      else if(voice===2)parts.push(pick([`The sun has elected itself boss today and everyone else is just along for the ride.`,`Hot enough that doing anything outside feels like a personal achievement.`]));
-      else parts.push(`Hydrate.`);
+      parts.push(pick2([
+        `Shade and water. That's the whole strategy today.`,
+        `Hydrate aggressively and without apology.`,
+        `The heat doesn't care how tough you are.`,
+        `Find the shade. It's out there and it's free.`,
+      ]));
     }else if(cloudyHours.length>hours.length*0.6&&rainHours.length===0){
-      if(voice===0)parts.push(pick([`Gray but dry. Could be worse.`,`The clouds are committing today, at least.`]));
-      else if(voice===1)parts.push(pick([`Overcast days have a certain calm to them.`,`Gloomy light, sure — but there's something nice about a gray quiet day.`]));
-      else if(voice===2)parts.push(pick([`The sky didn't get the memo about it being daytime.`,`Somewhere the sun is shining. Not here. But somewhere.`]));
-      else parts.push(`Gray day.`);
+      parts.push(pick2([
+        `Gray but dry. Could be worse.`,
+        `The sun took a day off. Match its energy if you need to.`,
+        `Somewhere the sun is shining. Not here. But somewhere.`,
+        `Overcast has a certain calm to it. Work with it.`,
+      ]));
     }else{
-      if(voice===0)parts.push(pick([`Unremarkable, dependable weather.`,`Nothing wild. That's fine.`,`A perfectly average day, meteorologically speaking.`]));
-      else if(voice===1)parts.push(pick([`Sometimes "fine" is exactly what you need.`,`A solid, steady day. Take it.`,`Not every day has to be a weather event.`]));
-      else if(voice===2)parts.push(pick([`The forecast is giving "steady workhorse" energy today.`,`This weather showed up, did its job, and asked for nothing in return.`,`Meteorologically unremarkable. Personally, that might be fine.`]));
-      else parts.push(`Fine.`);
+      parts.push(pick2([
+        `Nothing wild. That's fine.`,
+        `Unremarkable weather is underrated.`,
+        `Low drama, high function. Today's weather.`,
+        `Sometimes "fine" is exactly what the day ordered.`,
+        `A perfectly adequate day, meteorologically speaking.`,
+        `The forecast kept it simple today. You're welcome.`,
+      ]));
     }
   }
 
