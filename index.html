@@ -767,28 +767,30 @@ $('#searchInput').addEventListener('input',e=>{
 
 async function searchCity(q){
   try{
-    // Photon (OpenStreetMap) handles typos and fuzzy matching far better than Open-Meteo geocoding
-    const r=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(q)+'&limit=6&lang=en');
+    // Open-Meteo geocoding returns population data — fetch more than we show so we can sort
+    const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=15&language=en&format=json');
     const d=await r.json();
     const sg=$('#suggestions');
-    const results=(d.features||[]).filter(f=>f.properties&&f.geometry);
-    if(!results.length){sg.classList.remove('show');return}
-    sg.innerHTML=results.map((f,i)=>{
-      const p=f.properties;
-      const name=p.name||p.city||p.town||p.village||'';
-      const parts=[p.state||p.county,p.country].filter(Boolean);
-      return `<div class="suggestion-item" data-i="${i}"><strong>${name}</strong><small>${parts.join(', ')}</small></div>`;
+    const raw=(d.results||[]);
+    if(!raw.length){sg.classList.remove('show');return}
+    // Sort by population, with a 2x boost for US cities so e.g. Austin TX beats a tiny foreign town
+    const results=raw.slice().sort((a,b)=>{
+      const sa=(a.population||0)*(a.country_code==='US'?2:1);
+      const sb=(b.population||0)*(b.country_code==='US'?2:1);
+      return sb-sa;
+    }).slice(0,6);
+    sg.innerHTML=results.map((r,i)=>{
+      const region=[r.admin1,r.country].filter(Boolean).join(', ');
+      return `<div class="suggestion-item" data-i="${i}"><strong>${r.name}</strong><small>${region}</small></div>`;
     }).join('');
     sg.classList.add('show');
     sg.querySelectorAll('.suggestion-item').forEach((el,i)=>{
       el.addEventListener('click',()=>{
-        const f=results[i];
-        const p=f.properties;
-        const [lon,lat]=f.geometry.coordinates;
-        state.lat=lat;state.lon=lon;state.isGPS=false;
-        state.name=p.name||p.city||p.town||p.village||'Unknown';
-        state.region=[p.state||p.county,p.country].filter(Boolean).join(', ');
-        autoUnit(p.country||'');
+        const loc=results[i];
+        state.lat=loc.latitude;state.lon=loc.longitude;state.isGPS=false;
+        state.name=loc.name;
+        state.region=[loc.admin1,loc.country].filter(Boolean).join(', ');
+        autoUnit(loc.country_code||'');
         addRecentSearch({name:state.name,region:state.region,lat:state.lat,lon:state.lon});
         sg.classList.remove('show');
         $('#searchInput').value='';
