@@ -143,17 +143,17 @@
 .dark{
 --bg-from:#1a2a3a;--bg-to:#1a3a2a;
 --card-bg:rgba(255,255,255,0.10);--card-border:rgba(255,255,255,0.16);
---text:#e8f0f8;--text-secondary:#a0b8c8;--text-tertiary:#6a8898;
+--text:#e8f0f8;--text-secondary:#b8cedd;--text-tertiary:#8aaec4;
 --accent:#4ab8f8;
 }
 /* Night time in light mode: dark navy sky needs light text + crisper cards */
 .night:not(.dark){
 --card-bg:rgba(255,255,255,0.20);--card-border:rgba(255,255,255,0.35);
---text:#f0f6fc;--text-secondary:#c8d8e8;--text-tertiary:#a0c0d4;
+--text:#f0f6fc;--text-secondary:#d0e0ef;--text-tertiary:#b0cfe0;
 }
 /* Nav bar at night: solid enough to read without squinting */
 .night:not(.dark) .mobile-nav{background:rgba(12,22,44,0.92);border-top-color:rgba(255,255,255,0.18)}
-.night:not(.dark) .nav-tab{color:rgba(180,210,230,0.70)}
+.night:not(.dark) .nav-tab{color:rgba(180,210,230,0.85)}
 .night:not(.dark) .nav-tab.active{color:var(--accent)}
 html{font-family:'Outfit',-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--bg-from),var(--bg-to));color:var(--text);transition:background var(--transition),color var(--transition);overflow-x:hidden}
@@ -175,7 +175,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .suggestion-item:hover,.suggestion-item:active{background:rgba(58,143,212,0.1)}
 .suggestion-item small{color:var(--text-tertiary);display:block;margin-top:2px;font-size:12px}
 .suggestion-item.suggestion-recent{display:flex;align-items:center;gap:10px}
-.suggestion-item.suggestion-recent .recent-icon{font-size:13px;color:var(--text-tertiary);flex-shrink:0;opacity:0.7}
+.suggestion-item.suggestion-recent .recent-icon{font-size:13px;color:var(--text-secondary);flex-shrink:0}
 .btn-icon{width:44px;height:44px;border:1px solid var(--card-border);border-radius:14px;background:var(--card-bg);backdrop-filter:blur(var(--card-blur));-webkit-backdrop-filter:blur(var(--card-blur));color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;flex-shrink:0}
 .btn-icon:hover{background:rgba(255,255,255,0.55)}
 .dark .btn-icon:hover{background:rgba(255,255,255,0.14)}
@@ -195,8 +195,8 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .hero-icon{font-size:80px;line-height:1;margin-bottom:4px;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.08))}
 .hero-temp{font-size:96px;font-weight:800;letter-spacing:0px;line-height:1;font-variant-numeric:tabular-nums;background:linear-gradient(160deg,var(--text) 20%,var(--accent) 110%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 4px 20px rgba(0,0,0,0.22))}
 .hero-desc{font-size:18px;font-weight:600;color:var(--text-secondary);margin-top:4px}
-.hero-hilo{font-size:15px;color:var(--text-tertiary);margin-top:6px;font-weight:500}
-.hero-feels{font-size:13px;color:var(--text-tertiary);margin-top:4px}
+.hero-hilo{font-size:15px;color:var(--text-secondary);margin-top:6px;font-weight:500}
+.hero-feels{font-size:13px;color:var(--text-secondary);margin-top:4px}
 
 /* Unit toggle - removed, F only */
 
@@ -1125,7 +1125,7 @@ async function fetchWeather(){
   const app=$('#app');
   app.classList.add('loading');
   try{
-    const url=`https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day,visibility,cloud_cover,dew_point_2m,uv_index&hourly=temperature_2m,weather_code,precipitation_probability,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,uv_index_max&timezone=auto&forecast_days=5`;
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day,visibility,cloud_cover,dew_point_2m,uv_index&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,wind_speed_10m,wind_direction_10m,cloud_cover,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,precipitation_sum,uv_index_max&timezone=auto&forecast_days=5&elevation=auto&models=best_match`;
     const r=await fetch(url);
     state.data=await r.json();
     state.openDay=0;
