@@ -1891,7 +1891,8 @@ function getForwardLookLede(hourly,now,sunrise,sunset){
   }
   if(!hrs.length)return null;
   function fmtH(h){if(h===0)return'midnight';if(h<12)return h+' AM';if(h===12)return'noon';return(h-12)+' PM';}
-  function period(h){if(h>=2&&h<6)return'overnight';if(h<12)return'this morning';if(h<17)return'this afternoon';if(h<21)return'this evening';return'tonight';}
+  const nowH=now.getHours();
+  function period(h){const tmrw=h<nowH;if(h>=2&&h<6)return'overnight';if(h<12)return tmrw?'tomorrow morning':'this morning';if(h<17)return tmrw?'tomorrow afternoon':'this afternoon';if(h<21)return tmrw?'tomorrow evening':'this evening';return'tonight';}
   // Storm check
   const stormH=hrs.find(h=>[95,96,99].includes(h.code));
   if(stormH)return`Storms expected ${period(stormH.h)} — stay weather-aware.`;
