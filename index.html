@@ -1379,7 +1379,7 @@ function _updateAqiCard(){
   card.innerHTML=`<div class="label">Air Quality</div><div class="value">${aqiScore}</div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="sub">${info.tip}</div>`;
 }
 
-async function shareWeather(){
+function shareWeather(){
   if(!state.data)return;
   const c=state.data.current;
   const daily=state.data.daily;
@@ -1392,9 +1392,6 @@ async function shareWeather(){
   function htmlDecode(s){const t=document.createElement('textarea');t.innerHTML=s;return t.value;}
   const emojiChar=htmlDecode(wi.icon);
 
-  // Preload app icon image (async — data URL needs one event loop tick)
-  const _appIconEl=document.getElementById('appIcon');
-  const _iconImg=_appIconEl?.href?await new Promise(res=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>res(null);i.src=_appIconEl.href;}):null;
 
   // Up to 3 sentences from the AI summary
   const fullSum=generateSummary(hourly,daily,c.weather_code,now.getHours(),daily.sunrise[0],daily.sunset[0],{feelsLike:c.apparent_temperature,tempActual:c.temperature_2m,dewPoint:c.dew_point_2m,humidity:c.relative_humidity_2m,isDay:c.is_day});
@@ -1544,32 +1541,18 @@ async function shareWeather(){
   const AG=ctx.createLinearGradient(0,0,W,0);
   AG.addColorStop(0,'#38bdf8');AG.addColorStop(0.5,'#818cf8');AG.addColorStop(1,'#c084fc');
 
-  // ── TOP BAR: Icon + CIRRUS lockup ────────────────────
+  // ── TOP BAR: CIRRUS wordmark centered ────────────────
   ctx.fillStyle=AG;ctx.fillRect(0,0,W,3);
 
-  // Measure CIRRUS text width so we can center the icon+text lockup
-  if('letterSpacing' in ctx)ctx.letterSpacing='6px';
-  ctx.font='800 46px Outfit,system-ui,-apple-system,sans-serif';
-  const cirrusTextW=ctx.measureText('CIRRUS').width+30; // 5 gaps × 6px
-  if('letterSpacing' in ctx)ctx.letterSpacing='0px';
-  const ICON_SZ=46;
-  const LOCK_GAP=10;
-  const lockupW=ICON_SZ+LOCK_GAP+cirrusTextW;
-  const lockX=Math.round((W-lockupW)/2);
-
-  // App icon — preloaded above as _iconImg
-  if(_iconImg){ctx.drawImage(_iconImg,lockX,CIRRUS_Y-ICON_SZ+6,ICON_SZ,ICON_SZ);}
-
-  // CIRRUS wordmark — gradient matching landing page
-  const cirGradX=lockX+ICON_SZ+LOCK_GAP;
-  const cirGrad=ctx.createLinearGradient(cirGradX,CIRRUS_Y-36,cirGradX+cirrusTextW,CIRRUS_Y);
+  // CIRRUS wordmark — centered, gradient matching landing page
+  const cirGrad=ctx.createLinearGradient(W*0.3,CIRRUS_Y-36,W*0.7,CIRRUS_Y);
   cirGrad.addColorStop(0,lightBg?'#182838':'#ddeeff');
   cirGrad.addColorStop(1,lightBg?'#1a90e4':'#4ab8f8');
   if('letterSpacing' in ctx)ctx.letterSpacing='6px';
   ctx.font='800 46px Outfit,system-ui,-apple-system,sans-serif';
   ctx.fillStyle=cirGrad;
-  ctx.textAlign='left';
-  ctx.fillText('CIRRUS',cirGradX,CIRRUS_Y);
+  ctx.textAlign='center';
+  ctx.fillText('CIRRUS',W/2,CIRRUS_Y);
   if('letterSpacing' in ctx)ctx.letterSpacing='0px';
 
   // URL below lockup, centered
