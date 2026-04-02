@@ -2163,7 +2163,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
   const month=now.toLocaleString('en-US',{month:'long'});
   const timeframe=isNight?'tonight':isMorning?'this morning':isAfternoon?'this afternoon':isEvening?'this evening':'ahead';
   const cityHash=(state.name||'').split('').reduce((a,c)=>(a*31+c.charCodeAt(0))&0xffff,0);
-  const seed=((now.getDate()*31+nowHour)*7+cityHash)%13;
+  const seed=((now.getDate()*31+Math.floor(nowHour))*7+cityHash)%13;
   const pick=(arr)=>arr[seed%arr.length];
   const pick2=(arr)=>arr[(seed+5)%arr.length];
 
@@ -2612,7 +2612,7 @@ function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,is
   const quips=[];
   const sh=sunsetH||20; // real sunset fractional hour
   const sunAlreadyDown=hour>=sh;
-  const minsToSunset=Math.max(0,(sh-(hour+now.getMinutes()/60))*60);
+  const minsToSunset=Math.max(0,(sh-hour)*60);
   const isGoldenHour=!sunAlreadyDown&&minsToSunset<=50; // within 50 min of sunset
   const morning=!sunAlreadyDown&&hour>=6&&hour<12;
   const afternoon=!sunAlreadyDown&&hour>=12&&hour<17;
@@ -2745,7 +2745,7 @@ function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,is
   // Fallback
   if(quips.length===0)quips.push('\uD83D\uDE0A Hope you have a great one out there today.');
 
-  const seed=(new Date().getDate()*100+hour)%quips.length;
+  const seed=(new Date().getDate()*100+Math.floor(hour))%quips.length;
   return quips[seed];
 }
 
