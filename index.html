@@ -988,7 +988,7 @@ function _updateSummaryCard(){
   }
   const d=state.data;
   const now=new Date();
-  const summary=generateSummary(d.hourly,d.daily,d.current.weather_code,now.getHours(),d.daily.sunrise[0],d.daily.sunset[0]);
+  const summary=generateSummary(d.hourly,d.daily,d.current.weather_code,now.getHours(),d.daily.sunrise[0],d.daily.sunset[0],{feelsLike:d.current.apparent_temperature,tempActual:d.current.temperature_2m,dewPoint:d.current.dew_point_2m,humidity:d.current.relative_humidity_2m,isDay:d.current.is_day});
   const vibeTag=getVibeTag(d.hourly,d.daily,d.current.weather_code,now,d.daily.sunrise[0],d.daily.sunset[0]);
   card.className='summary-card glass';
   card.innerHTML=`<div class="summary-label">Next 12 Hours</div><div class="vibe-tag">${vibeTag}</div><div class="summary-text">${summary}</div>`;
@@ -1131,7 +1131,7 @@ function render(){
   const curUV=c.uv_index!=null?c.uv_index:0;
   const uvEmo=(!c.is_day||curUV<1)?'':curUV<=3?'\u{1F324}\uFE0F':curUV<=5?'\u{1F60E}':'\u{1F9F4}';
   const uvSub=(!c.is_day||curUV<0.5)?'None \u00b7 Nighttime':(uvEmo?uvEmo+' ':'')+uvLabel(curUV);
-  const summary=generateSummary(hourly,daily,c.weather_code,now.getHours(),daily.sunrise[0],daily.sunset[0]);
+  const summary=generateSummary(hourly,daily,c.weather_code,now.getHours(),daily.sunrise[0],daily.sunset[0],{feelsLike:c.apparent_temperature,tempActual:c.temperature_2m,dewPoint:c.dew_point_2m,humidity:c.relative_humidity_2m,isDay:c.is_day});
   const vibeTag=getVibeTag(hourly,daily,c.weather_code,now,daily.sunrise[0],daily.sunset[0]);
 
   const html=`
@@ -1922,7 +1922,7 @@ function getForwardLookLede(hourly,now,sunrise,sunset){
   return`Rain expected from ${fmtH(w.s)}\u2013${fmtH(w.e+1<24?w.e+1:w.e)}.${windows.length>1?' Another round later.':''}`;
 }
 
-function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
+function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
   function fracHour(s){if(!s)return null;const p=(s.split('T')[1]||'');const[h,m]=p.split(':');return parseInt(h)+(parseInt(m)||0)/60;}
   const sunriseH=fracHour(sunrise)||6;
   const sunsetH=fracHour(sunset)||20;
@@ -1954,18 +1954,49 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
   const windyHours=hours.filter(h=>h.wind>30);
   const maxWind=Math.round(Math.max(...hours.map(h=>h.wind))*0.621371);
 
+  // ── Current conditions (feels-like, dew point, humidity) ─────
+  const feelsLikeF=cond?Math.round(toF(cond.feelsLike)):maxT;
+  const actualF=cond?Math.round(toF(cond.tempActual)):maxT;
+  const feelsGap=feelsLikeF-actualF; // positive = hotter than it reads, negative = cooler
+  const feelsLikeDisp=state.unit==='C'?Math.round((feelsLikeF-32)*5/9):feelsLikeF;
+  const actualDisp=state.unit==='C'?Math.round((actualF-32)*5/9):actualF;
+  const dewF=cond&&cond.dewPoint!=null?Math.round(toF(cond.dewPoint)):null;
+  const humidity=cond&&cond.humidity!=null?Math.round(cond.humidity):null;
+  const isHumid=dewF!=null&&dewF>=65;        // uncomfortable
+  const isOppressive=dewF!=null&&dewF>=70;   // genuinely miserable
+  const isSoup=dewF!=null&&dewF>=75;         // dangerous / sauna territory
+  const bigFeelsHot=feelsGap>=8&&isDaytime;  // feels much hotter than it reads
+  const bigFeeelsCold=feelsGap<=-8;          // feels much colder (wind chill)
+
+  // ── Multi-day streak (5-day forecast) ────────────────────────
+  const futureMaxF=daily.temperature_2m_max.map(t=>Math.round(toF(t)));
+  const futureMinF=daily.temperature_2m_min.map(t=>Math.round(toF(t)));
+  const futurePrecip=daily.precipitation_probability_max||[];
+  const hotStreakDays=futureMaxF.filter(t=>t>=90).length;   // days ≥90°F in forecast
+  const coldStreakDays=futureMaxF.filter(t=>t<=40).length;  // days ≤40°F in forecast
+  const rainStreakDays=futurePrecip.filter(p=>p>=60).length;// days with ≥60% rain
+  const hotWeek=hotStreakDays>=4;
+  const coldWeek=coldStreakDays>=4;
+  const rainWeek=rainStreakDays>=4;
+  const hotSpell=!hotWeek&&hotStreakDays>=3;
+  const coldSnap=!coldWeek&&coldStreakDays>=3;
+  const tomorrowMaxF=futureMaxF[1]||futureMaxF[0];
+  const tomorrowMaxDisp=state.unit==='C'?Math.round((tomorrowMaxF-32)*5/9):tomorrowMaxF;
+  const tomorrowPrecip=futurePrecip[1]||0;
+  const bigTempSwingTomorrow=Math.abs(tomorrowMaxF-maxT)>15;
+
   const isNight=!isDaytime;
   const isMorning=isDaytime&&nowHour<12;
   const isAfternoon=isDaytime&&nowHour>=12&&nowHour<17;
   const isEvening=isDaytime&&nowHour>=17;
+  // After 7 PM focus shifts to overnight + tomorrow
+  const isLateEvening=nowHour>=19||isNight;
   const dayHoursInWindow=hours.filter(h=>h.h+0.5>=sunriseH&&h.h+0.5<sunsetH).length;
   const isPredomNight=dayHoursInWindow<hours.length*0.35;
   const outdoorWorthy=isDaytime&&maxT>=50&&rainHours.length<3&&stormHours.length===0&&snowHours.length<2;
   const niceOutdoor=isDaytime&&maxT>=62&&maxT<=92&&rainHours.length===0&&(clearHours.length>3||cloudyHours.length>0)&&stormHours.length===0&&!isPredomNight;
 
-  // Daily voice rotation: 0=deadpan  1=warm  2=wry  3=minimal
   const dayOfYear=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000);
-  const voice=dayOfYear%4;
   const city=(!state.isGPS&&state.name)?state.name.split(',')[0]:'';
   const month=now.toLocaleString('en-US',{month:'long'});
   const timeframe=isNight?'tonight':isMorning?'this morning':isAfternoon?'this afternoon':isEvening?'this evening':'ahead';
@@ -1973,6 +2004,37 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
   const seed=((now.getDate()*31+nowHour)*7+cityHash)%13;
   const pick=(arr)=>arr[seed%arr.length];
   const pick2=(arr)=>arr[(seed+5)%arr.length];
+
+  // ── Surprise/contrast opener — leads with the weirdest thing ─
+  // Only fires when something is genuinely weird/notable enough to be the hook
+  let contrastOpener=null;
+  if(isSoup&&isDaytime){
+    contrastOpener=pick([
+      `Dew point of ${dewF}\u00b0. The air is soup. Actual soup.`,
+      `${humidity}% humidity and a dew point of ${dewF}\u00b0 — stepping outside feels like walking through a warm wet towel.`,
+      city?`${city} is serving full swamp energy today. The humidity is the whole story.`:`The dew point is ${dewF}\u00b0. Everything is sticky. Everything is always sticky.`,
+      `The air contains approximately ${humidity}% water. You'll know it immediately when you step outside.`,
+    ]);
+  }else if(isOppressive&&isDaytime&&feelsGap>=6){
+    contrastOpener=pick([
+      `It's ${actualDisp}\u00b0, but between the humidity and the heat it feels like ${feelsLikeDisp}\u00b0. The extra ${feelsGap}\u00b0 is pure atmosphere.`,
+      `Technically ${actualDisp}\u00b0. Functionally ${feelsLikeDisp}\u00b0. Humidity does what it wants.`,
+      `The thermometer says ${actualDisp}\u00b0. Your body will disagree at ${feelsLikeDisp}\u00b0. The humidity wins every argument.`,
+    ]);
+  }else if(bigFeelsHot&&feelsGap>=12){
+    contrastOpener=pick([
+      `It reads ${actualDisp}\u00b0, but it feels like ${feelsLikeDisp}\u00b0. That ${feelsGap}-degree gap is real.`,
+      `Technically ${actualDisp}\u00b0. Tell that to your body at ${feelsLikeDisp}\u00b0.`,
+      `The number says ${actualDisp}\u00b0. The feel says ${feelsLikeDisp}\u00b0. Trust the feel.`,
+      city?`${city} says ${actualDisp}\u00b0. ${city} is lying. Feels like ${feelsLikeDisp}\u00b0.`:`${actualDisp}\u00b0 on paper, ${feelsLikeDisp}\u00b0 in practice. There's a difference.`,
+    ]);
+  }else if(bigFeeelsCold&&feelsGap<=-12){
+    contrastOpener=pick([
+      `It's ${actualDisp}\u00b0, but with the wind it feels like ${feelsLikeDisp}\u00b0. Dress for the feel, not the number.`,
+      `Thermometer: ${actualDisp}\u00b0. Wind chill: ${feelsLikeDisp}\u00b0. The wind chill is what matters.`,
+      `${actualDisp}\u00b0 is optimistic. Wind brings it to ${feelsLikeDisp}\u00b0. Layers.`,
+    ]);
+  }
 
   const parts=[];
 
@@ -2013,7 +2075,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
     ]));
   }else if(rainHours.length>0){
     const rainStart=rainHours[0].h;
-    const when=rainStart<6?'early this morning':rainStart<12?'this morning':rainStart<17?'this afternoon':rainStart<20?'this evening':'tonight';
+    const when=rainStart<nowHour?'later tonight':rainStart<6?'overnight':rainStart<12?'tomorrow morning':rainStart<17?'this afternoon':rainStart<20?'this evening':'tonight';
     parts.push(pick([
       `Showers possible ${when}. Classic "should I bring the umbrella" weather. Yes. Bring the umbrella.`,
       `Rain moving in around ${when}. That umbrella in your car? Now's the time.`,
@@ -2124,9 +2186,94 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
     const secondRain=secondHalf.filter(h=>h.precip>30).length;
     const firstClear=firstHalf.filter(h=>[0,1].includes(h.code)).length;
     const secondClear=secondHalf.filter(h=>[0,1].includes(h.code)).length;
-    const laterRef=isNight?'by morning':isEvening?'later tonight':'later on';
+    const laterRef=isLateEvening?'by morning':isEvening?'later tonight':'later on';
     const uvMax=daily.uv_index_max[0];
-    if(firstRain>1&&secondRain===0){
+
+    // Humidity/dew point (priority — it changes everything about how a day feels)
+    if(isSoup&&isDaytime&&!contrastOpener){
+      parts.push(pick([
+        `Dew point of ${dewF}\u00b0 — the air is legitimately wet. Your body will work twice as hard to cool down.`,
+        `${humidity}% humidity. Everything is sticky, nothing dries, and your hair has its own agenda now.`,
+        city?`${city} humidity is doing its absolute most today. Dew point ${dewF}\u00b0.`:`The humidity is the weather today. The temperature is just context.`,
+        `Dew point ${dewF}\u00b0. The kind of humidity that turns a short walk into an event.`,
+      ]));
+    }else if(isOppressive&&isDaytime&&!contrastOpener){
+      parts.push(pick([
+        `Dew point's up at ${dewF}\u00b0 — sticky and draining. Shade matters more than it normally would.`,
+        `${humidity}% humidity with a dew point of ${dewF}\u00b0. You'll feel it the second you step outside.`,
+        `The humidity is carrying today. ${dewF}\u00b0 dew point means it feels worse than the number suggests.`,
+        `Oppressive out there. The dew point of ${dewF}\u00b0 is doing the heavy lifting on the misery index.`,
+      ]));
+    }else if(isHumid&&isDaytime&&maxT>=85&&!contrastOpener){
+      parts.push(pick([
+        `With humidity like this, ${maxTDisp}\u00b0 hits differently. It's sticky and it's intentional.`,
+        `${maxTDisp}\u00b0 plus ${humidity}% humidity is its own situation. Hydrate constantly, complain freely.`,
+        `Hot and humid — the classic combo. The heat index is the real number today.`,
+        `Sweat doesn't evaporate when the air's this humid. Your body knows. Plan accordingly.`,
+      ]));
+    // Feels-like gap (when not already covered by contrast opener)
+    }else if(bigFeelsHot&&feelsGap>=8&&!contrastOpener&&isDaytime){
+      parts.push(pick([
+        `Feels like ${feelsLikeDisp}\u00b0 even though it's ${actualDisp}\u00b0. That gap is real — plan for the feel, not the number.`,
+        `The heat index puts it at ${feelsLikeDisp}\u00b0. Your body doesn't care what the thermometer says.`,
+        `${actualDisp}\u00b0 on paper, ${feelsLikeDisp}\u00b0 in practice. Adjust accordingly.`,
+        `Feels ${feelsGap}\u00b0 hotter than it reads. The combination of heat and humidity doesn't negotiate.`,
+      ]));
+    }else if(bigFeeelsCold&&feelsGap<=-8&&!contrastOpener){
+      parts.push(pick([
+        `Wind chill brings it to ${feelsLikeDisp}\u00b0. The thermometer is being overly optimistic.`,
+        `${actualDisp}\u00b0 on the gauge, ${feelsLikeDisp}\u00b0 on your face. Dress for the wind, not the reading.`,
+        `Exposed skin will know the wind chill immediately. The real number is ${feelsLikeDisp}\u00b0.`,
+      ]));
+    // Multi-day streaks
+    }else if(hotWeek){
+      parts.push(pick([
+        `And this isn't a one-day thing — it's hot all week. ${hotStreakDays} days above 90\u00b0 in the forecast.`,
+        city?`${city} is in full heat mode for the foreseeable future. ${hotStreakDays} days above 90\u00b0 ahead.`:`The whole week looks like this. Shade and water are your permanent companions.`,
+        `Not letting up either — ${hotStreakDays} consecutive hot days in the forecast. Pace yourself.`,
+        `This heat isn't going anywhere. The forecast has 90\u00b0+ locked in for ${hotStreakDays} days.`,
+      ]));
+    }else if(hotSpell){
+      parts.push(pick([
+        `And it's not just today — ${hotStreakDays} days of 90\u00b0+ ahead. The heat wave is committed.`,
+        `This is a ${hotStreakDays}-day stretch of heat. Not a fluke, a pattern.`,
+        city?`${city} is in for a hot run — ${hotStreakDays} days above 90\u00b0 in the forecast.`:`The heat sticks around for ${hotStreakDays} days. Budget your energy.`,
+      ]));
+    }else if(coldWeek){
+      parts.push(pick([
+        `And it's cold all week — ${coldStreakDays} days below 40\u00b0 in the forecast. Commit to the layers now.`,
+        `The cold isn't breaking anytime soon. ${coldStreakDays} days of this ahead.`,
+        `This cold snap is the whole week. Your coat is your best friend for ${coldStreakDays} more days.`,
+        city?`${city} is in for a cold week — ${coldStreakDays} days below 40\u00b0. It's a whole thing.`:`Below freezing for ${coldStreakDays} days. Start thinking about this as a lifestyle.`,
+      ]));
+    }else if(coldSnap){
+      parts.push(pick([
+        `Cold snap situation — ${coldStreakDays} days of sub-40\u00b0 ahead. This is a coat-every-day week.`,
+        `The cold lasts ${coldStreakDays} days. Don't get caught underdressed.`,
+        `${coldStreakDays}-day cold stretch ahead. The warm days are on the other side of this.`,
+      ]));
+    }else if(rainWeek){
+      parts.push(pick([
+        `The umbrella is just a part of the outfit this week — rain in the forecast ${rainStreakDays} days.`,
+        `${rainStreakDays} days of rain ahead. At some point it becomes a lifestyle.`,
+        `This week: wet. All of it. The umbrella earns its keep through the whole forecast.`,
+        city?`${city} is getting a proper soaking this week. ${rainStreakDays} rainy days ahead.`:`${rainStreakDays} rainy days in the forecast. The cozy is non-negotiable.`,
+      ]));
+    // Shift focus to tomorrow when it's late evening
+    }else if(isLateEvening&&bigTempSwingTomorrow&&!isNight){
+      parts.push(pick([
+        `Tomorrow looks ${tomorrowMaxF>maxT?'warmer':'cooler'} — ${tomorrowMaxDisp}\u00b0 is a notable shift from today.`,
+        `Worth knowing: tomorrow hits ${tomorrowMaxDisp}\u00b0. ${tomorrowMaxF>maxT?'Warmer coming.':'Cooler coming.'}`,
+        `${tomorrowMaxDisp}\u00b0 tomorrow — ${tomorrowMaxF>maxT?'a step up from today':'significantly cooler than today'}.`,
+      ]));
+    }else if(isLateEvening&&tomorrowPrecip>=60){
+      parts.push(pick([
+        `Rain tomorrow — ${tomorrowPrecip}% chance. Plan for wet if you've got anything outside.`,
+        `Tomorrow's looking wet. ${tomorrowPrecip}% rain probability. Umbrella advisory in effect.`,
+        `The forecast has tomorrow at ${tomorrowPrecip}% rain. Worth knowing before you plan the day.`,
+        `Rain moving in tomorrow. Don't let tonight's clear skies fool you.`,
+      ]));
+    }else if(firstRain>1&&secondRain===0){
       parts.push(pick([
         `Clears out ${laterRef}. Patience is the whole strategy.`,
         `Gets better ${laterRef} once it moves through.`,
@@ -2157,9 +2304,9 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
     }else if(maxT-minT>20){
       parts.push(pick([
         `${minTDisp}\u00b0 to ${maxTDisp}\u00b0 is a real swing. Layers are the only correct answer.`,
-        `Big temperature range — ${minTDisp}\u00b0 to ${maxTDisp}\u00b0. What you wear this morning won't cut it later.`,
+        isLateEvening?`${minTDisp}\u2013${maxTDisp}\u00b0 spread today. Whoever dressed for the morning was underprepared.`:`Big temperature range — ${minTDisp}\u00b0 to ${maxTDisp}\u00b0. What you wear now won't cut it later.`,
         `${minTDisp}\u2013${maxTDisp}\u00b0 spread. Dress in layers and feel smug when everyone else is cold.`,
-        `Morning and evening feel completely different today. Your closet would appreciate a heads-up.`,
+        `The temperature swings ${maxT-minT}\u00b0 today. Layers or regret — pick one.`,
       ]));
     }else if(minT<32&&!isPredomNight){
       parts.push(pick([
@@ -2273,7 +2420,9 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset){
   // Forward-looking lede: one actionable sentence about what's coming
   const _lede=getForwardLookLede(hourly,now,sunrise,sunset);
   const _body=parts.slice(0,4).map(s=>s.replace(/^(?:[\u2600-\u27BF]|[\uD800-\uDBFF][\uDC00-\uDFFF])[\uFE0F\u20E3]?\s*/,'')).join(' ');
-  return _lede?_lede+' '+_body:_body;
+  // Contrast opener prepends only when there's no lede (avoids triple-stacking)
+  const _hook=(!_lede&&contrastOpener)?contrastOpener+' ':''
+  return _lede?_lede+' '+_body:_hook+_body;
 }
 
 function getMoonPhase(date){
