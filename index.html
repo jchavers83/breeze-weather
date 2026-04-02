@@ -1555,9 +1555,9 @@ function shareWeather(){
   ctx.fillText('CIRRUS',W/2,CIRRUS_Y);
   if('letterSpacing' in ctx)ctx.letterSpacing='0px';
 
-  // URL below lockup, centered
-  ctx.fillStyle=tMuted;
-  ctx.font='500 12px Outfit,system-ui,-apple-system,sans-serif';
+  // URL below wordmark — more prominent
+  ctx.fillStyle=lightBg?'rgba(10,30,70,0.55)':'rgba(255,255,255,0.68)';
+  ctx.font='600 15px Outfit,system-ui,-apple-system,sans-serif';
   ctx.textAlign='center';
   ctx.fillText('cirrusweather.app',W/2,URL_Y);
   ctx.textAlign='left';
@@ -1619,7 +1619,7 @@ function shareWeather(){
   const stats=[
     {label:'FEELS LIKE',value:`${formatTemp(c.apparent_temperature)}\u00b0`},
     {label:'WIND',value:`${windSpeed(c.wind_speed_10m)} ${windUnit()}`},
-    {label:'RAIN · NEXT HR',value:precipNext>0?`${precipNext}%`:'\u2014'},
+    {label:'RAIN · NEXT HOUR',value:(()=>{const p=precipNext;const tier=p<=5?'None':p<=25?'Low':p<=50?'Possible':p<=75?'Likely':'High';return`${p}% \u00b7 ${tier}`;})()},
   ];
   const sW=W/stats.length;
   stats.forEach((s,i)=>{
@@ -1633,8 +1633,9 @@ function shareWeather(){
     ctx.font='600 10px system-ui,-apple-system,sans-serif';
     ctx.fillText(s.label,cx,STATS_TOP+14);
     ctx.fillStyle=tMain;
-    ctx.font='700 22px system-ui,-apple-system,sans-serif';
-    ctx.fillText(s.value,cx,STATS_TOP+40);
+    const _vfs=s.value.length>6?16:22;
+    ctx.font=`700 ${_vfs}px system-ui,-apple-system,sans-serif`;
+    ctx.fillText(s.value,cx,STATS_TOP+(_vfs<20?42:40));
     ctx.textAlign='left';
   });
 
@@ -1648,9 +1649,9 @@ function shareWeather(){
   ctx.textAlign='right';
   ctx.fillText(ds,W-36,FOOT_Y+20);
   ctx.textAlign='left';
-  // URL echoed in footer (bigger, more readable)
+  // URL echoed in footer — prominent gradient
   ctx.fillStyle=AG;
-  ctx.font='600 11px system-ui,-apple-system,sans-serif';
+  ctx.font='700 15px Outfit,system-ui,-apple-system,sans-serif';
   ctx.fillText('cirrusweather.app',36,FOOT_Y+20);
 
   // ── BOTTOM ACCENT STRIP ───────────────────────────────
