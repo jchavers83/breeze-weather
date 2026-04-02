@@ -1154,7 +1154,7 @@ function render(){
       <div class="summary-text">${summary}</div>
     </div>
     ${buildWearCard(c,daily,hourly,now)}
-    ${buildPrecipTimeline(hourly,now)}
+    ${buildPrecipTimeline(hourly,now,night,state.dark)}
     ${buildTopHourly(hourly,daily,now)}
     <div class="sun-bar glass">
       <div class="sun-item">
@@ -1730,7 +1730,7 @@ function buildWearCard(c,daily,hourly,now){
   return`<div class="wear-card glass"><div class="wear-label">What to Wear</div><div class="wear-text">${sentence}</div><div class="wear-quip">${quip} <span style="font-size:16px;vertical-align:middle">${allEmojis}</span></div></div>`;
 }
 
-function buildPrecipTimeline(hourly,now){
+function buildPrecipTimeline(hourly,now,isNight,isDark){
   let startIdx=-1;
   const nowMs=now.getTime();
   for(let i=0;i<hourly.time.length;i++){
@@ -1776,13 +1776,15 @@ function buildPrecipTimeline(hourly,now){
     if(windows.length>1){const l2=precipLabel(windows[1].code);sentence+=` Another round of ${l2.toLowerCase()} near ${fmtH(windows[1].start)}.`;}
   }
   function precipChanceLabel(p){if(p===0)return'None';if(p<=15)return'Very unlikely';if(p<=35)return'Unlikely';if(p<=55)return'Possible';if(p<=75)return'Likely';return'Very likely';}
-  // Interpolate along the app's own accent gradient for dry dots: #38bdf8 → #818cf8 → #c084fc
+  // Match the CIRRUS wordmark gradient: --text → --accent
   function accentDot(i,total){
+    function hexRgb(h){h=h.replace('#','');const n=parseInt(h,16);return[n>>16&255,n>>8&255,n&255];}
+    const textHex=isNight?(isDark?'#e8f0f8':'#f0f6fc'):'#182838';
+    const accentHex=isDark?'#4ab8f8':'#1a90e4';
+    const [r1,g1,b1]=hexRgb(textHex);
+    const [r2,g2,b2]=hexRgb(accentHex);
     const t=i/Math.max(total-1,1);
-    let r,g,b;
-    if(t<=0.5){const s=t*2;r=Math.round(56+(129-56)*s);g=Math.round(189+(140-189)*s);b=248;}
-    else{const s=(t-0.5)*2;r=Math.round(129+(192-129)*s);g=Math.round(140+(132-140)*s);b=Math.round(248+(252-248)*s);}
-    return`rgba(${r},${g},${b},0.55)`;
+    return`rgba(${Math.round(r1+(r2-r1)*t)},${Math.round(g1+(g2-g1)*t)},${Math.round(b1+(b2-b1)*t)},0.65)`;
   }
   const dots=hrs.map((h,i)=>{
     const wet=h.prob>=THRESHOLD;
