@@ -552,9 +552,7 @@ jobs:
     name: Severe Weather Check (every 10 min)
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      # Required for creating/updating Gists via GITHUB_TOKEN
-      gists: write
+      contents: write
     if: >
       (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'severe-weather-check' || github.event.inputs.job == 'all')) ||
       (
