@@ -717,6 +717,8 @@ OneSignalDeferred.push(async function(OneSignal) {
     if (granted && state.city) {
       OneSignal.User.addTag("city", state.city.toLowerCase());
       OneSignal.User.addTag("timezone", Intl.DateTimeFormat().resolvedOptions().timeZone);
+      OneSignal.User.addTag("lat", String(state.lat || ""));
+      OneSignal.User.addTag("lon", String(state.lon || ""));
     }
   });
 });
@@ -1193,6 +1195,8 @@ async function fetchWeather(){
         const permission=OneSignal.Notifications.permission;
         if(permission){
           OneSignal.User.addTag('city',state.name.toLowerCase());
+          OneSignal.User.addTag('lat',String(state.lat||''));
+          OneSignal.User.addTag('lon',String(state.lon||''));
         }
       });
     }
@@ -1422,6 +1426,8 @@ function handleAlertsBtn(){
         if(state.name){
           OneSignal.User.addTag('city',state.name.toLowerCase());
           OneSignal.User.addTag('timezone',Intl.DateTimeFormat().resolvedOptions().timeZone);
+          OneSignal.User.addTag('lat',String(state.lat||''));
+          OneSignal.User.addTag('lon',String(state.lon||''));
         }
       }
     });

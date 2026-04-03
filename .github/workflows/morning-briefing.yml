@@ -1,39 +1,747 @@
-name: Morning Weather Briefing
+name: Personalized Weather Push Notifications
 
 on:
   schedule:
-    # Runs at 12:00 UTC = 7:00 AM ET / 6:00 AM CT / 5:00 AM MT / 4:00 AM PT
-    # OneSignal's "Intelligent Delivery" will optimize per-subscriber timezone
-    - cron: '0 12 * * *'
-  workflow_dispatch: # allow manual trigger for testing
+    # Job 1: morning-briefing — 11:00 UTC (OneSignal delivers at 7:00 AM per subscriber timezone)
+    - cron: '0 11 * * *'
+    # Job 2: evening-lookahead — 23:00 UTC (OneSignal delivers at 9:00 PM per subscriber timezone)
+    - cron: '0 23 * * *'
+    # Job 3: severe-weather-check — every 10 minutes
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
 
 jobs:
-  send-briefing:
+  # ---------------------------------------------------------------------------
+  # JOB 1: Morning Briefing — personalized today's forecast per city
+  # ---------------------------------------------------------------------------
+  morning-briefing:
+    name: Morning Briefing (7 AM per subscriber timezone)
     runs-on: ubuntu-latest
+    # Only run at 11:00 UTC (or on manual dispatch)
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && startsWith(github.event.schedule, '0 11'))
+    env:
+      ONESIGNAL_APP_ID: "30178abc-998e-48d7-9594-21f2914087f0"
+      ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
     steps:
-      - name: Fetch weather and send push notification
-        env:
-          ONESIGNAL_APP_ID: "30178abc-998e-48d7-9594-21f2914087f0"
-          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+      - name: Send personalized morning briefings
         run: |
-          # Get current weather for a few major cities to build a general message
-          # We'll use a general broadcast for now - personalization by city tag in future
+          python3 << 'PYEOF'
+          import urllib.request
+          import urllib.parse
+          import json
+          import os
+          import sys
+          from datetime import datetime
 
-          # Get date info
-          DAY=$(date +%A)
-          DATE=$(date "+%B %-d")
+          APP_ID = os.environ["ONESIGNAL_APP_ID"]
+          API_KEY = os.environ["ONESIGNAL_API_KEY"]
 
-          # Send the push notification via OneSignal REST API
-          curl -s -X POST "https://api.onesignal.com/notifications" \
-            -H "Authorization: Key $ONESIGNAL_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"app_id\": \"$ONESIGNAL_APP_ID\",
-              \"included_segments\": [\"All\"],
-              \"contents\": {\"en\": \"Good morning! Tap to see today's forecast.\"},
-              \"headings\": {\"en\": \"Cirrus ☀️ $DAY, $DATE\"},
-              \"url\": \"https://jchavers83.github.io/breeze-weather\",
-              \"chrome_web_icon\": \"https://jchavers83.github.io/breeze-weather/icon.png\",
-              \"delayed_option\": \"timezone\",
-              \"delivery_time_of_day\": \"7:00AM\"
-            }"
+          def fetch_json(url, headers=None):
+              req = urllib.request.Request(url, headers=headers or {})
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  return json.loads(r.read().decode())
+
+          def post_json(url, data, headers=None):
+              body = json.dumps(data).encode()
+              h = {"Content-Type": "application/json"}
+              if headers:
+                  h.update(headers)
+              req = urllib.request.Request(url, data=body, headers=h, method="POST")
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  return json.loads(r.read().decode())
+
+          def weather_emoji(code):
+              if code == 0:
+                  return "☀️"
+              elif code in (1, 2):
+                  return "⛅"
+              elif code == 3:
+                  return "☁️"
+              elif code in range(45, 58):
+                  return "🌫️"
+              elif code in range(61, 68) or code in (80, 81, 82):
+                  return "🌧️"
+              elif code in range(71, 78) or code in (85, 86):
+                  return "❄️"
+              elif code in (95, 96, 99):
+                  return "⛈️"
+              return "🌡️"
+
+          def build_morning_message(weather, city_name):
+              current = weather.get("current", {})
+              daily = weather.get("daily", {})
+
+              curr_temp = current.get("temperature_2m")
+              curr_code = current.get("weather_code", 0)
+              today_high = daily.get("temperature_2m_max", [None])[0]
+              today_low = daily.get("temperature_2m_min", [None])[0]
+              precip_prob = daily.get("precipitation_probability_max", [0])[0] or 0
+              weather_code = daily.get("weather_code", [0])[0] or 0
+              sunrise = daily.get("sunrise", [""])[0]
+
+              def fmt_temp(t):
+                  if t is None:
+                      return "?"
+                  return f"{round((t * 9/5) + 32)}°"
+
+              curr_f = fmt_temp(curr_temp)
+              high_f = fmt_temp(today_high)
+              low_f = fmt_temp(today_low)
+              emoji = weather_emoji(weather_code)
+
+              high_c = today_high or 0
+              high_raw = round((high_c * 9/5) + 32)
+
+              is_storm = weather_code in (95, 96, 99)
+              is_rain = weather_code in list(range(51, 68)) + [80, 81, 82]
+              is_snow = weather_code in list(range(71, 78)) + [85, 86]
+              is_sunny = weather_code in (0, 1)
+              is_partly_cloudy = weather_code == 2
+              is_cloudy = weather_code == 3
+
+              if is_storm:
+                  timing_hint = ""
+                  if sunrise:
+                      try:
+                          sr_hour = int(sunrise.split("T")[1].split(":")[0])
+                          timing_hint = f" Storms likely after {sr_hour + 6}am." if sr_hour < 10 else " Storms likely this afternoon."
+                      except Exception:
+                          pass
+                  msg = f"{curr_f} now · High {high_f} / Low {low_f} · Storms likely.{timing_hint} {precip_prob}% chance of rain."
+              elif is_rain:
+                  if precip_prob >= 70:
+                      msg = f"{curr_f} now · High {high_f} / Low {low_f} · Rain likely today. {precip_prob}% chance — bring an umbrella."
+                  elif precip_prob >= 40:
+                      msg = f"{curr_f} now · High {high_f} / Low {low_f} · Possible rain today. {precip_prob}% chance."
+                  else:
+                      msg = f"{curr_f} now · High {high_f} / Low {low_f} · Light rain possible. Keep an eye on it."
+              elif is_snow:
+                  msg = f"{curr_f} now · High {high_f} / Low {low_f} · Snow today. Check road conditions before heading out."
+              elif is_sunny:
+                  if high_raw >= 95:
+                      msg = f"{curr_f} now · High {high_f} · Sunny and very hot. Stay hydrated."
+                  elif high_raw >= 85:
+                      msg = f"{curr_f} now · High {high_f} · Sunny all day. Great day to be outside."
+                  else:
+                      msg = f"{curr_f} now · High {high_f} · Sunny all day. Get outside — it's a good one."
+              elif is_partly_cloudy:
+                  if high_raw >= 85:
+                      msg = f"{curr_f} now · High {high_f} / Low {low_f} · Humid and partly cloudy. Chance of afternoon storms."
+                  else:
+                      msg = f"{curr_f} now · High {high_f} / Low {low_f} · Partly cloudy, comfortable out."
+              elif is_cloudy:
+                  msg = f"{curr_f} now · High {high_f} · Overcast all day, dry. Light jacket weather."
+              else:
+                  msg = f"{curr_f} now · High {high_f} / Low {low_f} · Have a great day."
+
+              city_display = city_name.title()
+              title = f"Cirrus {emoji} Good morning, {city_display}"
+              return title, msg, emoji
+
+          # --- Fetch all subscribers ---
+          print("Fetching OneSignal subscribers...")
+          try:
+              players_data = fetch_json(
+                  f"https://api.onesignal.com/apps/{APP_ID}/players?limit=300",
+                  headers={"Authorization": f"Key {API_KEY}"}
+              )
+          except Exception as e:
+              print(f"ERROR fetching subscribers: {e}")
+              sys.exit(1)
+
+          players = players_data.get("players", [])
+          print(f"Found {len(players)} subscribers.")
+
+          # --- Extract unique cities ---
+          cities = {}
+          for p in players:
+              tags = p.get("tags") or {}
+              city = tags.get("city", "").strip().lower()
+              if city:
+                  cities[city] = city
+          unique_cities = list(cities.keys())
+          print(f"Unique cities: {unique_cities}")
+
+          if not unique_cities:
+              print("No cities found in subscriber tags. Exiting.")
+              sys.exit(0)
+
+          # --- Process each city ---
+          for city in unique_cities:
+              print(f"\n--- Processing city: {city} ---")
+              try:
+                  # Geocode
+                  geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={urllib.parse.quote(city)}&count=1"
+                  geo = fetch_json(geo_url)
+                  results = geo.get("results")
+                  if not results:
+                      print(f"  Geocoding failed for '{city}', skipping.")
+                      continue
+                  lat = results[0]["latitude"]
+                  lon = results[0]["longitude"]
+                  print(f"  Geocoded: {lat}, {lon}")
+
+                  # Fetch weather
+                  wx_url = (
+                      f"https://api.open-meteo.com/v1/forecast"
+                      f"?latitude={lat}&longitude={lon}"
+                      f"&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code,sunrise,sunset"
+                      f"&current=temperature_2m,weather_code,is_day"
+                      f"&timezone=auto&forecast_days=2"
+                  )
+                  weather = fetch_json(wx_url)
+                  print(f"  Weather fetched.")
+
+                  # Build message
+                  title, body, emoji = build_morning_message(weather, city)
+                  print(f"  Title: {title}")
+                  print(f"  Body: {body}")
+
+                  # Send via OneSignal
+                  payload = {
+                      "app_id": APP_ID,
+                      "filters": [{"field": "tag", "key": "city", "relation": "=", "value": city}],
+                      "headings": {"en": title},
+                      "contents": {"en": body},
+                      "url": "https://cirrusweather.app",
+                      "chrome_web_icon": "https://cirrusweather.app/icon.png",
+                      "delayed_option": "timezone",
+                      "delivery_time_of_day": "7:00AM"
+                  }
+                  resp = post_json(
+                      "https://api.onesignal.com/notifications",
+                      payload,
+                      headers={"Authorization": f"Key {API_KEY}"}
+                  )
+                  notif_id = resp.get("id", "unknown")
+                  recipients = resp.get("recipients", 0)
+                  print(f"  Sent! Notification ID: {notif_id} | Recipients: {recipients}")
+
+              except Exception as e:
+                  print(f"  ERROR for city '{city}': {e}")
+                  continue
+
+          print("\nMorning briefing complete.")
+          PYEOF
+
+  # ---------------------------------------------------------------------------
+  # JOB 2: Evening Lookahead — personalized tomorrow's forecast per city
+  # ---------------------------------------------------------------------------
+  evening-lookahead:
+    name: Evening Lookahead (9 PM per subscriber timezone)
+    runs-on: ubuntu-latest
+    needs: morning-briefing
+    if: >
+      always() && (
+        github.event_name == 'workflow_dispatch' ||
+        (github.event_name == 'schedule' && startsWith(github.event.schedule, '0 23'))
+      )
+    env:
+      ONESIGNAL_APP_ID: "30178abc-998e-48d7-9594-21f2914087f0"
+      ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+    steps:
+      - name: Send personalized evening lookahead notifications
+        run: |
+          python3 << 'PYEOF'
+          import urllib.request
+          import urllib.parse
+          import json
+          import os
+          import sys
+
+          APP_ID = os.environ["ONESIGNAL_APP_ID"]
+          API_KEY = os.environ["ONESIGNAL_API_KEY"]
+
+          def fetch_json(url, headers=None):
+              req = urllib.request.Request(url, headers=headers or {})
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  return json.loads(r.read().decode())
+
+          def post_json(url, data, headers=None):
+              body = json.dumps(data).encode()
+              h = {"Content-Type": "application/json"}
+              if headers:
+                  h.update(headers)
+              req = urllib.request.Request(url, data=body, headers=h, method="POST")
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  return json.loads(r.read().decode())
+
+          def weather_emoji(code):
+              if code == 0:
+                  return "☀️"
+              elif code in (1, 2):
+                  return "⛅"
+              elif code == 3:
+                  return "☁️"
+              elif code in range(45, 58):
+                  return "🌫️"
+              elif code in range(61, 68) or code in (80, 81, 82):
+                  return "🌧️"
+              elif code in range(71, 78) or code in (85, 86):
+                  return "❄️"
+              elif code in (95, 96, 99):
+                  return "⛈️"
+              return "🌡️"
+
+          def build_evening_message(weather, city_name):
+              daily = weather.get("daily", {})
+
+              # Index 1 = tomorrow
+              tomorrow_high = (daily.get("temperature_2m_max") or [None, None])[1]
+              tomorrow_low = (daily.get("temperature_2m_min") or [None, None])[1]
+              precip_prob = (daily.get("precipitation_probability_max") or [0, 0])[1] or 0
+              weather_code = (daily.get("weather_code") or [0, 0])[1] or 0
+
+              def fmt_temp(t):
+                  if t is None:
+                      return "?"
+                  return f"{round((t * 9/5) + 32)}°"
+
+              high_f = fmt_temp(tomorrow_high)
+              low_f = fmt_temp(tomorrow_low)
+              emoji = weather_emoji(weather_code)
+
+              high_c = tomorrow_high or 0
+              high_raw = round((high_c * 9/5) + 32)
+
+              is_storm = weather_code in (95, 96, 99)
+              is_rain = weather_code in list(range(51, 68)) + [80, 81, 82]
+              is_snow = weather_code in list(range(71, 78)) + [85, 86]
+              is_sunny = weather_code in (0, 1)
+              is_partly_cloudy = weather_code == 2
+              is_cloudy = weather_code == 3
+
+              if is_storm:
+                  msg = f"High {high_f} / Low {low_f} · Storms expected tomorrow. {precip_prob}% chance of rain — plan ahead."
+              elif is_rain:
+                  if precip_prob >= 70:
+                      msg = f"High {high_f} / Low {low_f} · Rain likely in the morning, clearing by noon. {precip_prob}% chance."
+                  elif precip_prob >= 40:
+                      msg = f"High {high_f} / Low {low_f} · Possible rain tomorrow. {precip_prob}% chance — maybe pack an umbrella."
+                  else:
+                      msg = f"High {high_f} / Low {low_f} · Light rain possible. Mostly manageable."
+              elif is_snow:
+                  msg = f"High {high_f} / Low {low_f} · Snow expected tomorrow. Check conditions in the morning."
+              elif is_sunny:
+                  if high_raw >= 95:
+                      msg = f"High {high_f} / Low {low_f} · Sunny and very hot tomorrow. Hydrate."
+                  else:
+                      msg = f"High {high_f} / Low {low_f} · Mostly sunny. Nice day ahead."
+              elif is_partly_cloudy:
+                  if high_raw >= 85:
+                      msg = f"High {high_f} / Low {low_f} · Humid and partly cloudy. Chance of afternoon storms."
+                  else:
+                      msg = f"High {high_f} / Low {low_f} · Partly cloudy, comfortable out."
+              elif is_cloudy:
+                  msg = f"High {high_f} / Low {low_f} · Overcast all day, dry."
+              else:
+                  msg = f"High {high_f} / Low {low_f} · Have a good one tomorrow."
+
+              city_display = city_name.title()
+              title = f"Cirrus {emoji} Tomorrow in {city_display}"
+              return title, msg
+
+          # --- Fetch subscribers ---
+          print("Fetching OneSignal subscribers...")
+          try:
+              players_data = fetch_json(
+                  f"https://api.onesignal.com/apps/{APP_ID}/players?limit=300",
+                  headers={"Authorization": f"Key {API_KEY}"}
+              )
+          except Exception as e:
+              print(f"ERROR fetching subscribers: {e}")
+              sys.exit(1)
+
+          players = players_data.get("players", [])
+          print(f"Found {len(players)} subscribers.")
+
+          cities = {}
+          for p in players:
+              tags = p.get("tags") or {}
+              city = tags.get("city", "").strip().lower()
+              if city:
+                  cities[city] = city
+          unique_cities = list(cities.keys())
+          print(f"Unique cities: {unique_cities}")
+
+          if not unique_cities:
+              print("No cities found in subscriber tags. Exiting.")
+              sys.exit(0)
+
+          for city in unique_cities:
+              print(f"\n--- Processing city: {city} ---")
+              try:
+                  geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={urllib.parse.quote(city)}&count=1"
+                  geo = fetch_json(geo_url)
+                  results = geo.get("results")
+                  if not results:
+                      print(f"  Geocoding failed for '{city}', skipping.")
+                      continue
+                  lat = results[0]["latitude"]
+                  lon = results[0]["longitude"]
+                  print(f"  Geocoded: {lat}, {lon}")
+
+                  wx_url = (
+                      f"https://api.open-meteo.com/v1/forecast"
+                      f"?latitude={lat}&longitude={lon}"
+                      f"&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code,sunrise,sunset"
+                      f"&current=temperature_2m,weather_code,is_day"
+                      f"&timezone=auto&forecast_days=2"
+                  )
+                  weather = fetch_json(wx_url)
+                  print(f"  Weather fetched.")
+
+                  title, body = build_evening_message(weather, city)
+                  print(f"  Title: {title}")
+                  print(f"  Body: {body}")
+
+                  payload = {
+                      "app_id": APP_ID,
+                      "filters": [{"field": "tag", "key": "city", "relation": "=", "value": city}],
+                      "headings": {"en": title},
+                      "contents": {"en": body},
+                      "url": "https://cirrusweather.app",
+                      "chrome_web_icon": "https://cirrusweather.app/icon.png",
+                      "delayed_option": "timezone",
+                      "delivery_time_of_day": "9:00PM"
+                  }
+                  resp = post_json(
+                      "https://api.onesignal.com/notifications",
+                      payload,
+                      headers={"Authorization": f"Key {API_KEY}"}
+                  )
+                  notif_id = resp.get("id", "unknown")
+                  recipients = resp.get("recipients", 0)
+                  print(f"  Sent! Notification ID: {notif_id} | Recipients: {recipients}")
+
+              except Exception as e:
+                  print(f"  ERROR for city '{city}': {e}")
+                  continue
+
+          print("\nEvening lookahead complete.")
+          PYEOF
+
+  # ---------------------------------------------------------------------------
+  # JOB 3: Severe Weather Check — runs every 10 minutes
+  # ---------------------------------------------------------------------------
+  severe-weather-check:
+    name: Severe Weather Check (every 10 min)
+    runs-on: ubuntu-latest
+    # Run on every 10-min schedule tick OR manual dispatch;
+    # skip the 11:00 and 23:00 schedule triggers (those belong to jobs 1 & 2)
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'schedule' &&
+        !startsWith(github.event.schedule, '0 11') &&
+        !startsWith(github.event.schedule, '0 23')
+      )
+    env:
+      ONESIGNAL_APP_ID: "30178abc-998e-48d7-9594-21f2914087f0"
+      ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Check NWS severe alerts and notify affected subscribers
+        run: |
+          python3 << 'PYEOF'
+          import urllib.request
+          import urllib.parse
+          import json
+          import os
+          import sys
+          from datetime import datetime, timezone, timedelta
+
+          APP_ID = os.environ["ONESIGNAL_APP_ID"]
+          API_KEY = os.environ["ONESIGNAL_API_KEY"]
+          GH_TOKEN = os.environ["GITHUB_TOKEN"]
+
+          SEVERE_EVENT_TYPES = {
+              "Tornado Warning",
+              "Tornado Watch",
+              "Severe Thunderstorm Warning",
+              "Severe Thunderstorm Watch",
+              "Flash Flood Warning",
+              "Flash Flood Emergency",
+              "Hurricane Warning",
+              "Hurricane Watch",
+              "Tropical Storm Warning",
+              "Tropical Storm Watch",
+              "Storm Surge Warning",
+              "Storm Surge Watch",
+              "Extreme Wind Warning",
+              "Dust Storm Warning",
+          }
+
+          NWS_HEADERS = {
+              "User-Agent": "CirrusWeatherApp/1.0 (https://cirrusweather.app)",
+              "Accept": "application/geo+json"
+          }
+
+          def fetch_json(url, headers=None):
+              h = dict(headers or {})
+              req = urllib.request.Request(url, headers=h)
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  return json.loads(r.read().decode())
+
+          def post_json(url, data, headers=None):
+              body = json.dumps(data).encode()
+              h = {"Content-Type": "application/json"}
+              if headers:
+                  h.update(headers)
+              req = urllib.request.Request(url, data=body, headers=h, method="POST")
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  return json.loads(r.read().decode())
+
+          def patch_json(url, data, headers=None):
+              body = json.dumps(data).encode()
+              h = {"Content-Type": "application/json"}
+              if headers:
+                  h.update(headers)
+              req = urllib.request.Request(url, data=body, headers=h, method="PATCH")
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  return json.loads(r.read().decode())
+
+          # --- Gist deduplication ---
+          GIST_FILENAME = "cirrus-sent-alerts.json"
+
+          def get_or_create_gist():
+              """Find existing cirrus-sent-alerts gist or create one."""
+              list_url = "https://api.github.com/gists"
+              req = urllib.request.Request(
+                  list_url,
+                  headers={"Authorization": f"token {GH_TOKEN}", "User-Agent": "CirrusWeatherApp/1.0"}
+              )
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  gists = json.loads(r.read().decode())
+
+              for gist in gists:
+                  if GIST_FILENAME in gist.get("files", {}):
+                      print(f"Found existing gist: {gist['id']}")
+                      return gist["id"], gist["files"][GIST_FILENAME]["raw_url"]
+
+              # Create new gist
+              print("Creating new deduplication gist...")
+              payload = {
+                  "description": "Cirrus Weather App — sent alert IDs for deduplication",
+                  "public": False,
+                  "files": {GIST_FILENAME: {"content": json.dumps({"sent_alerts": []})}}
+              }
+              resp = post_json(
+                  "https://api.github.com/gists",
+                  payload,
+                  headers={"Authorization": f"token {GH_TOKEN}", "User-Agent": "CirrusWeatherApp/1.0"}
+              )
+              gist_id = resp["id"]
+              raw_url = resp["files"][GIST_FILENAME]["raw_url"]
+              print(f"Created gist: {gist_id}")
+              return gist_id, raw_url
+
+          def read_sent_alerts(raw_url):
+              """Read the sent alert IDs from gist, pruning entries older than 24h."""
+              req = urllib.request.Request(raw_url, headers={"User-Agent": "CirrusWeatherApp/1.0"})
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  data = json.loads(r.read().decode())
+
+              now = datetime.now(timezone.utc)
+              cutoff = now - timedelta(hours=24)
+              fresh = []
+              for entry in data.get("sent_alerts", []):
+                  try:
+                      sent_at = datetime.fromisoformat(entry["sent_at"])
+                      if sent_at > cutoff:
+                          fresh.append(entry)
+                  except Exception:
+                      pass
+              return fresh
+
+          def write_sent_alerts(gist_id, alert_list):
+              """Write updated sent alerts back to gist."""
+              content = json.dumps({"sent_alerts": alert_list}, indent=2)
+              patch_json(
+                  f"https://api.github.com/gists/{gist_id}",
+                  {"files": {GIST_FILENAME: {"content": content}}},
+                  headers={"Authorization": f"token {GH_TOKEN}", "User-Agent": "CirrusWeatherApp/1.0"}
+              )
+
+          # --- NWS alerts ---
+          print("Fetching active NWS severe/extreme alerts...")
+          nws_url = (
+              "https://api.weather.gov/alerts/active"
+              "?severity=Extreme,Severe"
+              "&certainty=Observed,Likely"
+              "&urgency=Immediate,Expected"
+              "&status=actual"
+          )
+          try:
+              nws_data = fetch_json(nws_url, headers=NWS_HEADERS)
+          except Exception as e:
+              print(f"ERROR fetching NWS alerts: {e}")
+              sys.exit(1)
+
+          features = nws_data.get("features", [])
+          print(f"Total NWS alerts fetched: {len(features)}")
+
+          # Filter to target event types
+          relevant_alerts = []
+          for feat in features:
+              props = feat.get("properties", {})
+              event = props.get("event", "")
+              if event in SEVERE_EVENT_TYPES:
+                  relevant_alerts.append(feat)
+
+          print(f"Relevant severe alerts: {len(relevant_alerts)}")
+          if not relevant_alerts:
+              print("No relevant severe alerts. Exiting.")
+              sys.exit(0)
+
+          # --- Load sent alerts from gist ---
+          try:
+              gist_id, raw_url = get_or_create_gist()
+              sent_list = read_sent_alerts(raw_url)
+              sent_ids = {entry["alert_id"] for entry in sent_list}
+              print(f"Already sent alert IDs (last 24h): {len(sent_ids)}")
+          except Exception as e:
+              print(f"WARNING: Could not read gist for deduplication: {e}. Will proceed without dedup.")
+              gist_id = None
+              sent_list = []
+              sent_ids = set()
+
+          # --- Get OneSignal subscribers ---
+          print("Fetching OneSignal subscribers...")
+          try:
+              players_data = fetch_json(
+                  f"https://api.onesignal.com/apps/{APP_ID}/players?limit=300",
+                  headers={"Authorization": f"Key {API_KEY}"}
+              )
+          except Exception as e:
+              print(f"ERROR fetching subscribers: {e}")
+              sys.exit(1)
+
+          players = players_data.get("players", [])
+          print(f"Found {len(players)} subscribers.")
+
+          # Build city -> lat/lon map from subscriber tags
+          city_coords = {}
+          for p in players:
+              tags = p.get("tags") or {}
+              city = tags.get("city", "").strip().lower()
+              if not city:
+                  continue
+              if city in city_coords:
+                  continue
+
+              # Prefer explicit lat/lon tags
+              try:
+                  lat = float(tags.get("lat", ""))
+                  lon = float(tags.get("lon", ""))
+                  city_coords[city] = (lat, lon)
+                  continue
+              except (ValueError, TypeError):
+                  pass
+
+              # Fall back to geocoding
+              try:
+                  geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={urllib.parse.quote(city)}&count=1"
+                  geo = fetch_json(geo_url)
+                  results = geo.get("results")
+                  if results:
+                      city_coords[city] = (results[0]["latitude"], results[0]["longitude"])
+              except Exception as e:
+                  print(f"  Could not geocode '{city}': {e}")
+
+          print(f"City coordinates resolved: {list(city_coords.keys())}")
+
+          # Build city -> NWS forecast zone map
+          city_zones = {}
+          for city, (lat, lon) in city_coords.items():
+              try:
+                  pts_url = f"https://api.weather.gov/points/{lat:.4f},{lon:.4f}"
+                  pts_data = fetch_json(pts_url, headers=NWS_HEADERS)
+                  zone_url = pts_data.get("properties", {}).get("forecastZone", "")
+                  if zone_url:
+                      # Extract zone ID from URL like: https://api.weather.gov/zones/forecast/TXZ123
+                      zone_id = zone_url.rstrip("/").split("/")[-1]
+                      city_zones[city] = zone_id
+                      print(f"  {city} -> zone {zone_id}")
+              except Exception as e:
+                  print(f"  Could not get NWS zone for '{city}': {e}")
+
+          # --- Match alerts to cities and send notifications ---
+          newly_sent = []
+          now_iso = datetime.now(timezone.utc).isoformat()
+
+          for alert in relevant_alerts:
+              props = alert.get("properties", {})
+              alert_id = props.get("id", "")
+              event = props.get("event", "Unknown Event")
+              headline = (props.get("headline") or props.get("description") or event)[:100]
+              affected_zones_urls = props.get("affectedZones", [])
+              affected_zone_ids = set()
+              for z_url in affected_zones_urls:
+                  z_id = z_url.rstrip("/").split("/")[-1]
+                  affected_zone_ids.add(z_id)
+
+              if alert_id in sent_ids:
+                  print(f"Skipping already-sent alert: {alert_id} ({event})")
+                  continue
+
+              print(f"\nAlert: {event} | ID: {alert_id}")
+              print(f"  Affected zones: {affected_zone_ids}")
+              print(f"  Headline: {headline}")
+
+              # Find which cities are in affected zones
+              matching_cities = []
+              for city, zone_id in city_zones.items():
+                  if zone_id in affected_zone_ids:
+                      matching_cities.append(city)
+
+              if not matching_cities:
+                  print(f"  No subscriber cities in affected zones.")
+                  continue
+
+              print(f"  Matching cities: {matching_cities}")
+
+              # Send one notification per matching city
+              alert_sent = False
+              for city in matching_cities:
+                  city_display = city.title()
+                  try:
+                      payload = {
+                          "app_id": APP_ID,
+                          "filters": [{"field": "tag", "key": "city", "relation": "=", "value": city}],
+                          "headings": {"en": f"Warning {event} · {city_display}"},
+                          "contents": {"en": headline},
+                          "priority": 10,
+                          "ttl": 3600,
+                          "url": "https://cirrusweather.app"
+                      }
+                      resp = post_json(
+                          "https://api.onesignal.com/notifications",
+                          payload,
+                          headers={"Authorization": f"Key {API_KEY}"}
+                      )
+                      notif_id = resp.get("id", "unknown")
+                      recipients = resp.get("recipients", 0)
+                      print(f"  Sent to '{city}': Notification ID {notif_id} | Recipients: {recipients}")
+                      alert_sent = True
+                  except Exception as e:
+                      print(f"  ERROR sending alert to '{city}': {e}")
+
+              if alert_sent:
+                  newly_sent.append({"alert_id": alert_id, "event": event, "sent_at": now_iso})
+
+          # --- Update gist with newly sent IDs ---
+          if gist_id and newly_sent:
+              updated_list = sent_list + newly_sent
+              try:
+                  write_sent_alerts(gist_id, updated_list)
+                  print(f"\nUpdated gist with {len(newly_sent)} new alert ID(s).")
+              except Exception as e:
+                  print(f"WARNING: Could not update gist: {e}")
+          elif not newly_sent:
+              print("\nNo new alerts sent this run.")
+
+          print("\nSevere weather check complete.")
+          PYEOF
