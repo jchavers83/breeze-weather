@@ -1,0 +1,39 @@
+name: Morning Weather Briefing
+
+on:
+  schedule:
+    # Runs at 12:00 UTC = 7:00 AM ET / 6:00 AM CT / 5:00 AM MT / 4:00 AM PT
+    # OneSignal's "Intelligent Delivery" will optimize per-subscriber timezone
+    - cron: '0 12 * * *'
+  workflow_dispatch: # allow manual trigger for testing
+
+jobs:
+  send-briefing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch weather and send push notification
+        env:
+          ONESIGNAL_APP_ID: "30178abc-998e-48d7-9594-21f2914087f0"
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+        run: |
+          # Get current weather for a few major cities to build a general message
+          # We'll use a general broadcast for now - personalization by city tag in future
+
+          # Get date info
+          DAY=$(date +%A)
+          DATE=$(date "+%B %-d")
+
+          # Send the push notification via OneSignal REST API
+          curl -s -X POST "https://api.onesignal.com/notifications" \
+            -H "Authorization: Key $ONESIGNAL_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"app_id\": \"$ONESIGNAL_APP_ID\",
+              \"included_segments\": [\"All\"],
+              \"contents\": {\"en\": \"Good morning! Tap to see today's forecast.\"},
+              \"headings\": {\"en\": \"Cirrus ☀️ $DAY, $DATE\"},
+              \"url\": \"https://jchavers83.github.io/breeze-weather\",
+              \"chrome_web_icon\": \"https://jchavers83.github.io/breeze-weather/icon.png\",
+              \"delayed_option\": \"timezone\",
+              \"delivery_time_of_day\": \"7:00AM\"
+            }"

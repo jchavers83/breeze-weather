@@ -24,6 +24,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Cirrus%22%2C%22short_name%22%3A%22Cirrus%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%234A90D9%22%2C%22theme_color%22%3A%22%234A90D9%22%7D">
 <link rel="apple-touch-icon" id="appIcon">
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
 // Generate PWA icon — Sun + Cloud + 3 wind lines
 (function(){
@@ -478,6 +479,25 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .alert-instruction{font-size:12px;color:var(--text);line-height:1.5;padding:9px 12px;border-radius:10px;border-left:3px solid #dc2626;background:rgba(220,38,38,0.07);font-weight:500}
 .alert-watch .alert-instruction{border-left-color:#ea580c;background:rgba(234,88,12,0.07)}
 .alert-advisory .alert-instruction{border-left-color:#b45309;background:rgba(202,138,4,0.07)}
+
+/* OneSignal alerts button */
+.alerts-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.22);
+  border: 1.5px solid rgba(255,255,255,0.4);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.alerts-btn:hover { background: rgba(255,255,255,0.32); }
+.alerts-btn.active { background: rgba(26,144,228,0.35); border-color: rgba(26,144,228,0.6); }
 </style>
 </head>
 <body>
@@ -679,6 +699,29 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 </nav>
 
 <script>
+// ===================== ONESIGNAL PUSH NOTIFICATIONS =====================
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
+  await OneSignal.init({
+    appId: "30178abc-998e-48d7-9594-21f2914087f0",
+    safari_web_id: "SAFARI_WEB_ID_PLACEHOLDER",
+    notifyButton: { enable: false },
+    welcomeNotification: {
+      title: "Cirrus ☀️",
+      message: "Weather alerts are on. We'll keep it short.",
+    },
+    serviceWorkerParam: { scope: "/" },
+  });
+
+  // When user grants permission, tag them with their city for personalized alerts
+  OneSignal.Notifications.addEventListener("permissionChange", async (granted) => {
+    if (granted && state.city) {
+      OneSignal.User.addTag("city", state.city.toLowerCase());
+      OneSignal.User.addTag("timezone", Intl.DateTimeFormat().resolvedOptions().timeZone);
+    }
+  });
+});
+
 const WMO_CODES={0:{desc:'Clear Sky',icon:'&#9728;&#65039;',night:'&#127769;'},1:{desc:'Mainly Clear',icon:'&#127780;&#65039;',night:'&#127769;'},2:{desc:'Partly Cloudy',icon:'&#9925;',night:'&#9925;'},3:{desc:'Overcast',icon:'&#9729;&#65039;',night:'&#9729;&#65039;'},45:{desc:'Fog',icon:'&#127787;&#65039;',night:'&#127787;&#65039;'},48:{desc:'Depositing Rime Fog',icon:'&#127787;&#65039;',night:'&#127787;&#65039;'},51:{desc:'Light Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},53:{desc:'Moderate Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},55:{desc:'Dense Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},56:{desc:'Freezing Drizzle',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},57:{desc:'Heavy Freezing Drizzle',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},61:{desc:'Slight Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},63:{desc:'Moderate Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},65:{desc:'Heavy Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},66:{desc:'Freezing Rain',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},67:{desc:'Heavy Freezing Rain',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},71:{desc:'Slight Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},73:{desc:'Moderate Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},75:{desc:'Heavy Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},77:{desc:'Snow Grains',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},80:{desc:'Slight Showers',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},81:{desc:'Moderate Showers',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},82:{desc:'Violent Showers',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},85:{desc:'Slight Snow Showers',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},86:{desc:'Heavy Snow Showers',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},95:{desc:'Thunderstorm',icon:'&#9889;',night:'&#9889;'},96:{desc:'Thunderstorm with Hail',icon:'&#9889;',night:'&#9889;'},99:{desc:'Thunderstorm Heavy Hail',icon:'&#9889;',night:'&#9889;'}};
 
 let state={lat:null,lon:null,name:'',region:'',country:'',dark:false,unit:'F',data:null,openDay:0,refreshTimer:null,activeAlerts:[],airQuality:null};
@@ -1145,6 +1188,15 @@ async function fetchWeather(){
       setTimeout(()=>requestAnimationFrame(tick),32);
     }
     scheduleRefresh();
+    // Update OneSignal city tag when weather loads
+    if(window.OneSignalDeferred){
+      OneSignalDeferred.push(async function(OneSignal){
+        const permission=OneSignal.Notifications.permission;
+        if(permission){
+          OneSignal.User.addTag('city',state.name.toLowerCase());
+        }
+      });
+    }
   }catch(e){console.error(e)}
   app.classList.remove('loading');
 }
@@ -1196,6 +1248,9 @@ function render(){
       <div class="hero-desc">${wi.desc}</div>
       <div class="hero-hilo">H:${formatTemp(daily.temperature_2m_max[0])}&deg; L:${formatTemp(daily.temperature_2m_min[0])}&deg;</div>
       <div class="hero-feels">Feels like ${formatTemp(c.apparent_temperature)}&deg;${state.unit}</div>
+      <div style="margin-top:12px">
+        <button class="alerts-btn" id="alertsBtn" onclick="handleAlertsBtn()">&#128276; Enable alerts</button>
+      </div>
     </div>
     <div class="summary-card glass" id="summaryCard">
       <div class="summary-label">Next 12 Hours</div>
@@ -1321,6 +1376,8 @@ function render(){
   _updateAqiCard();
   const shareBtn=document.getElementById('btnShareHeader');
   if(shareBtn)shareBtn.style.display='';
+  // Initialize alerts button state after render
+  _initAlertsBtn();
 
   // Scroll to top, then scroll today's hourly to current hour (horizontally only)
   window.scrollTo(0,0);
@@ -1336,6 +1393,40 @@ function render(){
       }
     }
   },100);
+}
+
+// ── OneSignal alerts button helpers ─────────────────────────────────────────
+function _initAlertsBtn(){
+  const btn=document.getElementById('alertsBtn');
+  if(!btn)return;
+  if(window.OneSignalDeferred){
+    OneSignalDeferred.push(async function(OneSignal){
+      const granted=OneSignal.Notifications.permission;
+      if(granted){
+        btn.classList.add('active');
+        btn.textContent='\uD83D\uDD14 Alerts on';
+      }
+    });
+  }
+}
+
+function handleAlertsBtn(){
+  const btn=document.getElementById('alertsBtn');
+  if(!btn)return;
+  if(window.OneSignalDeferred){
+    OneSignalDeferred.push(async function(OneSignal){
+      await OneSignal.Notifications.requestPermission();
+      const granted=OneSignal.Notifications.permission;
+      if(granted){
+        btn.classList.add('active');
+        btn.textContent='\uD83D\uDD14 Alerts on';
+        if(state.name){
+          OneSignal.User.addTag('city',state.name.toLowerCase());
+          OneSignal.User.addTag('timezone',Intl.DateTimeFormat().resolvedOptions().timeZone);
+        }
+      }
+    });
+  }
 }
 
 function uvLabel(uv){
