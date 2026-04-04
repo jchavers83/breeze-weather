@@ -2955,19 +2955,19 @@ function toggleDay(i){
     }));
   }
 
-  // Cloud maker — layers of clouds at different speeds and opacities
+  // Cloud maker — wispy, elongated streaks; not puffy cartoon blobs
   function makeClouds(n, style){
-    // style: 'overcast' = dense, slow, layered; 'partly' = fluffy, faster, fewer
+    const isOvercast = style==='overcast';
     return Array.from({length:n},(_,i)=>{
       const layer = i % 3; // 0=back, 1=mid, 2=front
-      const isOvercast = style==='overcast';
       return {
-        x: Math.random()*W*1.5 - W*0.25,
-        y: (layer===0 ? 0.05 : layer===1 ? 0.12 : 0.08)*H + Math.random()*0.18*H,
-        w: (isOvercast ? 220 : 140) + Math.random()*(isOvercast ? 200 : 120),
-        h: (isOvercast ? 55 : 40) + Math.random()*(isOvercast ? 45 : 35),
-        spd: (layer===0 ? 0.12 : layer===1 ? 0.22 : 0.32) * (isOvercast ? 1 : 1.6),
-        op: isOvercast ? (layer===0?0.22:layer===1?0.28:0.32) : (layer===0?0.15:layer===1?0.20:0.26),
+        x: Math.random()*W*1.6 - W*0.3,
+        y: (layer===0 ? 0.04 : layer===1 ? 0.10 : 0.06)*H + Math.random()*0.20*H,
+        // Much wider, much flatter — wispy streaks not blobs
+        w: (isOvercast ? 320 : 200) + Math.random()*(isOvercast ? 260 : 160),
+        h: (isOvercast ? 22 : 18) + Math.random()*(isOvercast ? 18 : 14),
+        spd: (layer===0 ? 0.10 : layer===1 ? 0.18 : 0.28) * (isOvercast ? 1 : 1.5),
+        op: isOvercast ? (layer===0?0.18:layer===1?0.22:0.26) : (layer===0?0.12:layer===1?0.16:0.22),
         layer,
         style
       };
@@ -3012,21 +3012,22 @@ function toggleDay(i){
       ctx.fillStyle=grad;
     }
 
-    // Draw puffy cloud shape using overlapping ellipses
+    // Draw wispy elongated cloud — wide flat streaks like real cirrus
     ctx.beginPath();
-    ctx.ellipse(x, y, w*0.5, h*0.55, 0, 0, Math.PI*2);
+    ctx.ellipse(x, y, w*0.5, h*0.5, 0, 0, Math.PI*2);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(x-w*0.28, y+h*0.08, w*0.32, h*0.45, 0, 0, Math.PI*2);
+    ctx.ellipse(x-w*0.32, y+h*0.1, w*0.28, h*0.38, 0, 0, Math.PI*2);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(x+w*0.28, y+h*0.05, w*0.35, h*0.48, 0, 0, Math.PI*2);
+    ctx.ellipse(x+w*0.33, y+h*0.08, w*0.26, h*0.36, 0, 0, Math.PI*2);
+    ctx.fill();
+    // Wispy trailing edges — very flat, very wide
+    ctx.beginPath();
+    ctx.ellipse(x-w*0.44, y+h*0.15, w*0.14, h*0.22, 0, 0, Math.PI*2);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(x+w*0.12, y-h*0.18, w*0.28, h*0.42, 0, 0, Math.PI*2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(x-w*0.1, y-h*0.12, w*0.25, h*0.38, 0, 0, Math.PI*2);
+    ctx.ellipse(x+w*0.44, y+h*0.12, w*0.13, h*0.20, 0, 0, Math.PI*2);
     ctx.fill();
 
     ctx.restore();
