@@ -778,7 +778,76 @@ jobs:
               sent_list = []
               sent_ids  = set()
 
-          # --- Broadcast each unseen alert to ALL subscribers ---
+          # --- Build city → NWS zone ID cache (computed once at startup) ---
+          RAW_CITIES = os.environ.get("CITIES", "")
+          CITY_LIST  = [c.strip() for c in RAW_CITIES.replace("\n", ",").split(",") if c.strip()]
+
+          # cache: city name → (lat, lon)
+          city_coords = {}
+          # cache: (lat, lon) string → NWS zone ID like "OKZ040"
+          coords_zone = {}
+
+          def geocode_city(city):
+              """Return (lat, lon) for a city name, or None on failure. Cached."""
+              if city in city_coords:
+                  return city_coords[city]
+              try:
+                  geo_url = (
+                      "https://geocoding-api.open-meteo.com/v1/search"
+                      f"?name={urllib.parse.quote(city)}&count=1"
+                  )
+                  geo = fetch_json(geo_url)
+                  results = geo.get("results")
+                  if not results:
+                      print(f"  Geocoding returned no results for '{city}'")
+                      city_coords[city] = None
+                      return None
+                  lat = results[0]["latitude"]
+                  lon = results[0]["longitude"]
+                  city_coords[city] = (lat, lon)
+                  return (lat, lon)
+              except Exception as e:
+                  print(f"  Geocoding failed for '{city}': {e}")
+                  city_coords[city] = None
+                  return None
+
+          def get_nws_zone(lat, lon):
+              """Return NWS forecast zone ID (e.g. 'OKZ040') for lat/lon, or None. Cached."""
+              key = f"{lat},{lon}"
+              if key in coords_zone:
+                  return coords_zone[key]
+              try:
+                  points_url = f"https://api.weather.gov/points/{lat},{lon}"
+                  data = fetch_json(points_url, headers=NWS_HEADERS)
+                  zone_url = data.get("properties", {}).get("forecastZone", "")
+                  if not zone_url:
+                      print(f"  NWS points returned no forecastZone for {lat},{lon}")
+                      coords_zone[key] = None
+                      return None
+                  zone_id = zone_url.rstrip("/").split("/")[-1]
+                  coords_zone[key] = zone_id
+                  return zone_id
+              except Exception as e:
+                  print(f"  NWS points lookup failed for {lat},{lon}: {e}")
+                  coords_zone[key] = None
+                  return None
+
+          # Pre-populate zone cache for all cities
+          print(f"\nPre-computing NWS zones for {len(CITY_LIST)} cities...")
+          for city in CITY_LIST:
+              coords = geocode_city(city)
+              if coords:
+                  get_nws_zone(coords[0], coords[1])
+          print("Zone cache built.")
+
+          # Extreme alert event types that warrant a broadcast fallback if no cities match
+          EXTREME_EVENTS = {
+              "Tornado Warning",
+              "Flash Flood Emergency",
+              "Hurricane Warning",
+          }
+
+          # --- Process each unseen alert with city-targeted notifications ---
           newly_sent = []
           now_iso    = datetime.now(timezone.utc).isoformat()
 
@@ -791,7 +860,6 @@ jobs:
 
               # Build a concise headline from description/headline field
               raw_headline = (props.get("headline") or props.get("description") or event)
-              # Strip NWS boilerplate prefix like "NWS XYZ has issued..."
               headline = raw_headline[:120].strip()
 
               if alert_id in sent_ids:
@@ -802,41 +870,96 @@ jobs:
               print(f"  Area:     {area}")
               print(f"  Headline: {headline}")
 
-              # Title includes the area so subscribers can self-filter
+              # Get UGC zone codes for this alert
+              alert_ugc = set(props.get("geocode", {}).get("UGC", []))
+              print(f"  Alert UGC zones: {alert_ugc}")
+
+              # Determine which cities are in this alert's affected zones
+              affected_cities = []
+              for city in CITY_LIST:
+                  coords = city_coords.get(city)
+                  if coords is None:
+                      continue
+                  zone_id = coords_zone.get(f"{coords[0]},{coords[1]}")
+                  if zone_id and zone_id in alert_ugc:
+                      affected_cities.append(city)
+
+              print(f"  Affected cities: {affected_cities}")
+
               notif_title = f"{emoji} {event} · {area}"
-              # Body is the NWS headline, capped at 120 chars
               notif_body  = headline if headline else event
 
-              try:
-                  payload = {
-                      "app_id": APP_ID,
-                      "included_segments": ["All"],
-                      "headings":  {"en": notif_title},
-                      "contents":  {"en": notif_body},
-                      "priority":  10,
-                      "ttl":       3600,
-                      "url":       "https://cirrusweather.app",
-                      "chrome_web_icon": "https://cirrusweather.app/icon.png"
-                  }
-                  resp = post_json(
-                      "https://api.onesignal.com/notifications",
-                      payload,
-                      headers={"Authorization": f"Key {API_KEY}"}
-                  )
-                  notif_id   = resp.get("id", "unknown")
-                  recipients = resp.get("recipients", 0)
-                  errors_os  = resp.get("errors")
-                  print(f"  Broadcast sent! OneSignal ID: {notif_id} | Recipients: {recipients}")
-                  if errors_os:
-                      print(f"  OneSignal errors: {errors_os}")
+              sent_ok = False
+
+              if affected_cities:
+                  # Send one targeted push per affected city
+                  for city in affected_cities:
+                      try:
+                          payload = {
+                              "app_id": APP_ID,
+                              "filters": [
+                                  {"field": "tag", "key": "city", "relation": "=", "value": city}
+                              ],
+                              "headings": {"en": notif_title},
+                              "contents": {"en": notif_body},
+                              "priority": 10,
+                              "ttl":      3600,
+                              "url":      "https://cirrusweather.app",
+                              "chrome_web_icon": "https://cirrusweather.app/icon.png"
+                          }
+                          resp = post_json(
+                              "https://api.onesignal.com/notifications",
+                              payload,
+                              headers={"Authorization": f"Key {API_KEY}"}
+                          )
+                          notif_id   = resp.get("id", "unknown")
+                          recipients = resp.get("recipients", 0)
+                          errors_os  = resp.get("errors")
+                          print(f"  Targeted send → {city}: ID {notif_id} | Recipients: {recipients}")
+                          if errors_os:
+                              print(f"  OneSignal errors: {errors_os}")
+                          sent_ok = True
+                      except Exception as e:
+                          print(f"  ERROR sending targeted alert for city '{city}': {e}")
+              elif event in EXTREME_EVENTS:
+                  # No city tag matches but this is an extreme alert — broadcast to all
+                  # with a note so subscribers understand it may not be their area
+                  broadcast_body = f"{notif_body} (Check your area)"
+                  try:
+                      payload = {
+                          "app_id": APP_ID,
+                          "included_segments": ["All"],
+                          "headings": {"en": notif_title},
+                          "contents": {"en": broadcast_body},
+                          "priority": 10,
+                          "ttl":      3600,
+                          "url":      "https://cirrusweather.app",
+                          "chrome_web_icon": "https://cirrusweather.app/icon.png"
+                      }
+                      resp = post_json(
+                          "https://api.onesignal.com/notifications",
+                          payload,
+                          headers={"Authorization": f"Key {API_KEY}"}
+                      )
+                      notif_id   = resp.get("id", "unknown")
+                      recipients = resp.get("recipients", 0)
+                      errors_os  = resp.get("errors")
+                      print(f"  Extreme-alert broadcast (no city match): ID {notif_id} | Recipients: {recipients}")
+                      if errors_os:
+                          print(f"  OneSignal errors: {errors_os}")
+                      sent_ok = True
+                  except Exception as e:
+                      print(f"  ERROR sending extreme-alert broadcast '{alert_id}': {e}")
+              else:
+                  print(f"  No affected cities found for non-extreme alert — skipping notification.")
+
+              if sent_ok:
                   newly_sent.append({
                       "alert_id": alert_id,
                       "event":    event,
                       "area":     area,
                       "sent_at":  now_iso
                   })
-              except Exception as e:
-                  print(f"  ERROR sending alert '{alert_id}': {e}")
 
           # --- Persist newly sent IDs to gist ---
           if gist_id and newly_sent:
