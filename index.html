@@ -1005,7 +1005,7 @@ function renderSettings(){
   }
 
   const header=`
-    <div style="text-align:center;padding:32px 0 36px">
+    <div style="text-align:center;padding:4px 0 24px">
       <div class="landing-icon" style="margin-bottom:16px"><canvas id="settingsLogo" width="260" height="260" style="width:130px;height:130px"></canvas></div>
       <div class="landing-title">CIRRUS</div>
       <div class="landing-tagline" style="color:var(--text-secondary)">No ads. No articles. No agenda.<span class="tagline-punch" style="color:var(--text);font-weight:800">Just the weather.</span></div>
@@ -3152,49 +3152,35 @@ function toggleDay(i){
   function drawCloud(c){
     const x=c.x, y=c.y, w=c.w, h=c.h, op=c.op;
     const isDark=document.documentElement.classList.contains('dark');
-    ctx.save();
-    ctx.globalAlpha=isDark ? op*0.45 : op;
 
-    // Dark mode: dim blue-slate clouds that blend into the night sky
-    // Light mode: warm cream-white for overcast, bright white for partly cloudy
+    let col;
     if(isDark){
-      const grad = ctx.createLinearGradient(x, y-h*0.3, x, y+h*0.7);
-      grad.addColorStop(0,'rgba(80,100,130,1)');
-      grad.addColorStop(0.5,'rgba(60,80,110,1)');
-      grad.addColorStop(1,'rgba(40,60,90,1)');
-      ctx.fillStyle=grad;
+      col='rgba(90,115,150,';
     } else if(c.style==='overcast'){
-      const grad = ctx.createLinearGradient(x, y-h*0.3, x, y+h*0.7);
-      grad.addColorStop(0,'rgba(255,255,248,1)');
-      grad.addColorStop(0.5,'rgba(240,245,255,1)');
-      grad.addColorStop(1,'rgba(210,225,240,1)');
-      ctx.fillStyle=grad;
+      col='rgba(200,215,230,';
     } else {
-      const grad = ctx.createLinearGradient(x, y-h*0.3, x, y+h*0.5);
-      grad.addColorStop(0,'rgba(255,255,255,1)');
-      grad.addColorStop(1,'rgba(230,242,255,1)');
-      ctx.fillStyle=grad;
+      col='rgba(255,255,255,';
     }
 
-    // Draw wispy elongated cloud — wide flat streaks like real cirrus
-    ctx.beginPath();
-    ctx.ellipse(x, y, w*0.5, h*0.5, 0, 0, Math.PI*2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(x-w*0.32, y+h*0.1, w*0.28, h*0.38, 0, 0, Math.PI*2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(x+w*0.33, y+h*0.08, w*0.26, h*0.36, 0, 0, Math.PI*2);
-    ctx.fill();
-    // Wispy trailing edges — very flat, very wide
-    ctx.beginPath();
-    ctx.ellipse(x-w*0.44, y+h*0.15, w*0.14, h*0.22, 0, 0, Math.PI*2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(x+w*0.44, y+h*0.12, w*0.13, h*0.20, 0, 0, Math.PI*2);
-    ctx.fill();
+    // Each cloud is several blurred passes at low opacity — soft, feathered, real-looking
+    const passes=[
+      {blurPx: h*1.8, ax: 0,      ay: 0,    rx: w*0.50, ry: h*0.55, a: op*0.55},
+      {blurPx: h*1.2, ax:-w*0.28, ay: h*0.05, rx: w*0.28, ry: h*0.42, a: op*0.45},
+      {blurPx: h*1.2, ax: w*0.29, ay: h*0.04, rx: w*0.26, ry: h*0.40, a: op*0.42},
+      {blurPx: h*2.2, ax:-w*0.42, ay: h*0.10, rx: w*0.18, ry: h*0.28, a: op*0.28},
+      {blurPx: h*2.2, ax: w*0.42, ay: h*0.08, rx: w*0.16, ry: h*0.26, a: op*0.25},
+    ];
 
-    ctx.restore();
+    passes.forEach(p=>{
+      ctx.save();
+      ctx.filter=`blur(${p.blurPx.toFixed(1)}px)`;
+      ctx.globalAlpha=isDark ? p.a*0.5 : p.a;
+      ctx.fillStyle=col+'1)';
+      ctx.beginPath();
+      ctx.ellipse(x+p.ax, y+p.ay, Math.max(p.rx,1), Math.max(p.ry,1), 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    });
   }
 
   function drawSunRays(rays){
