@@ -542,7 +542,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 /* Hero */
 .mkt-hero{text-align:center;padding:28px 0 24px}
 .mkt-hero-icon-wrap{width:88px;height:88px;border-radius:22px;overflow:hidden;margin:0 auto 20px;border:1.5px solid rgba(255,255,255,0.28);box-shadow:0 8px 32px rgba(0,0,0,0.18)}
-.mkt-wordmark{font-size:40px;font-weight:800;letter-spacing:8px;color:#fff;margin-bottom:14px;text-shadow:0 2px 20px rgba(0,0,0,0.12)}
+.mkt-wordmark{font-size:40px;font-weight:800;letter-spacing:8px;background:linear-gradient(135deg,#182838,#1a90e4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px}
 .mkt-tagline-pre{font-size:17px;font-weight:500;color:rgba(255,255,255,0.82);line-height:1.5;margin-bottom:2px}
 .mkt-tagline-punch{font-size:20px;font-weight:800;color:#fff;display:block;margin-bottom:28px}
 
@@ -724,22 +724,34 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
         <div class="phone-mockup-wrap reveal">
           <div class="phone-mockup">
             <div class="phone-notch"><div class="phone-speaker"></div><div class="phone-camera"></div></div>
-            <div class="phone-screen">
+            <div class="phone-screen" style="background:linear-gradient(155deg,#4bc8ee 0%,#38c8a0 100%)">
               <div class="phone-screen-status">
                 <span class="phone-status-time">9:41</span>
-                <span class="phone-status-icons">●●● ▶ 100%</span>
+                <span class="phone-status-icons">●●● 5G 100%</span>
               </div>
-              <div class="phone-app-bar">CIRRUS</div>
-              <div class="phone-mock-city">San Francisco, CA</div>
-              <div class="phone-mock-icon">☀️</div>
-              <div class="phone-mock-temp">68°</div>
-              <div class="phone-mock-desc">Clear Sky · Feels like 65°</div>
-              <div class="phone-mock-strip">
-                <div><div class="psi-val">62%</div><div class="psi-lbl">Humidity</div></div>
-                <div><div class="psi-val">7 mph</div><div class="psi-lbl">Wind</div></div>
-                <div><div class="psi-val">UV 4</div><div class="psi-lbl">Index</div></div>
+              <!-- header bar -->
+              <div style="background:rgba(255,255,255,0.18);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:10px;padding:6px 10px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.9)">San Francisco, CA</span>
               </div>
-              <div class="phone-mock-summary">"Perfect afternoon — get outside before the fog rolls in around 5 PM."</div>
+              <!-- hero -->
+              <div style="text-align:center;padding:2px 0 10px">
+                <div style="font-size:46px;line-height:1;margin-bottom:2px">☀️</div>
+                <div style="font-size:60px;font-weight:800;color:#fff;line-height:1;letter-spacing:-2px;filter:drop-shadow(0 2px 10px rgba(0,0,0,0.12))">68°</div>
+                <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);margin:5px 0 2px">Clear Sky</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.7)">H:72° &nbsp;L:58° &nbsp;·&nbsp; Feels like 65°</div>
+              </div>
+              <!-- summary card -->
+              <div style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.22);border-radius:10px;padding:8px 10px;margin-bottom:8px">
+                <div style="font-size:9px;color:rgba(255,255,255,0.92);line-height:1.55;font-style:italic">"Beautiful afternoon ahead — low humidity, no clouds in sight."</div>
+              </div>
+              <!-- hourly strip -->
+              <div style="display:flex;justify-content:space-between;background:rgba(255,255,255,0.14);border-radius:10px;padding:8px 10px">
+                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">Now</div><div style="font-size:16px;line-height:1">☀️</div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">68°</div></div>
+                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">2 PM</div><div style="font-size:16px;line-height:1">☀️</div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">71°</div></div>
+                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">4 PM</div><div style="font-size:16px;line-height:1">🌤️</div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">69°</div></div>
+                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">6 PM</div><div style="font-size:16px;line-height:1">🌅</div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">64°</div></div>
+              </div>
             </div>
             <div class="phone-home-bar"></div>
           </div>
@@ -758,11 +770,6 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
         </div>
         <div class="mkt-trial-terms reveal reveal-d2">Free for 7 days &mdash; no credit card required</div>
 
-        <div class="mkt-or-divider reveal reveal-d2"><span>or</span></div>
-        <button class="mkt-cta-btn secondary reveal reveal-d3" onclick="document.getElementById('btnLocate').click()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
-          Try it free &mdash; no signup needed
-        </button>
       </div>
 
       <!-- ── HOW IT WORKS ── -->
@@ -840,7 +847,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
         <div class="pricing-grid">
           <div class="pricing-card reveal">
             <div class="pricing-period">Monthly</div>
-            <div class="pricing-price">$2<span style="font-size:16px;font-weight:600">.99</span></div>
+            <div class="pricing-price">$3.99</div>
             <div class="pricing-per">per month</div>
             <div class="pricing-features">
               <div class="pricing-feature-item">All features included</div>
@@ -851,11 +858,11 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
           <div class="pricing-card best reveal reveal-d1">
             <div class="pricing-badge">Best value</div>
             <div class="pricing-period">Annual</div>
-            <div class="pricing-price">$1<span style="font-size:16px;font-weight:600">.67</span></div>
-            <div class="pricing-per">per month &middot; $19.99/yr</div>
+            <div class="pricing-price">$2.08</div>
+            <div class="pricing-per">per month &middot; $24.99/yr</div>
             <div class="pricing-features">
               <div class="pricing-feature-item">Everything in monthly</div>
-              <div class="pricing-feature-item">Save 44%</div>
+              <div class="pricing-feature-item">Save 48%</div>
               <div class="pricing-feature-item">Priority support</div>
             </div>
           </div>
