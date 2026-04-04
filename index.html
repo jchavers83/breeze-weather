@@ -11,14 +11,14 @@
 <meta property="og:title" content="Cirrus">
 <meta property="og:description" content="No ads. No articles. No agenda. Just the weather.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://cirrusweather.app/">
-<meta property="og:image" content="https://cirrusweather.app/icon.png">
+<meta property="og:url" content="https://jchavers83.github.io/breeze-weather/">
+<meta property="og:image" content="https://jchavers83.github.io/breeze-weather/icon.png">
 <meta property="og:image:width" content="512">
 <meta property="og:image:height" content="512">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Cirrus">
 <meta name="twitter:description" content="No ads. No articles. No agenda. Just the weather.">
-<meta name="twitter:image" content="https://cirrusweather.app/icon.png">
+<meta name="twitter:image" content="https://jchavers83.github.io/breeze-weather/icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -704,6 +704,7 @@ window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
   await OneSignal.init({
     appId: "30178abc-998e-48d7-9594-21f2914087f0",
+    safari_web_id: "SAFARI_WEB_ID_PLACEHOLDER",
     notifyButton: { enable: false },
     welcomeNotification: {
       title: "Cirrus ☀️",
@@ -768,7 +769,7 @@ function updateGradient(){
   // Rain / drizzle: deeper, more dramatic blue than clear
   else if(code>=61||code>=51&&code<=57){from=state.dark?'#1a2a3a':'#4e88b8';to=state.dark?'#1a3030':'#4ea8b0'}
   // Cloudy / fog: warm periwinkle-blue — overcast but still alive and daytime
-  else if(code>=3&&code<=48){from=state.dark?'#1a2a30':'#6aaed8';to=state.dark?'#1a2a38':'#4e8ec8'}
+  else if(code>=3&&code<=48){from=state.dark?'#1a2030':'#7bbee8';to=state.dark?'#1a2a40':'#a8d4f0'}
   // Clear / partly cloudy: vivid sky-blue → vivid mint (the money shot)
   else{from=state.dark?'#1a2a3a':'#5ec7f0';to=state.dark?'#1a3a2a':'#52d4a0'}
   document.documentElement.style.setProperty('--bg-from',from);
@@ -2926,10 +2927,10 @@ function toggleDay(i){
 (function(){
   const canvas=document.getElementById('weatherCanvas');
   const ctx=canvas.getContext('2d');
-  let W,H,particles=[],mode='none',raf,lightning=0,lflash=false;
+  let W,H,particles=[],clouds=[],mode='none',raf,lightning=0,lflash=false;
 
   function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
-  window.addEventListener('resize',resize);resize();
+  window.addEventListener('resize',()=>{resize();});resize();
 
   function makeRain(n){
     return Array.from({length:n},()=>({
@@ -2954,8 +2955,124 @@ function toggleDay(i){
     }));
   }
 
+  // Cloud maker — layers of clouds at different speeds and opacities
+  function makeClouds(n, style){
+    // style: 'overcast' = dense, slow, layered; 'partly' = fluffy, faster, fewer
+    return Array.from({length:n},(_,i)=>{
+      const layer = i % 3; // 0=back, 1=mid, 2=front
+      const isOvercast = style==='overcast';
+      return {
+        x: Math.random()*W*1.5 - W*0.25,
+        y: (layer===0 ? 0.05 : layer===1 ? 0.12 : 0.08)*H + Math.random()*0.18*H,
+        w: (isOvercast ? 220 : 140) + Math.random()*(isOvercast ? 200 : 120),
+        h: (isOvercast ? 55 : 40) + Math.random()*(isOvercast ? 45 : 35),
+        spd: (layer===0 ? 0.12 : layer===1 ? 0.22 : 0.32) * (isOvercast ? 1 : 1.6),
+        op: isOvercast ? (layer===0?0.22:layer===1?0.28:0.32) : (layer===0?0.15:layer===1?0.20:0.26),
+        layer,
+        style
+      };
+    });
+  }
+
+  // Sun rays maker
+  function makeSunRays(n){
+    return Array.from({length:n},(_,i)=>({
+      angle: (i/n)*Math.PI*2,
+      len: 0.12 + Math.random()*0.08,
+      op: 0.04 + Math.random()*0.06,
+      spd: 0.0003 + Math.random()*0.0002,
+      ph: Math.random()*Math.PI*2
+    }));
+  }
+
+  function drawCloud(c){
+    const x=c.x, y=c.y, w=c.w, h=c.h, op=c.op;
+    ctx.save();
+    ctx.globalAlpha=op;
+
+    // Use white for partly cloudy, warm cream-white for overcast
+    if(c.style==='overcast'){
+      const grad = ctx.createLinearGradient(x, y-h*0.3, x, y+h*0.7);
+      grad.addColorStop(0,'rgba(255,255,248,1)');
+      grad.addColorStop(0.5,'rgba(240,245,255,1)');
+      grad.addColorStop(1,'rgba(210,225,240,1)');
+      ctx.fillStyle=grad;
+    } else {
+      const grad = ctx.createLinearGradient(x, y-h*0.3, x, y+h*0.5);
+      grad.addColorStop(0,'rgba(255,255,255,1)');
+      grad.addColorStop(1,'rgba(230,242,255,1)');
+      ctx.fillStyle=grad;
+    }
+
+    // Draw puffy cloud shape using overlapping ellipses
+    ctx.beginPath();
+    ctx.ellipse(x, y, w*0.5, h*0.55, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x-w*0.28, y+h*0.08, w*0.32, h*0.45, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x+w*0.28, y+h*0.05, w*0.35, h*0.48, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x+w*0.12, y-h*0.18, w*0.28, h*0.42, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x-w*0.1, y-h*0.12, w*0.25, h*0.38, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawSunRays(rays){
+    // Sun positioned top-right area
+    const sx = W*0.78, sy = H*0.14;
+    const baseR = Math.min(W,H)*0.06;
+    rays.forEach(r=>{
+      r.ph += r.spd;
+      const pulse = 0.6 + Math.sin(r.ph)*0.4;
+      const innerR = baseR * 1.1;
+      const outerR = baseR * (1.1 + r.len * (3 + pulse));
+      const op = r.op * pulse;
+      ctx.save();
+      ctx.globalAlpha = op;
+      ctx.strokeStyle = 'rgba(255,240,180,1)';
+      ctx.lineWidth = 2.5 + Math.random()*1;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(sx + Math.cos(r.angle)*innerR, sy + Math.sin(r.angle)*innerR);
+      ctx.lineTo(sx + Math.cos(r.angle)*outerR, sy + Math.sin(r.angle)*outerR);
+      ctx.stroke();
+      ctx.restore();
+    });
+    // Sun glow
+    const grd = ctx.createRadialGradient(sx,sy,baseR*0.5, sx,sy,baseR*3.5);
+    grd.addColorStop(0,'rgba(255,240,160,0.18)');
+    grd.addColorStop(0.5,'rgba(255,220,100,0.06)');
+    grd.addColorStop(1,'rgba(255,200,80,0)');
+    ctx.fillStyle=grd;
+    ctx.beginPath();ctx.arc(sx,sy,baseR*3.5,0,Math.PI*2);ctx.fill();
+  }
+
   function draw(){
     ctx.clearRect(0,0,W,H);
+
+    // Draw sun rays (clear day)
+    if(mode==='sunny'||mode==='partly'){
+      drawSunRays(particles);
+    }
+
+    // Draw clouds (overcast or partly cloudy)
+    if(mode==='overcast'||mode==='partly'||mode==='rain'||mode==='storm'){
+      // Sort by layer so back clouds render first
+      clouds.sort((a,b)=>a.layer-b.layer);
+      clouds.forEach(c=>{
+        c.x += c.spd;
+        if(c.x - c.w > W) c.x = -c.w * 1.2;
+        drawCloud(c);
+      });
+    }
+
     if(mode==='rain'||mode==='storm'){
       particles.forEach(p=>{
         ctx.strokeStyle=`rgba(180,215,245,${p.op})`;
@@ -2983,19 +3100,64 @@ function toggleDay(i){
         ctx.fillStyle=`rgba(255,255,255,${Math.max(0,op)})`;
         ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,Math.PI*2);ctx.fill();
       });
+    }else if(mode==='cloudy-night'){
+      // Stars peeking through clouds at night
+      particles.forEach(p=>{
+        p.ph+=p.spd*0.6;
+        const op=0.15+Math.sin(p.ph)*0.20;
+        ctx.fillStyle=`rgba(255,255,255,${Math.max(0,op)})`;
+        ctx.beginPath();ctx.arc(p.x,p.y,p.sz*0.7,0,Math.PI*2);ctx.fill();
+      });
     }
+
     raf=requestAnimationFrame(draw);
   }
 
   window.setWeatherAnim=function(code,isNight){
     cancelAnimationFrame(raf);
     ctx.clearRect(0,0,W,H);
-    if([95,96,99].includes(code)){mode='storm';particles=makeRain(140);}
-    else if((code>=51&&code<=67)||(code>=80&&code<=82)){mode='rain';particles=makeRain(110);}
-    else if((code>=71&&code<=77)||(code>=85&&code<=86)){mode='snow';particles=makeSnow(90);}
-    else if(isNight&&code<=2){mode='stars';particles=makeStars(130);}
-    else{mode='none';particles=[];}
-    if(mode!=='none')draw();
+    particles=[];clouds=[];
+
+    if([95,96,99].includes(code)){
+      mode='storm';
+      particles=makeRain(140);
+      clouds=makeClouds(8,'overcast');
+    } else if((code>=51&&code<=67)||(code>=80&&code<=82)){
+      mode='rain';
+      particles=makeRain(110);
+      clouds=makeClouds(6,'overcast');
+    } else if((code>=71&&code<=77)||(code>=85&&code<=86)){
+      mode='snow';
+      particles=makeSnow(90);
+    } else if(code>=3&&code<=48){
+      // Overcast/cloudy/foggy
+      if(isNight){
+        mode='cloudy-night';
+        particles=makeStars(60);
+        clouds=makeClouds(10,'overcast');
+      } else {
+        mode='overcast';
+        clouds=makeClouds(12,'overcast');
+      }
+    } else if(code<=2){
+      if(isNight){
+        mode='stars';
+        particles=makeStars(130);
+      } else if(code===2){
+        // Partly cloudy day
+        mode='partly';
+        particles=makeSunRays(16);
+        clouds=makeClouds(5,'partly');
+      } else {
+        // Clear sunny day
+        mode='sunny';
+        particles=makeSunRays(20);
+      }
+    } else {
+      mode='none';
+    }
+
+    if(mode!=='none') draw();
   };
 })();
 
