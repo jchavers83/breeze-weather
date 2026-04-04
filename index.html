@@ -3120,19 +3120,19 @@ function toggleDay(i){
     }));
   }
 
-  // Cloud maker — wispy, elongated streaks; not puffy cartoon blobs
   function makeClouds(n, style){
     const isOvercast = style==='overcast';
     return Array.from({length:n},(_,i)=>{
-      const layer = i % 3; // 0=back, 1=mid, 2=front
+      const layer = i % 3;
       return {
         x: Math.random()*W*1.6 - W*0.3,
-        y: (layer===0 ? 0.04 : layer===1 ? 0.10 : 0.06)*H + Math.random()*0.20*H,
-        // Much wider, much flatter — wispy streaks not blobs
-        w: (isOvercast ? 320 : 200) + Math.random()*(isOvercast ? 260 : 160),
-        h: (isOvercast ? 22 : 18) + Math.random()*(isOvercast ? 18 : 14),
-        spd: (layer===0 ? 0.10 : layer===1 ? 0.18 : 0.28) * (isOvercast ? 1 : 1.5),
-        op: isOvercast ? (layer===0?0.18:layer===1?0.22:0.26) : (layer===0?0.12:layer===1?0.16:0.22),
+        y: (layer===0 ? 0.05 : layer===1 ? 0.12 : 0.08)*H + Math.random()*0.22*H,
+        w: (isOvercast ? 260 : 150) + Math.random()*(isOvercast ? 200 : 130),
+        h: (isOvercast ? 38 : 52) + Math.random()*(isOvercast ? 28 : 48),
+        spd: (layer===0 ? 0.08 : layer===1 ? 0.15 : 0.24) * (isOvercast ? 0.8 : 1.2),
+        op: isOvercast
+          ? (layer===0?0.52:layer===1?0.62:0.72)
+          : (layer===0?0.44:layer===1?0.54:0.66),
         layer,
         style
       };
@@ -3153,32 +3153,45 @@ function toggleDay(i){
   function drawCloud(c){
     const x=c.x, y=c.y, w=c.w, h=c.h, op=c.op;
     const isDark=document.documentElement.classList.contains('dark');
+    const isOvercast=c.style==='overcast';
 
-    let col;
-    if(isDark){
-      col='rgba(90,115,150,';
-    } else if(c.style==='overcast'){
-      col='rgba(200,215,230,';
-    } else {
-      col='rgba(255,255,255,';
-    }
-
-    // Each cloud is several blurred passes at low opacity — soft, feathered, real-looking
-    const passes=[
-      {blurPx: h*1.8, ax: 0,      ay: 0,    rx: w*0.50, ry: h*0.55, a: op*0.55},
-      {blurPx: h*1.2, ax:-w*0.28, ay: h*0.05, rx: w*0.28, ry: h*0.42, a: op*0.45},
-      {blurPx: h*1.2, ax: w*0.29, ay: h*0.04, rx: w*0.26, ry: h*0.40, a: op*0.42},
-      {blurPx: h*2.2, ax:-w*0.42, ay: h*0.10, rx: w*0.18, ry: h*0.28, a: op*0.28},
-      {blurPx: h*2.2, ax: w*0.42, ay: h*0.08, rx: w*0.16, ry: h*0.26, a: op*0.25},
+    // Puff layout: overcast = flat stratus layers; partly = taller cumulus puffs
+    const puffs=isOvercast ? [
+      {ox:0,       oy:0,       rx:w*0.42, ry:h*0.46, a:1.00},
+      {ox:-w*0.30, oy:h*0.09,  rx:w*0.30, ry:h*0.38, a:0.88},
+      {ox: w*0.31, oy:h*0.07,  rx:w*0.28, ry:h*0.36, a:0.85},
+      {ox: 0,      oy:-h*0.16, rx:w*0.22, ry:h*0.32, a:0.72},
+      {ox:-w*0.46, oy:h*0.17,  rx:w*0.18, ry:h*0.26, a:0.58},
+      {ox: w*0.45, oy:h*0.15,  rx:w*0.17, ry:h*0.24, a:0.54},
+    ] : [
+      {ox:0,       oy:0,       rx:w*0.34, ry:h*0.54, a:1.00},
+      {ox:-w*0.23, oy:h*0.14,  rx:w*0.27, ry:h*0.46, a:0.90},
+      {ox: w*0.24, oy:h*0.12,  rx:w*0.25, ry:h*0.44, a:0.87},
+      {ox:-w*0.11, oy:-h*0.24, rx:w*0.22, ry:h*0.38, a:0.82},
+      {ox: w*0.09, oy:-h*0.20, rx:w*0.19, ry:h*0.33, a:0.74},
+      {ox:-w*0.37, oy:h*0.22,  rx:w*0.15, ry:h*0.28, a:0.54},
+      {ox: w*0.36, oy:h*0.20,  rx:w*0.14, ry:h*0.26, a:0.50},
     ];
 
-    passes.forEach(p=>{
+    let r,g,b;
+    if(isDark)          { r=88;  g=112; b=148; }
+    else if(isOvercast) { r=188; g=200; b=216; }
+    else                { r=255; g=255; b=255; }
+
+    puffs.forEach(p=>{
+      const cx=x+p.ox, cy=y+p.oy;
+      const maxR=Math.max(p.rx,p.ry);
+      const baseOp=(isDark ? op*0.40 : op)*p.a;
+      const grad=ctx.createRadialGradient(cx,cy-p.ry*0.12,0,cx,cy,maxR);
+      grad.addColorStop(0,   `rgba(${r},${g},${b},${baseOp.toFixed(3)})`);
+      grad.addColorStop(0.5, `rgba(${r},${g},${b},${(baseOp*0.45).toFixed(3)})`);
+      grad.addColorStop(1,   `rgba(${r},${g},${b},0)`);
       ctx.save();
-      ctx.filter=`blur(${p.blurPx.toFixed(1)}px)`;
-      ctx.globalAlpha=isDark ? p.a*0.5 : p.a;
-      ctx.fillStyle=col+'1)';
+      ctx.fillStyle=grad;
+      ctx.translate(cx,cy);
+      ctx.scale(p.rx/maxR, p.ry/maxR);
       ctx.beginPath();
-      ctx.ellipse(x+p.ax, y+p.ay, Math.max(p.rx,1), Math.max(p.ry,1), 0, 0, Math.PI*2);
+      ctx.arc(0,0,maxR,0,Math.PI*2);
       ctx.fill();
       ctx.restore();
     });
