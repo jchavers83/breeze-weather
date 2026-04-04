@@ -945,6 +945,7 @@ $$('.nav-tab').forEach(btn=>{
       $('.header').style.display='none';
       $('#savedBar').style.display='none';
       $('#settingsView').classList.add('active');
+      window.scrollTo(0,0);
       renderSettings();
     }else{
       $('#radarView').classList.remove('active');
@@ -1058,12 +1059,12 @@ function renderSettings(){
 
   el.innerHTML=header+notifSection+displaySection+notifCta+supportSection+about;
 
-  // Draw the mini logo into the settings canvas
+  // Draw the logo into the settings canvas
   const sc=document.getElementById('settingsLogo');
   if(sc){
     const lc=document.getElementById('landingIcon');
     if(lc){
-      sc.getContext('2d').drawImage(lc,0,0,80,80);
+      sc.getContext('2d').drawImage(lc,0,0,260,260);
     }
   }
 }
