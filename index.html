@@ -990,7 +990,7 @@ function renderSettings(){
   const el=$('#settingsView');
   if(!el)return;
 
-  function toggle(key,label,sub,onchange){
+  function toggle(key,label,sub){
     const checked=getSetting(key);
     const id='tog_'+key.replace(/[^a-z]/g,'_');
     return `<div class="settings-row">
@@ -1003,6 +1003,13 @@ function renderSettings(){
       </label>
     </div>`;
   }
+
+  const header=`
+    <div style="text-align:center;padding:24px 0 28px">
+      <canvas id="settingsLogo" width="80" height="80" style="display:block;margin:0 auto 12px"></canvas>
+      <div style="font-size:26px;font-weight:800;letter-spacing:0.04em;background:linear-gradient(135deg,var(--text) 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">CIRRUS</div>
+      <div style="font-size:13px;font-weight:500;color:var(--text-secondary);margin-top:4px">No ads. No articles. No agenda.<br>Just the weather.</div>
+    </div>`;
 
   const notifSection=`
     <div class="settings-section">
@@ -1033,14 +1040,33 @@ function renderSettings(){
       </div>
     </div>`;
 
-  const about=`
-    <div class="settings-about">
-      Cirrus Weather &mdash; <a href="https://cirrusweather.app">cirrusweather.app</a><br>
-      No ads. No articles. No agenda.<br>
-      <span style="opacity:0.6">v1.0</span>
+  const supportSection=`
+    <div class="settings-section">
+      <div class="settings-section-title">Support</div>
+      <div class="settings-row" style="border-radius:14px;cursor:pointer" onclick="window.location='mailto:bugs@cirrusweather.app?subject=Bug%20Report&body=Describe%20the%20issue%3A%0A%0ADevice%2FBrowser%3A%0A%0ASteps%20to%20reproduce%3A'">
+        <div class="settings-row-label">
+          <span>Report a Bug</span>
+          <small>bugs@cirrusweather.app</small>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-tertiary);flex-shrink:0"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
     </div>`;
 
-  el.innerHTML=notifSection+displaySection+notifCta+about;
+  const about=`
+    <div class="settings-about">
+      <a href="https://cirrusweather.app">cirrusweather.app</a> &nbsp;&mdash;&nbsp; <span style="opacity:0.6">v1.0</span>
+    </div>`;
+
+  el.innerHTML=header+notifSection+displaySection+notifCta+supportSection+about;
+
+  // Draw the mini logo into the settings canvas
+  const sc=document.getElementById('settingsLogo');
+  if(sc){
+    const lc=document.getElementById('landingIcon');
+    if(lc){
+      sc.getContext('2d').drawImage(lc,0,0,80,80);
+    }
+  }
 }
 
 function _alertsGranted(){
