@@ -438,6 +438,28 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .tab-view{display:none;padding:calc(env(safe-area-inset-top,0px) + 68px) 16px calc(env(safe-area-inset-bottom,8px) + 74px);box-sizing:border-box;min-height:100vh}
 .tab-view.active{display:block}
 
+/* Settings view */
+#settingsView{display:none;padding:calc(env(safe-area-inset-top,0px) + 68px) 16px calc(env(safe-area-inset-bottom,8px) + 74px);box-sizing:border-box;min-height:100vh}
+#settingsView.active{display:block}
+.settings-section{margin-bottom:20px}
+.settings-section-title{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:8px;padding:0 4px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:var(--card-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--card-border);margin-bottom:1px}
+.settings-row:first-of-type{border-radius:14px 14px 0 0}
+.settings-row:last-of-type{border-radius:0 0 14px 14px;margin-bottom:0}
+.settings-row:only-of-type{border-radius:14px}
+.settings-row-label{display:flex;flex-direction:column;gap:2px}
+.settings-row-label span{font-size:15px;font-weight:600;color:var(--text)}
+.settings-row-label small{font-size:12px;color:var(--text-secondary);font-weight:500}
+/* toggle switch */
+.toggle{position:relative;width:51px;height:31px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;border-radius:31px;background:var(--card-border);transition:background 0.2s;cursor:pointer}
+.toggle input:checked+.toggle-track{background:#34c759}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:25px;height:25px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.22);transition:transform 0.2s;pointer-events:none}
+.toggle input:checked~.toggle-thumb{transform:translateX(20px)}
+.settings-divider{height:1px;background:var(--card-border);margin:4px 0 20px}
+.settings-about{text-align:center;padding:12px 0 4px;color:var(--text-tertiary);font-size:12px;font-weight:500;line-height:1.7}
+.settings-about a{color:var(--accent);text-decoration:none;font-weight:600}
 /* Radar */
 #radarView{display:none;position:fixed;inset:0;z-index:51;padding:env(safe-area-inset-top,0px) 0 0;box-sizing:border-box;flex-direction:column}
 #radarView.active{display:flex}
@@ -678,6 +700,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 <div id="forecastView" class="tab-view"></div>
 <div id="detailsView" class="tab-view"></div>
+<div id="settingsView"></div>
 
 <nav class="mobile-nav" id="mobileNav" style="display:none">
   <button class="nav-tab active" data-tab="current">
@@ -696,6 +719,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M6.34 6.34a8 8 0 1 0 11.32 0"/><path d="M9.17 9.17a4 4 0 1 0 5.66 0"/></svg>
     <span>Radar</span>
   </button>
+  <button class="nav-tab" data-tab="settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span>Settings</span>
+  </button>
 </nav>
 
 <script>
@@ -704,7 +731,6 @@ window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
   await OneSignal.init({
     appId: "30178abc-998e-48d7-9594-21f2914087f0",
-    safari_web_id: "SAFARI_WEB_ID_PLACEHOLDER",
     notifyButton: { enable: false },
     welcomeNotification: {
       title: "Cirrus ☀️",
@@ -715,8 +741,8 @@ OneSignalDeferred.push(async function(OneSignal) {
 
   // When user grants permission, tag them with their city for personalized alerts
   OneSignal.Notifications.addEventListener("permissionChange", async (granted) => {
-    if (granted && state.city) {
-      OneSignal.User.addTag("city", state.city.toLowerCase());
+    if (granted && state.name) {
+      OneSignal.User.addTag("city", state.name.toLowerCase());
       OneSignal.User.addTag("timezone", Intl.DateTimeFormat().resolvedOptions().timeZone);
       OneSignal.User.addTag("lat", String(state.lat || ""));
       OneSignal.User.addTag("lon", String(state.lon || ""));
@@ -910,10 +936,19 @@ $$('.nav-tab').forEach(btn=>{
       $('#content').style.display='none';
       $('.header').style.display='none';
       $('#savedBar').style.display='none';
+      $('#settingsView').classList.remove('active');
       $('#radarView').classList.add('active');
       initRadar();
+    }else if(tab==='settings'){
+      $('#radarView').classList.remove('active');
+      $('#content').style.display='none';
+      $('.header').style.display='none';
+      $('#savedBar').style.display='none';
+      $('#settingsView').classList.add('active');
+      renderSettings();
     }else{
       $('#radarView').classList.remove('active');
+      $('#settingsView').classList.remove('active');
       $('.header').style.display='';
       if(getSaved().length)$('#savedBar').style.display='';
       $('#content').style.display='block';
@@ -929,6 +964,110 @@ $$('.nav-tab').forEach(btn=>{
     }
   });
 });
+
+// ── Settings page ────────────────────────────────────────────────────────────
+const SETTINGS_KEYS={
+  morningBriefing:'cirrus_morning',
+  eveningBriefing:'cirrus_evening',
+  severeAlerts:'cirrus_severe',
+  precipAlerts:'cirrus_precip',
+  darkMode:'cirrus_dark'
+};
+function getSetting(key){
+  const stored=localStorage.getItem(key);
+  // Default on for notification types, dark follows app state
+  if(stored===null){
+    if(key===SETTINGS_KEYS.darkMode)return state.dark;
+    return true;
+  }
+  return stored==='true';
+}
+function setSetting(key,val){
+  localStorage.setItem(key,val?'true':'false');
+}
+
+function renderSettings(){
+  const el=$('#settingsView');
+  if(!el)return;
+
+  function toggle(key,label,sub,onchange){
+    const checked=getSetting(key);
+    const id='tog_'+key.replace(/[^a-z]/g,'_');
+    return `<div class="settings-row">
+      <div class="settings-row-label"><span>${label}</span>${sub?`<small>${sub}</small>`:''}
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="${id}" ${checked?'checked':''} onchange="onSettingToggle('${key}',this.checked)">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>`;
+  }
+
+  const notifSection=`
+    <div class="settings-section">
+      <div class="settings-section-title">Notifications</div>
+      ${toggle(SETTINGS_KEYS.morningBriefing,'Morning Briefing','Daily forecast delivered 6–7 AM your time')}
+      ${toggle(SETTINGS_KEYS.eveningBriefing,'Evening Lookahead','Tomorrow\'s weather delivered at 9 PM your time')}
+      ${toggle(SETTINGS_KEYS.severeAlerts,'Severe Weather Alerts','Warnings &amp; watches for your area')}
+      ${toggle(SETTINGS_KEYS.precipAlerts,'Precipitation Alerts','Rain or snow starting within the hour')}
+    </div>`;
+
+  const displaySection=`
+    <div class="settings-section">
+      <div class="settings-section-title">Display</div>
+      ${toggle(SETTINGS_KEYS.darkMode,'Dark Mode','','')}
+    </div>`;
+
+  const notifCta=`
+    <div class="settings-section">
+      <div class="settings-section-title">Push Notifications</div>
+      <div class="settings-row" style="border-radius:14px">
+        <div class="settings-row-label">
+          <span id="alertsBtnSettingsLabel">${_alertsGranted()?'Alerts enabled':'Enable alerts'}</span>
+          <small>${_alertsGranted()?'Tap to manage in Settings':'Get weather alerts on this device'}</small>
+        </div>
+        <button class="alerts-btn" id="alertsBtnSettings" onclick="handleAlertsBtn()" style="margin:0;font-size:13px;padding:6px 12px">
+          ${_alertsGranted()?'&#128276; On':'&#128276; Enable'}
+        </button>
+      </div>
+    </div>`;
+
+  const about=`
+    <div class="settings-about">
+      Cirrus Weather &mdash; <a href="https://cirrusweather.app">cirrusweather.app</a><br>
+      No ads. No articles. No agenda.<br>
+      <span style="opacity:0.6">v1.0</span>
+    </div>`;
+
+  el.innerHTML=notifSection+displaySection+notifCta+about;
+}
+
+function _alertsGranted(){
+  try{return window.OneSignal&&OneSignal.Notifications&&OneSignal.Notifications.permission;}catch(e){return false;}
+}
+
+function onSettingToggle(key,val){
+  setSetting(key,val);
+  if(key===SETTINGS_KEYS.darkMode){
+    state.dark=val;
+    document.documentElement.classList.toggle('dark',val);
+    localStorage.setItem('darkMode',val?'1':'0');
+  }
+  // For notification keys: update OneSignal tags so backend knows user preferences
+  const notifKeys=[SETTINGS_KEYS.morningBriefing,SETTINGS_KEYS.eveningBriefing,SETTINGS_KEYS.severeAlerts,SETTINGS_KEYS.precipAlerts];
+  if(notifKeys.includes(key)&&window.OneSignalDeferred){
+    OneSignalDeferred.push(async function(OS){
+      const tagMap={
+        [SETTINGS_KEYS.morningBriefing]:'notif_morning',
+        [SETTINGS_KEYS.eveningBriefing]:'notif_evening',
+        [SETTINGS_KEYS.severeAlerts]:'notif_severe',
+        [SETTINGS_KEYS.precipAlerts]:'notif_precip'
+      };
+      OS.User.addTag(tagMap[key],val?'1':'0');
+    });
+  }
+}
 
 // Unit toggle
 function autoUnit(country){
@@ -1400,30 +1539,30 @@ function render(){
 }
 
 // ── OneSignal alerts button helpers ─────────────────────────────────────────
-function _initAlertsBtn(){
+function _setAlertsBtnsOn(){
   const btn=document.getElementById('alertsBtn');
-  if(!btn)return;
+  if(btn){btn.classList.add('active');btn.textContent='\uD83D\uDD14 Alerts on';}
+  const sb=document.getElementById('alertsBtnSettings');
+  if(sb){sb.innerHTML='\uD83D\uDD14 On';}
+  const sl=document.getElementById('alertsBtnSettingsLabel');
+  if(sl){sl.textContent='Alerts enabled';}
+}
+
+function _initAlertsBtn(){
   if(window.OneSignalDeferred){
     OneSignalDeferred.push(async function(OneSignal){
-      const granted=OneSignal.Notifications.permission;
-      if(granted){
-        btn.classList.add('active');
-        btn.textContent='\uD83D\uDD14 Alerts on';
-      }
+      if(OneSignal.Notifications.permission) _setAlertsBtnsOn();
     });
   }
 }
 
 function handleAlertsBtn(){
-  const btn=document.getElementById('alertsBtn');
-  if(!btn)return;
   if(window.OneSignalDeferred){
     OneSignalDeferred.push(async function(OneSignal){
       await OneSignal.Notifications.requestPermission();
       const granted=OneSignal.Notifications.permission;
       if(granted){
-        btn.classList.add('active');
-        btn.textContent='\uD83D\uDD14 Alerts on';
+        _setAlertsBtnsOn();
         if(state.name){
           OneSignal.User.addTag('city',state.name.toLowerCase());
           OneSignal.User.addTag('timezone',Intl.DateTimeFormat().resolvedOptions().timeZone);
