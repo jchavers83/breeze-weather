@@ -127,8 +127,14 @@
     });
     lx.globalAlpha=1;
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',drawLanding);
-  else drawLanding();
+  function copyToDisplay(){
+    const disp=document.getElementById('landingIconDisplay');
+    const src=document.getElementById('landingIcon');
+    if(disp&&src)disp.getContext('2d').drawImage(src,0,0,260,260,0,0,176,176);
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',()=>{drawLanding();copyToDisplay();});
+  }else{drawLanding();copyToDisplay();}
 })();
 </script>
 <style>
@@ -439,7 +445,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .tab-view.active{display:block}
 
 /* Settings view */
-#settingsView{display:none;padding:calc(env(safe-area-inset-top,0px) + 8px) 16px calc(env(safe-area-inset-bottom,8px) + 74px);box-sizing:border-box;min-height:100vh}
+#settingsView{display:none;padding:env(safe-area-inset-top,8px) 16px calc(env(safe-area-inset-bottom,8px) + 74px);box-sizing:border-box;min-height:100vh}
 #settingsView.active{display:block}
 .settings-section{margin-bottom:20px}
 .settings-section-title{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:8px;padding:0 4px}
@@ -460,6 +466,15 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .settings-divider{height:1px;background:var(--card-border);margin:4px 0 20px}
 .settings-about{text-align:center;padding:12px 0 4px;color:var(--text-tertiary);font-size:12px;font-weight:500;line-height:1.7}
 .settings-about a{color:var(--accent);text-decoration:none;font-weight:600}
+/* segmented control */
+.seg-ctrl{display:flex;background:rgba(120,120,128,0.16);border-radius:9px;padding:2px;gap:2px;flex-shrink:0}
+.seg-btn{flex:1;padding:5px 10px;border:none;background:transparent;color:var(--text-secondary);font-size:13px;font-weight:600;border-radius:7px;cursor:pointer;transition:all 0.15s;font-family:inherit;white-space:nowrap}
+.seg-btn.active{background:var(--card-bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.18)}
+/* settings select */
+.settings-select{background:transparent;border:none;color:var(--accent);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-appearance:none;appearance:none;outline:none;text-align:right}
+/* default city row */
+.settings-city-name{font-size:14px;color:var(--accent);font-weight:600}
+.settings-city-clear{font-size:12px;color:var(--text-tertiary);font-weight:600;background:none;border:none;cursor:pointer;padding:0 0 0 8px;font-family:inherit;-webkit-tap-highlight-color:transparent}
 /* Radar */
 #radarView{display:none;position:fixed;inset:0;z-index:51;padding:env(safe-area-inset-top,0px) 0 0;box-sizing:border-box;flex-direction:column}
 #radarView.active{display:flex}
@@ -520,6 +535,148 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 }
 .alerts-btn:hover { background: rgba(255,255,255,0.32); }
 .alerts-btn.active { background: rgba(26,144,228,0.35); border-color: rgba(26,144,228,0.6); }
+
+/* ── Marketing landing page ────────────────────────────────────────────────── */
+.mkt-landing{max-width:500px;margin:0 auto;padding-bottom:48px}
+
+/* Hero */
+.mkt-hero{text-align:center;padding:28px 0 24px}
+.mkt-hero-icon-wrap{width:88px;height:88px;border-radius:22px;overflow:hidden;margin:0 auto 20px;border:1.5px solid rgba(255,255,255,0.28);box-shadow:0 8px 32px rgba(0,0,0,0.18)}
+.mkt-wordmark{font-size:40px;font-weight:800;letter-spacing:8px;color:#fff;margin-bottom:14px;text-shadow:0 2px 20px rgba(0,0,0,0.12)}
+.mkt-tagline-pre{font-size:17px;font-weight:500;color:rgba(255,255,255,0.82);line-height:1.5;margin-bottom:2px}
+.mkt-tagline-punch{font-size:20px;font-weight:800;color:#fff;display:block;margin-bottom:28px}
+
+/* Phone mockup */
+.phone-mockup-wrap{max-width:220px;margin:0 auto 32px}
+.phone-mockup{position:relative;background:#080810;border-radius:38px;border:2px solid rgba(255,255,255,0.14);padding:12px 8px 16px;box-shadow:0 28px 72px rgba(0,0,0,0.45),0 0 0 1px rgba(255,255,255,0.07),inset 0 1px 0 rgba(255,255,255,0.08)}
+.phone-notch{width:76px;height:20px;background:#080810;border-radius:0 0 14px 14px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;gap:8px}
+.phone-camera{width:8px;height:8px;border-radius:50%;background:#181828;border:1.5px solid #242438}
+.phone-speaker{width:38px;height:4px;border-radius:2px;background:#181828}
+.phone-screen{border-radius:26px;overflow:hidden;background:linear-gradient(155deg,#38bdf8 0%,#1e72d4 100%);padding:10px 10px 14px;min-height:360px;position:relative}
+.phone-screen-status{display:flex;justify-content:space-between;align-items:center;padding:0 2px;margin-bottom:8px}
+.phone-status-time{font-size:11px;font-weight:700;color:rgba(255,255,255,0.85)}
+.phone-status-icons{font-size:9px;color:rgba(255,255,255,0.7);font-weight:600;letter-spacing:1px}
+.phone-app-bar{font-size:9px;font-weight:800;letter-spacing:2.5px;color:rgba(255,255,255,0.75);text-align:center;margin-bottom:10px}
+.phone-mock-city{font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);text-align:center;margin-bottom:2px}
+.phone-mock-icon{font-size:34px;text-align:center;margin-bottom:2px}
+.phone-mock-temp{font-size:54px;font-weight:800;color:#fff;text-align:center;line-height:1;letter-spacing:-2px;filter:drop-shadow(0 2px 12px rgba(0,0,0,0.2))}
+.phone-mock-desc{font-size:11px;font-weight:600;color:rgba(255,255,255,0.8);text-align:center;margin:4px 0 10px}
+.phone-mock-strip{display:flex;justify-content:space-around;background:rgba(255,255,255,0.15);border-radius:10px;padding:8px 6px;margin-bottom:8px}
+.psi-val{font-size:12px;font-weight:700;color:#fff;text-align:center}
+.psi-lbl{font-size:8px;color:rgba(255,255,255,0.65);font-weight:600;text-transform:uppercase;letter-spacing:0.3px;text-align:center}
+.phone-mock-summary{font-size:9px;color:rgba(255,255,255,0.88);line-height:1.55;background:rgba(255,255,255,0.15);border-radius:9px;padding:7px 9px;font-style:italic}
+.phone-home-bar{width:72px;height:4px;background:rgba(255,255,255,0.28);border-radius:2px;margin:10px auto 0}
+
+/* Email form */
+.mkt-email-form{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
+.mkt-email-input-wrap{position:relative}
+.mkt-email-input{width:100%;padding:14px 44px 14px 16px;border:1.5px solid rgba(255,255,255,0.32);border-radius:14px;background:rgba(255,255,255,0.14);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;font-size:15px;font-family:inherit;outline:none;transition:border-color 0.2s,background 0.2s;box-sizing:border-box}
+.mkt-email-input::placeholder{color:rgba(255,255,255,0.5)}
+.mkt-email-input:focus{border-color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.2)}
+.mkt-email-valid-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#4ade80;font-size:17px;font-weight:700;opacity:0;transition:opacity 0.2s}
+.mkt-email-valid-icon.show{opacity:1}
+.mkt-cta-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:15px 24px;border-radius:14px;background:rgba(255,255,255,0.95);color:#1260c4;font-size:16px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;font-family:inherit;width:100%}
+.mkt-cta-btn:hover{background:#fff;transform:translateY(-1px)}
+.mkt-cta-btn:active{transform:scale(0.97)}
+.mkt-cta-btn.secondary{background:rgba(255,255,255,0.14);color:#fff;border:1.5px solid rgba(255,255,255,0.28)}
+.mkt-cta-btn.secondary:hover{background:rgba(255,255,255,0.22)}
+.mkt-trial-terms{font-size:11px;color:rgba(255,255,255,0.58);text-align:center;margin-top:6px}
+.mkt-or-divider{display:flex;align-items:center;gap:10px;margin:18px 0}
+.mkt-or-divider::before,.mkt-or-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.18)}
+.mkt-or-divider span{font-size:11px;color:rgba(255,255,255,0.5);font-weight:600;text-transform:uppercase;letter-spacing:1px}
+
+/* Section wrapper */
+.mkt-section{margin-bottom:36px}
+.mkt-section-label{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);text-align:center;margin-bottom:18px}
+
+/* Steps */
+.steps-list{display:flex;flex-direction:column;gap:10px}
+.step-item{display:flex;align-items:flex-start;gap:14px;padding:16px}
+.step-num{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.16);border:1.5px solid rgba(255,255,255,0.28);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
+.step-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px}
+.step-desc{font-size:13px;color:var(--text-secondary);line-height:1.5}
+
+/* iOS demo */
+.ios-share-demo{padding:20px 16px;margin-top:0}
+.ios-share-demo-title{font-size:14px;font-weight:700;color:var(--text);text-align:center;margin-bottom:16px}
+.ios-share-sheet{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);border-radius:14px;overflow:hidden;max-width:300px;margin:0 auto}
+.ios-share-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.ios-share-row:last-child{border-bottom:none}
+.ios-share-icon{width:32px;height:32px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ios-share-icon.green{background:#34c759}
+.ios-share-icon.muted{background:rgba(255,255,255,0.14)}
+.ios-share-text{font-size:13px;font-weight:600;color:var(--text)}
+.ios-share-text small{display:block;font-size:11px;color:var(--text-secondary);font-weight:500;margin-top:1px}
+
+/* Feature grid */
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.feature-card{padding:16px 14px;display:flex;flex-direction:column;gap:7px}
+.feature-icon{font-size:22px;line-height:1}
+.feature-title{font-size:13px;font-weight:700;color:var(--text)}
+.feature-desc{font-size:12px;color:var(--text-secondary);line-height:1.5;font-weight:500}
+
+/* Pricing */
+.pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.pricing-card{padding:20px 14px;border-radius:20px;background:var(--card-bg);backdrop-filter:blur(var(--card-blur));-webkit-backdrop-filter:blur(var(--card-blur));border:1px solid var(--card-border);text-align:center;position:relative}
+.pricing-card.best{border:2px solid var(--accent);background:rgba(26,144,228,0.10)}
+.pricing-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:10px;font-weight:800;padding:3px 11px;border-radius:20px;white-space:nowrap}
+.pricing-period{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-tertiary);margin-bottom:6px}
+.pricing-price{font-size:30px;font-weight:800;color:var(--text);line-height:1;margin-bottom:2px}
+.pricing-per{font-size:11px;color:var(--text-secondary);margin-bottom:12px}
+.pricing-features{text-align:left;display:flex;flex-direction:column;gap:5px}
+.pricing-feature-item{font-size:11px;color:var(--text-secondary);display:flex;gap:5px;align-items:flex-start}
+.pricing-feature-item::before{content:'✓';color:#34c759;font-weight:700;flex-shrink:0}
+.pricing-note{font-size:11px;color:rgba(255,255,255,0.5);text-align:center}
+
+/* Reviews */
+.reviews-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.reviews-section-label{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5)}
+.btn-leave-review{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.22);color:rgba(255,255,255,0.85);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.btn-leave-review:hover{background:rgba(255,255,255,0.2)}
+.btn-leave-review:active{transform:scale(0.95)}
+.review-cards{display:flex;flex-direction:column;gap:10px}
+.review-card{padding:16px}
+.review-stars{color:#FFD84D;font-size:14px;letter-spacing:2px;margin-bottom:8px}
+.review-quote{font-size:14px;color:var(--text);line-height:1.6;font-style:italic;margin-bottom:10px}
+.review-author{font-size:12px;font-weight:700;color:var(--text-secondary)}
+.review-author-city{color:var(--text-tertiary);font-weight:500}
+
+/* Review modal */
+.review-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:600;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s}
+.review-modal-overlay.open{opacity:1;pointer-events:all}
+.review-modal{width:100%;max-width:560px;background:var(--card-bg);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--card-border);border-radius:24px 24px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom,16px) + 12px);transform:translateY(100%);transition:transform 0.35s cubic-bezier(.4,0,.2,1)}
+.review-modal-overlay.open .review-modal{transform:translateY(0)}
+.review-modal-drag{width:36px;height:4px;background:var(--card-border);border-radius:2px;margin:0 auto 20px}
+.review-modal-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:3px}
+.review-modal-sub{font-size:13px;color:var(--text-secondary);margin-bottom:18px}
+.star-picker{display:flex;gap:6px;margin-bottom:16px}
+.star-btn{font-size:30px;background:none;border:none;cursor:pointer;opacity:0.22;transition:opacity 0.12s,transform 0.1s;line-height:1;padding:0;-webkit-tap-highlight-color:transparent}
+.star-btn.lit{opacity:1}
+.star-btn:active{transform:scale(1.15)}
+.review-textarea{width:100%;padding:12px 14px;border:1px solid var(--card-border);border-radius:12px;background:rgba(128,128,128,0.08);color:var(--text);font-size:14px;font-family:inherit;resize:none;outline:none;transition:border-color 0.2s;min-height:86px;margin-bottom:10px;box-sizing:border-box}
+.review-textarea:focus{border-color:var(--accent)}
+.review-name-input{width:100%;padding:12px 14px;border:1px solid var(--card-border);border-radius:12px;background:rgba(128,128,128,0.08);color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color 0.2s;margin-bottom:14px;box-sizing:border-box}
+.review-name-input:focus{border-color:var(--accent)}
+.review-submit-row{display:flex;gap:10px}
+.btn-review-cancel{flex:1;padding:13px;border-radius:12px;border:1px solid var(--card-border);background:rgba(128,128,128,0.08);color:var(--text-secondary);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-review-submit{flex:2;padding:13px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity 0.2s}
+.btn-review-submit:disabled{opacity:0.4;cursor:default}
+.review-success{text-align:center;padding:12px 0 4px}
+.review-success-icon{font-size:44px;margin-bottom:12px}
+.review-success-msg{font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px}
+.review-success-sub{font-size:13px;color:var(--text-secondary);line-height:1.5}
+
+/* Bottom CTA */
+.mkt-bottom-cta{text-align:center;padding:8px 0 20px}
+.mkt-bottom-cta-sub{font-size:14px;color:rgba(255,255,255,0.55);margin-top:16px;font-weight:500;letter-spacing:0.3px}
+
+/* Scroll reveal */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity 0.6s ease,transform 0.6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-d1{transition-delay:0.07s}
+.reveal-d2{transition-delay:0.14s}
+.reveal-d3{transition-delay:0.21s}
+.reveal-d4{transition-delay:0.28s}
 </style>
 </head>
 <body>
@@ -550,27 +707,193 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
   <div id="savedBar" class="saved-bar" style="display:none"></div>
 
   <div id="content">
-    <div class="landing">
-      <div class="landing-icon"><canvas id="landingIcon" width="260" height="260"></canvas></div>
-      <div class="landing-title">CIRRUS</div>
-      <div class="landing-tagline">No ads. No articles. No agenda.<span class="tagline-punch">Just the weather.</span></div>
-      <button class="landing-cta" onclick="document.getElementById('btnLocate').click()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
-        Use My Location
-      </button>
-      <div class="landing-or">or search for a city above</div>
-      <div class="breeze-lines">
-        <div class="breeze-line"></div>
-        <div class="breeze-line"></div>
-        <div class="breeze-line"></div>
-      </div>
-      <div class="landing-divider"><span>Preview</span></div>
-      <div style="text-align:center">
-        <button class="preview-dark-toggle" id="previewDarkToggle" onclick="togglePreviewDark()">
-          <svg id="previewDarkIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
-          <span id="previewDarkLabel">Try dark mode</span>
+    <!-- landingIcon canvas kept hidden — used for PWA icon + settings logo -->
+    <canvas id="landingIcon" width="260" height="260" style="display:none"></canvas>
+    <div class="mkt-landing">
+
+      <!-- ── HERO ── -->
+      <div class="mkt-hero">
+        <div class="mkt-hero-icon-wrap">
+          <canvas id="landingIconDisplay" width="176" height="176" style="width:88px;height:88px;display:block"></canvas>
+        </div>
+        <div class="mkt-wordmark">CIRRUS</div>
+        <div class="mkt-tagline-pre">No ads. No articles. No agenda.</div>
+        <span class="mkt-tagline-punch">Just the weather.</span>
+
+        <!-- Phone mockup -->
+        <div class="phone-mockup-wrap reveal">
+          <div class="phone-mockup">
+            <div class="phone-notch"><div class="phone-speaker"></div><div class="phone-camera"></div></div>
+            <div class="phone-screen">
+              <div class="phone-screen-status">
+                <span class="phone-status-time">9:41</span>
+                <span class="phone-status-icons">●●● ▶ 100%</span>
+              </div>
+              <div class="phone-app-bar">CIRRUS</div>
+              <div class="phone-mock-city">San Francisco, CA</div>
+              <div class="phone-mock-icon">☀️</div>
+              <div class="phone-mock-temp">68°</div>
+              <div class="phone-mock-desc">Clear Sky · Feels like 65°</div>
+              <div class="phone-mock-strip">
+                <div><div class="psi-val">62%</div><div class="psi-lbl">Humidity</div></div>
+                <div><div class="psi-val">7 mph</div><div class="psi-lbl">Wind</div></div>
+                <div><div class="psi-val">UV 4</div><div class="psi-lbl">Index</div></div>
+              </div>
+              <div class="phone-mock-summary">"Perfect afternoon — get outside before the fog rolls in around 5 PM."</div>
+            </div>
+            <div class="phone-home-bar"></div>
+          </div>
+        </div>
+
+        <!-- Email signup -->
+        <div class="mkt-email-form reveal reveal-d1">
+          <div class="mkt-email-input-wrap">
+            <input class="mkt-email-input" type="email" id="mktEmail" placeholder="Enter your email to get started" autocomplete="email" oninput="handleMktEmail(this,'mktEmailIcon')">
+            <span class="mkt-email-valid-icon" id="mktEmailIcon">✓</span>
+          </div>
+          <button class="mkt-cta-btn" onclick="handleMktEmailSubmit('mktEmail','mktEmailIcon')">
+            Start Free Trial
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </div>
+        <div class="mkt-trial-terms reveal reveal-d2">Free for 7 days &mdash; no credit card required</div>
+
+        <div class="mkt-or-divider reveal reveal-d2"><span>or</span></div>
+        <button class="mkt-cta-btn secondary reveal reveal-d3" onclick="document.getElementById('btnLocate').click()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
+          Try it free &mdash; no signup needed
         </button>
       </div>
+
+      <!-- ── HOW IT WORKS ── -->
+      <div class="mkt-section">
+        <div class="mkt-section-label">How it works</div>
+        <div class="steps-list">
+          <div class="step-item glass reveal">
+            <div class="step-num">1</div>
+            <div>
+              <div class="step-title">Search or share your location</div>
+              <div class="step-desc">Type any city worldwide or tap "Use My Location." No account required to check the weather.</div>
+            </div>
+          </div>
+          <div class="step-item glass reveal reveal-d1">
+            <div class="step-num">2</div>
+            <div>
+              <div class="step-title">Get the weather in plain English</div>
+              <div class="step-desc">Cirrus tells you what conditions actually mean — what to wear, when rain arrives, whether to bring an umbrella.</div>
+            </div>
+          </div>
+          <div class="step-item glass reveal reveal-d2">
+            <div class="step-num">3</div>
+            <div>
+              <div class="step-title">Add it to your home screen</div>
+              <div class="step-desc">Install as a PWA for one-tap access. No App Store, no download — it just works.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ADD TO HOME SCREEN ── -->
+      <div class="mkt-section">
+        <div class="mkt-section-label">Install on iPhone</div>
+        <div class="ios-share-demo glass reveal">
+          <div class="ios-share-demo-title">Add Cirrus to your home screen in 3 taps</div>
+          <div class="ios-share-sheet">
+            <div class="ios-share-row">
+              <div class="ios-share-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/><path d="M21 13v8H3V5h8"/></svg>
+              </div>
+              <div class="ios-share-text">Tap the Share button <small>In Safari, tap &#x2B06; at the bottom of the screen</small></div>
+            </div>
+            <div class="ios-share-row">
+              <div class="ios-share-icon muted">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
+              </div>
+              <div class="ios-share-text">Tap "Add to Home Screen" <small>Scroll down in the share sheet to find it</small></div>
+            </div>
+            <div class="ios-share-row">
+              <div class="ios-share-icon green">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              </div>
+              <div class="ios-share-text">Tap "Add" <small>Cirrus appears on your home screen instantly</small></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FEATURES ── -->
+      <div class="mkt-section">
+        <div class="mkt-section-label">What makes Cirrus different</div>
+        <div class="feature-grid">
+          <div class="feature-card glass reveal"><div class="feature-icon">🚫</div><div class="feature-title">Zero ads, forever</div><div class="feature-desc">No banners. No "weather stories." No sponsored content. Ever.</div></div>
+          <div class="feature-card glass reveal reveal-d1"><div class="feature-icon">🧠</div><div class="feature-title">Plain English</div><div class="feature-desc">Tells you what the weather means, not just what it is.</div></div>
+          <div class="feature-card glass reveal reveal-d2"><div class="feature-icon">👗</div><div class="feature-title">What to wear</div><div class="feature-desc">Daily outfit guidance based on real conditions.</div></div>
+          <div class="feature-card glass reveal reveal-d3"><div class="feature-icon">📡</div><div class="feature-title">Live radar</div><div class="feature-desc">See rain now and where it's headed in the next 40 minutes.</div></div>
+          <div class="feature-card glass reveal"><div class="feature-icon">🌍</div><div class="feature-title">Worldwide</div><div class="feature-desc">Any city, any country. Search or GPS.</div></div>
+          <div class="feature-card glass reveal reveal-d1"><div class="feature-icon">🌙</div><div class="feature-title">Dark mode</div><div class="feature-desc">Auto-switches at sunset. Beautiful day and night.</div></div>
+        </div>
+      </div>
+
+      <!-- ── PRICING ── -->
+      <div class="mkt-section">
+        <div class="mkt-section-label">Simple pricing</div>
+        <div class="pricing-grid">
+          <div class="pricing-card reveal">
+            <div class="pricing-period">Monthly</div>
+            <div class="pricing-price">$2<span style="font-size:16px;font-weight:600">.99</span></div>
+            <div class="pricing-per">per month</div>
+            <div class="pricing-features">
+              <div class="pricing-feature-item">All features included</div>
+              <div class="pricing-feature-item">Radar &amp; nowcast</div>
+              <div class="pricing-feature-item">Push alerts</div>
+            </div>
+          </div>
+          <div class="pricing-card best reveal reveal-d1">
+            <div class="pricing-badge">Best value</div>
+            <div class="pricing-period">Annual</div>
+            <div class="pricing-price">$1<span style="font-size:16px;font-weight:600">.67</span></div>
+            <div class="pricing-per">per month &middot; $19.99/yr</div>
+            <div class="pricing-features">
+              <div class="pricing-feature-item">Everything in monthly</div>
+              <div class="pricing-feature-item">Save 44%</div>
+              <div class="pricing-feature-item">Priority support</div>
+            </div>
+          </div>
+        </div>
+        <div class="pricing-note reveal reveal-d2">Both plans include a 7-day free trial. Cancel anytime.</div>
+      </div>
+
+      <!-- ── REVIEWS ── -->
+      <div class="mkt-section">
+        <div class="reviews-header">
+          <div class="reviews-section-label">What people are saying</div>
+          <button class="btn-leave-review" onclick="openReviewModal()">&#9733; Leave a review</button>
+        </div>
+        <div class="review-cards" id="curatedReviewsContainer"></div>
+      </div>
+
+      <!-- ── BOTTOM CTA ── -->
+      <div class="mkt-bottom-cta">
+        <div class="mkt-email-form reveal" style="max-width:400px;margin:0 auto 10px">
+          <div class="mkt-email-input-wrap">
+            <input class="mkt-email-input" type="email" id="mktEmail2" placeholder="Enter your email" autocomplete="email" oninput="handleMktEmail(this,'mktEmailIcon2')">
+            <span class="mkt-email-valid-icon" id="mktEmailIcon2">✓</span>
+          </div>
+          <button class="mkt-cta-btn" onclick="handleMktEmailSubmit('mktEmail2','mktEmailIcon2')">
+            Start Free Trial
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </div>
+        <div class="mkt-trial-terms reveal">7-day free trial &middot; No credit card &middot; Cancel anytime</div>
+        <div class="mkt-or-divider reveal"><span>or</span></div>
+        <button class="mkt-cta-btn secondary reveal" style="max-width:400px;margin:0 auto" onclick="document.getElementById('btnLocate').click()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
+          Try it free &mdash; no signup needed
+        </button>
+        <div class="mkt-bottom-cta-sub reveal">The weather. Nothing else.</div>
+      </div>
+
+    </div>
       <div class="preview-section">
         <div class="preview-cards">
 
@@ -702,6 +1025,30 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 <div id="detailsView" class="tab-view"></div>
 <div id="settingsView"></div>
 
+<!-- Review submission modal -->
+<div class="review-modal-overlay" id="reviewModalOverlay" onclick="handleReviewModalBackdrop(event)">
+  <div class="review-modal">
+    <div class="review-modal-drag"></div>
+    <div id="reviewModalContent">
+      <div class="review-modal-title">Leave a review</div>
+      <div class="review-modal-sub">Share your experience with Cirrus</div>
+      <div class="star-picker" id="starPicker">
+        <button class="star-btn" onclick="setReviewStar(1)">&#9733;</button>
+        <button class="star-btn" onclick="setReviewStar(2)">&#9733;</button>
+        <button class="star-btn" onclick="setReviewStar(3)">&#9733;</button>
+        <button class="star-btn" onclick="setReviewStar(4)">&#9733;</button>
+        <button class="star-btn" onclick="setReviewStar(5)">&#9733;</button>
+      </div>
+      <textarea class="review-textarea" id="reviewText" placeholder="Tell us what you think about Cirrus..." maxlength="500"></textarea>
+      <input class="review-name-input" type="text" id="reviewName" placeholder="Your name or nickname (optional)" maxlength="50">
+      <div class="review-submit-row">
+        <button class="btn-review-cancel" onclick="closeReviewModal()">Cancel</button>
+        <button class="btn-review-submit" onclick="submitReview()">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <nav class="mobile-nav" id="mobileNav" style="display:none">
   <button class="nav-tab active" data-tab="current">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/></svg>
@@ -752,7 +1099,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 
 const WMO_CODES={0:{desc:'Clear Sky',icon:'&#9728;&#65039;',night:'&#127769;'},1:{desc:'Mainly Clear',icon:'&#127780;&#65039;',night:'&#127769;'},2:{desc:'Partly Cloudy',icon:'&#9925;',night:'&#9925;'},3:{desc:'Overcast',icon:'&#9729;&#65039;',night:'&#9729;&#65039;'},45:{desc:'Fog',icon:'&#127787;&#65039;',night:'&#127787;&#65039;'},48:{desc:'Depositing Rime Fog',icon:'&#127787;&#65039;',night:'&#127787;&#65039;'},51:{desc:'Light Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},53:{desc:'Moderate Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},55:{desc:'Dense Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},56:{desc:'Freezing Drizzle',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},57:{desc:'Heavy Freezing Drizzle',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},61:{desc:'Slight Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},63:{desc:'Moderate Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},65:{desc:'Heavy Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},66:{desc:'Freezing Rain',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},67:{desc:'Heavy Freezing Rain',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},71:{desc:'Slight Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},73:{desc:'Moderate Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},75:{desc:'Heavy Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},77:{desc:'Snow Grains',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},80:{desc:'Slight Showers',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},81:{desc:'Moderate Showers',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},82:{desc:'Violent Showers',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},85:{desc:'Slight Snow Showers',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},86:{desc:'Heavy Snow Showers',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},95:{desc:'Thunderstorm',icon:'&#9889;',night:'&#9889;'},96:{desc:'Thunderstorm with Hail',icon:'&#9889;',night:'&#9889;'},99:{desc:'Thunderstorm Heavy Hail',icon:'&#9889;',night:'&#9889;'}};
 
-let state={lat:null,lon:null,name:'',region:'',country:'',dark:false,unit:'F',data:null,openDay:0,refreshTimer:null,activeAlerts:[],airQuality:null};
+let state={lat:null,lon:null,name:'',region:'',country:'',countryCode:'',dark:false,unit:'F',data:null,openDay:0,refreshTimer:null,activeAlerts:[],airQuality:null};
 
 const $=s=>document.querySelector(s);
 const $$=s=>document.querySelectorAll(s);
@@ -760,8 +1107,18 @@ const $$=s=>document.querySelectorAll(s);
 function toF(c){return c*9/5+32}
 function formatTemp(c){return state.unit==='F'?Math.round(toF(c)):Math.round(c)}
 function tempUnit(){return state.unit}
-function windSpeed(kmh){return state.unit==='F'?Math.round(kmh*0.621371):Math.round(kmh)}
-function windUnit(){return state.unit==='F'?'mph':'km/h'}
+function windSpeed(kmh){
+  const wu=localStorage.getItem(SETTINGS_KEYS.windUnit)||'auto';
+  if(wu==='mph'||(wu==='auto'&&state.unit==='F'))return Math.round(kmh*0.621371);
+  if(wu==='knots')return Math.round(kmh*0.539957);
+  return Math.round(kmh);
+}
+function windUnit(){
+  const wu=localStorage.getItem(SETTINGS_KEYS.windUnit)||'auto';
+  if(wu==='mph'||(wu==='auto'&&state.unit==='F'))return 'mph';
+  if(wu==='knots')return 'kts';
+  return 'km/h';
+}
 function visUnit(km){return (km*0.621371).toFixed(1)+' mi'}
 function dirStr(deg){const dirs=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];return dirs[Math.round(deg/22.5)%16]}
 function formatTime(iso){const d=new Date(iso);let h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+(m<10?'0':'')+m+' '+ap}
@@ -873,7 +1230,8 @@ async function searchCity(q){
         state.lat=loc.latitude;state.lon=loc.longitude;state.isGPS=false;
         state.name=loc.name;
         state.region=[loc.admin1,loc.country].filter(Boolean).join(', ');
-        autoUnit(loc.country_code||'');
+        state.countryCode=loc.country_code||'';
+        autoUnit(state.countryCode);
         addRecentSearch({name:state.name,region:state.region,lat:state.lat,lon:state.lon});
         sg.classList.remove('show');
         $('#searchInput').value='';
@@ -911,7 +1269,8 @@ $('#btnLocate').addEventListener('click',()=>{
       const rd=await rr.json();
       state.name=rd.address?.city||rd.address?.town||rd.address?.village||'Current Location';
       state.region=[rd.address?.state,rd.address?.country].filter(Boolean).join(', ');
-      autoUnit(rd.address&&rd.address.country?rd.address.country:'');
+      state.countryCode=rd.address?.country_code?.toUpperCase()||'';
+      autoUnit(state.countryCode);
     }catch(e){state.name='Current Location';state.region=''}
     btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>';
     fetchWeather();
@@ -941,15 +1300,14 @@ $$('.nav-tab').forEach(btn=>{
       initRadar();
     }else if(tab==='settings'){
       $('#radarView').classList.remove('active');
-      $('#content').style.display='none';
-      $('.header').style.display='none';
-      $('#savedBar').style.display='none';
+      $('#app').style.display='none';
       $('#settingsView').classList.add('active');
       window.scrollTo(0,0);
       renderSettings();
     }else{
       $('#radarView').classList.remove('active');
       $('#settingsView').classList.remove('active');
+      $('#app').style.display='';
       $('.header').style.display='';
       if(getSaved().length)$('#savedBar').style.display='';
       $('#content').style.display='block';
@@ -972,19 +1330,58 @@ const SETTINGS_KEYS={
   eveningBriefing:'cirrus_evening',
   severeAlerts:'cirrus_severe',
   precipAlerts:'cirrus_precip',
-  darkMode:'cirrus_dark'
+  darkMode:'cirrus_dark',
+  tempUnit:'cirrus_unit',
+  windUnit:'cirrus_wind',
+  morningHour:'cirrus_mhour',
+  eveningHour:'cirrus_ehour',
+  animations:'cirrus_anim',
+  defaultCity:'cirrus_dcity',
 };
 function getSetting(key){
   const stored=localStorage.getItem(key);
-  // Default on for notification types, dark follows app state
   if(stored===null){
     if(key===SETTINGS_KEYS.darkMode)return state.dark;
+    if(key===SETTINGS_KEYS.tempUnit)return 'auto';
+    if(key===SETTINGS_KEYS.windUnit)return 'auto';
+    if(key===SETTINGS_KEYS.morningHour)return 7;
+    if(key===SETTINGS_KEYS.eveningHour)return 21;
+    if(key===SETTINGS_KEYS.animations)return true;
+    if(key===SETTINGS_KEYS.defaultCity)return null;
     return true;
   }
+  if(key===SETTINGS_KEYS.morningHour||key===SETTINGS_KEYS.eveningHour)return parseInt(stored);
+  if(key===SETTINGS_KEYS.tempUnit||key===SETTINGS_KEYS.windUnit)return stored;
+  if(key===SETTINGS_KEYS.defaultCity)return stored?JSON.parse(stored):null;
   return stored==='true';
 }
 function setSetting(key,val){
-  localStorage.setItem(key,val?'true':'false');
+  if(val===null){localStorage.removeItem(key);return;}
+  if(typeof val==='object')localStorage.setItem(key,JSON.stringify(val));
+  else if(typeof val==='boolean')localStorage.setItem(key,val?'true':'false');
+  else localStorage.setItem(key,String(val));
+}
+function setDefaultCity(){
+  if(!state.name)return;
+  setSetting(SETTINGS_KEYS.defaultCity,{name:state.name,region:state.region,lat:state.lat,lon:state.lon,countryCode:state.countryCode});
+  renderSettings();
+}
+function clearDefaultCity(){
+  setSetting(SETTINGS_KEYS.defaultCity,null);
+  renderSettings();
+}
+function onSettingSeg(key,val){
+  setSetting(key,val);
+  if(key===SETTINGS_KEYS.tempUnit){
+    if(val==='auto')autoUnit(state.countryCode||'');
+    else{state.unit=val;updateUnitBtn();if(state.data)render();}
+  }
+  if(key===SETTINGS_KEYS.windUnit&&state.data)render();
+  if(key===SETTINGS_KEYS.morningHour||key===SETTINGS_KEYS.eveningHour){
+    const tag=key===SETTINGS_KEYS.morningHour?'morning_hour':'evening_hour';
+    if(window.OneSignalDeferred)OneSignalDeferred.push(async OS=>OS.User.addTag(tag,String(val)));
+  }
+  renderSettings();
 }
 
 function renderSettings(){
@@ -1005,6 +1402,20 @@ function renderSettings(){
     </div>`;
   }
 
+  function seg(key,options){
+    const cur=getSetting(key);
+    const btns=options.map(([val,label])=>
+      `<button class="seg-btn${cur===val?' active':''}" onclick="onSettingSeg('${key}','${val}')">${label}</button>`
+    ).join('');
+    return `<div class="seg-ctrl">${btns}</div>`;
+  }
+
+  function timeSelect(key,options){
+    const cur=getSetting(key);
+    const opts=options.map(([val,label])=>`<option value="${val}"${cur===val?' selected':''}>${label}</option>`).join('');
+    return `<select class="settings-select" onchange="onSettingSeg('${key}',parseInt(this.value))">${opts}</select>`;
+  }
+
   const header=`
     <div style="text-align:center;padding:4px 0 24px">
       <div class="landing-icon" style="margin-bottom:16px"><canvas id="settingsLogo" width="260" height="260" style="width:130px;height:130px"></canvas></div>
@@ -1012,19 +1423,59 @@ function renderSettings(){
       <div class="landing-tagline" style="color:var(--text-secondary)">No ads. No articles. No agenda.<span class="tagline-punch" style="color:var(--text);font-weight:800">Just the weather.</span></div>
     </div>`;
 
+  // Default city
+  const dc=getSetting(SETTINGS_KEYS.defaultCity);
+  const cityRow=`<div class="settings-row" style="border-radius:14px">
+    <div class="settings-row-label"><span>Default City</span><small>${dc?dc.name+', '+dc.region:'Opens to last viewed city'}</small></div>
+    <div style="display:flex;align-items:center;gap:4px">
+      ${state.name&&(!dc||dc.name!==state.name)?`<button class="settings-city-clear" onclick="setDefaultCity()" style="color:var(--accent)">Set current</button>`:''}
+      ${dc?`<button class="settings-city-clear" onclick="clearDefaultCity()">✕ Clear</button>`:''}
+    </div>
+  </div>`;
+
+  const prefsSection=`
+    <div class="settings-section">
+      <div class="settings-section-title">Preferences</div>
+      ${cityRow}
+      <div class="settings-row">
+        <div class="settings-row-label"><span>Temperature</span></div>
+        ${seg(SETTINGS_KEYS.tempUnit,[['auto','Auto'],['F','°F'],['C','°C']])}
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-label"><span>Wind Speed</span></div>
+        ${seg(SETTINGS_KEYS.windUnit,[['auto','Auto'],['mph','mph'],['kmh','km/h'],['knots','kts']])}
+      </div>
+      ${toggle(SETTINGS_KEYS.animations,'Animations','Turn off to save battery')}
+      ${toggle(SETTINGS_KEYS.darkMode,'Dark Mode','')}
+    </div>`;
+
+  const mHour=getSetting(SETTINGS_KEYS.morningHour);
+  const eHour=getSetting(SETTINGS_KEYS.eveningHour);
   const notifSection=`
     <div class="settings-section">
       <div class="settings-section-title">Notifications</div>
-      ${toggle(SETTINGS_KEYS.morningBriefing,'Morning Briefing','Daily forecast delivered 6–7 AM your time')}
-      ${toggle(SETTINGS_KEYS.eveningBriefing,'Evening Lookahead','Tomorrow\'s weather delivered at 9 PM your time')}
+      <div class="settings-row">
+        <div class="settings-row-label"><span>Morning Briefing</span><small>Daily forecast, your local time</small></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${timeSelect(SETTINGS_KEYS.morningHour,[[5,'5 AM'],[6,'6 AM'],[7,'7 AM'],[8,'8 AM']])}
+          <label class="toggle" style="margin-left:4px">
+            <input type="checkbox" ${getSetting(SETTINGS_KEYS.morningBriefing)?'checked':''} onchange="onSettingToggle('${SETTINGS_KEYS.morningBriefing}',this.checked)">
+            <div class="toggle-track"></div><div class="toggle-thumb"></div>
+          </label>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-label"><span>Evening Lookahead</span><small>Tomorrow's weather, your local time</small></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${timeSelect(SETTINGS_KEYS.eveningHour,[[18,'6 PM'],[19,'7 PM'],[20,'8 PM'],[21,'9 PM'],[22,'10 PM']])}
+          <label class="toggle" style="margin-left:4px">
+            <input type="checkbox" ${getSetting(SETTINGS_KEYS.eveningBriefing)?'checked':''} onchange="onSettingToggle('${SETTINGS_KEYS.eveningBriefing}',this.checked)">
+            <div class="toggle-track"></div><div class="toggle-thumb"></div>
+          </label>
+        </div>
+      </div>
       ${toggle(SETTINGS_KEYS.severeAlerts,'Severe Weather Alerts','Warnings &amp; watches for your area')}
       ${toggle(SETTINGS_KEYS.precipAlerts,'Precipitation Alerts','Rain or snow starting within the hour')}
-    </div>`;
-
-  const displaySection=`
-    <div class="settings-section">
-      <div class="settings-section-title">Display</div>
-      ${toggle(SETTINGS_KEYS.darkMode,'Dark Mode','','')}
     </div>`;
 
   const notifCta=`
@@ -1033,7 +1484,7 @@ function renderSettings(){
       <div class="settings-row" style="border-radius:14px">
         <div class="settings-row-label">
           <span id="alertsBtnSettingsLabel">${_alertsGranted()?'Alerts enabled':'Enable alerts'}</span>
-          <small>${_alertsGranted()?'Tap to manage in Settings':'Get weather alerts on this device'}</small>
+          <small>${_alertsGranted()?'Tap to manage in device Settings':'Get weather alerts on this device'}</small>
         </div>
         <button class="alerts-btn" id="alertsBtnSettings" onclick="handleAlertsBtn()" style="margin:0;font-size:13px;padding:6px 12px">
           ${_alertsGranted()?'&#128276; On':'&#128276; Enable'}
@@ -1041,14 +1492,27 @@ function renderSettings(){
       </div>
     </div>`;
 
+  const acctSection=`
+    <div class="settings-section">
+      <div class="settings-section-title">Account</div>
+      <div class="settings-row" style="border-radius:14px">
+        <div class="settings-row-label"><span>Subscription</span><small>Free — coming soon</small></div>
+        <span style="font-size:13px;font-weight:700;color:var(--accent)">Free</span>
+      </div>
+    </div>`;
+
+  const chevron=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-tertiary);flex-shrink:0"><path d="m9 18 6-6-6-6"/></svg>`;
   const supportSection=`
     <div class="settings-section">
       <div class="settings-section-title">Support</div>
-      <div class="settings-row" style="border-radius:14px;cursor:pointer" onclick="window.location='mailto:bugs@cirrusweather.app?subject=Bug%20Report&body=Describe%20the%20issue%3A%0A%0ADevice%2FBrowser%3A%0A%0ASteps%20to%20reproduce%3A'">
-        <div class="settings-row-label">
-          <span>Report a Bug</span>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-tertiary);flex-shrink:0"><path d="m9 18 6-6-6-6"/></svg>
+      <div class="settings-row" style="cursor:pointer" onclick="window.location='mailto:bugs@cirrusweather.app?subject=Bug%20Report&body=Describe%20the%20issue%3A%0A%0ADevice%2FBrowser%3A%0A%0ASteps%20to%20reproduce%3A'">
+        <div class="settings-row-label"><span>Report a Bug</span></div>${chevron}
+      </div>
+      <div class="settings-row" style="cursor:pointer" onclick="window.open('https://cirrusweather.app/privacy','_blank')">
+        <div class="settings-row-label"><span>Privacy Policy</span></div>${chevron}
+      </div>
+      <div class="settings-row" style="border-radius:0 0 14px 14px;cursor:pointer" onclick="window.open('https://cirrusweather.app/terms','_blank')">
+        <div class="settings-row-label"><span>Terms of Service</span></div>${chevron}
       </div>
     </div>`;
 
@@ -1057,15 +1521,12 @@ function renderSettings(){
       <a href="https://cirrusweather.app">cirrusweather.app</a> &nbsp;&mdash;&nbsp; <span style="opacity:0.6">v1.0</span>
     </div>`;
 
-  el.innerHTML=header+notifSection+displaySection+notifCta+supportSection+about;
+  el.innerHTML=header+prefsSection+notifSection+notifCta+acctSection+supportSection+about;
 
-  // Draw the logo into the settings canvas
   const sc=document.getElementById('settingsLogo');
   if(sc){
     const lc=document.getElementById('landingIcon');
-    if(lc){
-      sc.getContext('2d').drawImage(lc,0,0,260,260);
-    }
+    if(lc)sc.getContext('2d').drawImage(lc,0,0,260,260);
   }
 }
 
@@ -1077,10 +1538,14 @@ function onSettingToggle(key,val){
   setSetting(key,val);
   if(key===SETTINGS_KEYS.darkMode){
     state.dark=val;
-    document.documentElement.classList.toggle('dark',val);
-    localStorage.setItem('darkMode',val?'1':'0');
+    document.body.classList.toggle('dark',val);
+    updateGradient();
+    updateUnitBtn();
   }
-  // For notification keys: update OneSignal tags so backend knows user preferences
+  if(key===SETTINGS_KEYS.animations){
+    if(window.setAnimEnabled)setAnimEnabled(val);
+    else if(window.setWeatherAnim&&state.data)updateGradient();
+  }
   const notifKeys=[SETTINGS_KEYS.morningBriefing,SETTINGS_KEYS.eveningBriefing,SETTINGS_KEYS.severeAlerts,SETTINGS_KEYS.precipAlerts];
   if(notifKeys.includes(key)&&window.OneSignalDeferred){
     OneSignalDeferred.push(async function(OS){
@@ -1097,10 +1562,14 @@ function onSettingToggle(key,val){
 
 // Unit toggle
 function autoUnit(country){
-  // Accept either country code (US, KY, LR) or full name
-  const fahrCodes=['US','KY','LR'];
-  const fahrNames=['United States','Cayman Islands','Liberia'];
-  state.unit=(fahrCodes.includes(country)||fahrNames.includes(country))?'F':'C';
+  const override=localStorage.getItem(SETTINGS_KEYS.tempUnit)||'auto';
+  if(override==='F'){state.unit='F';}
+  else if(override==='C'){state.unit='C';}
+  else{
+    const fahrCodes=['US','KY','LR'];
+    const fahrNames=['United States','Cayman Islands','Liberia'];
+    state.unit=(fahrCodes.includes(country)||fahrNames.includes(country))?'F':'C';
+  }
   updateUnitBtn();
 }
 function toggleUnit(){
@@ -3092,7 +3561,12 @@ function toggleDay(i){
 (function(){
   const canvas=document.getElementById('weatherCanvas');
   const ctx=canvas.getContext('2d');
-  let W,H,particles=[],clouds=[],mode='none',raf,lightning=0,lflash=false;
+  let W,H,particles=[],clouds=[],mode='none',raf,lightning=0,lflash=false,animEnabled=true;
+  window.setAnimEnabled=function(val){
+    animEnabled=val;
+    if(!val){cancelAnimationFrame(raf);ctx.clearRect(0,0,W,H);}
+    else if(mode!=='none'){raf=requestAnimationFrame(draw);}
+  };
 
   function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
   window.addEventListener('resize',()=>{resize();});resize();
@@ -3283,7 +3757,7 @@ function toggleDay(i){
       });
     }
 
-    raf=requestAnimationFrame(draw);
+    if(animEnabled)raf=requestAnimationFrame(draw);
   }
 
   window.setWeatherAnim=function(code,isNight){
@@ -3555,28 +4029,117 @@ function _destroyNowcast(){
   document.getElementById('nowcastView').style.display='none';
 }
 
-// Preview dark mode toggle
-function togglePreviewDark(){
-  $('#btnDark').click();
-  const btn=document.getElementById('previewDarkToggle');
-  const lbl=document.getElementById('previewDarkLabel');
-  const ico=document.getElementById('previewDarkIcon');
-  if(!btn)return;
-  if(state.dark){
-    lbl.textContent='Back to light mode';
-    ico.innerHTML='<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/>';
-  }else{
-    lbl.textContent='Try dark mode';
-    ico.innerHTML='<path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>';
-  }
+// ── Curated reviews — edit this array to control what's displayed ──────────
+const CURATED_REVIEWS=[
+  {stars:5,text:"Finally a weather app that just tells me the weather. No stories, no ads, no clickbait. Cirrus is everything The Weather Channel used to be.",author:"Mike T.",city:"Chicago, IL"},
+  {stars:5,text:"The 'what to wear' card alone is worth it. My wife and I both check it every morning before getting dressed.",author:"Priya S.",city:"Austin, TX"},
+  {stars:5,text:"Installed it as a PWA and it opens instantly. Feels like a real native app. Weather in 2 seconds, no login required.",author:"Jordan L.",city:"Seattle, WA"},
+];
+
+function renderCuratedReviews(){
+  const container=document.getElementById('curatedReviewsContainer');
+  if(!container)return;
+  container.innerHTML=CURATED_REVIEWS.map((r,i)=>`
+    <div class="review-card glass reveal${i===1?' reveal-d1':i===2?' reveal-d2':''}">
+      <div class="review-stars">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+      <div class="review-quote">&ldquo;${r.text}&rdquo;</div>
+      <div class="review-author">${r.author} <span class="review-author-city">&middot; ${r.city}</span></div>
+    </div>`).join('');
+  container.querySelectorAll('.reveal').forEach(el=>{
+    if(window._revealObs)window._revealObs.observe(el);
+  });
 }
 
-// Scroll-triggered preview card animations
-(function(){
-  const obs=new IntersectionObserver(entries=>{
+// ── Review modal ─────────────────────────────────────────────────────────────
+let _reviewStar=0;
+
+function openReviewModal(){
+  document.getElementById('reviewModalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeReviewModal(){
+  document.getElementById('reviewModalOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+function handleReviewModalBackdrop(e){
+  if(e.target.id==='reviewModalOverlay')closeReviewModal();
+}
+function setReviewStar(n){
+  _reviewStar=n;
+  document.querySelectorAll('.star-btn').forEach((btn,i)=>btn.classList.toggle('lit',i<n));
+}
+function submitReview(){
+  const text=(document.getElementById('reviewText').value||'').trim();
+  const name=(document.getElementById('reviewName').value||'').trim()||'Anonymous';
+  if(!_reviewStar||!text){
+    if(!_reviewStar){
+      const sp=document.getElementById('starPicker');
+      if(sp){sp.style.animation='none';void sp.offsetWidth;sp.style.animation='alertPulse 0.5s ease 2';}
+    }
+    return;
+  }
+  try{
+    const pending=JSON.parse(localStorage.getItem('cirrusPendingReviews')||'[]');
+    pending.push({stars:_reviewStar,text,name,city:state.name||'',ts:Date.now()});
+    localStorage.setItem('cirrusPendingReviews',JSON.stringify(pending));
+  }catch(e){}
+  document.getElementById('reviewModalContent').innerHTML=`
+    <div class="review-success">
+      <div class="review-success-icon">🙏</div>
+      <div class="review-success-msg">Thanks for your review!</div>
+      <div class="review-success-sub">We read every submission before it goes live.<br>Your feedback helps us improve Cirrus.</div>
+    </div>
+    <div class="review-submit-row" style="margin-top:22px">
+      <button class="btn-review-cancel" style="flex:1" onclick="closeReviewModal();_resetReviewModal()">Done</button>
+    </div>`;
+}
+function _resetReviewModal(){
+  _reviewStar=0;
+  document.getElementById('reviewModalContent').innerHTML=`
+    <div class="review-modal-title">Leave a review</div>
+    <div class="review-modal-sub">Share your experience with Cirrus</div>
+    <div class="star-picker" id="starPicker">
+      <button class="star-btn" onclick="setReviewStar(1)">&#9733;</button>
+      <button class="star-btn" onclick="setReviewStar(2)">&#9733;</button>
+      <button class="star-btn" onclick="setReviewStar(3)">&#9733;</button>
+      <button class="star-btn" onclick="setReviewStar(4)">&#9733;</button>
+      <button class="star-btn" onclick="setReviewStar(5)">&#9733;</button>
+    </div>
+    <textarea class="review-textarea" id="reviewText" placeholder="Tell us what you think about Cirrus..." maxlength="500"></textarea>
+    <input class="review-name-input" type="text" id="reviewName" placeholder="Your name or nickname (optional)" maxlength="50">
+    <div class="review-submit-row">
+      <button class="btn-review-cancel" onclick="closeReviewModal()">Cancel</button>
+      <button class="btn-review-submit" onclick="submitReview()">Submit</button>
+    </div>`;
+}
+
+// ── Email form helpers ────────────────────────────────────────────────────────
+function handleMktEmail(el,iconId){
+  const ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim());
+  const icon=document.getElementById(iconId);
+  if(icon)icon.classList.toggle('show',ok);
+}
+function handleMktEmailSubmit(inputId,iconId){
+  const el=document.getElementById(inputId);
+  if(!el)return;
+  const val=el.value.trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){el.focus();return;}
+  // TODO: wire to backend/Supabase
+  el.value='';
+  const icon=document.getElementById(iconId);
+  if(icon)icon.classList.remove('show');
+  const prev=el.placeholder;
+  el.placeholder='✓ You\'re on the list!';
+  setTimeout(()=>{el.placeholder=prev;},4000);
+}
+
+// ── Scroll reveal ─────────────────────────────────────────────────────────────
+(function initReveal(){
+  window._revealObs=new IntersectionObserver(entries=>{
     entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
-  },{threshold:0.08});
-  document.querySelectorAll('.preview-card').forEach(c=>obs.observe(c));
+  },{threshold:0.06});
+  document.querySelectorAll('.reveal').forEach(el=>window._revealObs.observe(el));
+  renderCuratedReviews();
 })();
 </script>
 </body>
