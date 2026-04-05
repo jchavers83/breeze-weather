@@ -199,7 +199,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Hero */
 .hero{text-align:center;padding:16px 0 20px}
-.hero-icon{font-size:80px;line-height:1;margin-bottom:4px;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.08))}
+.hero-icon{width:96px;height:96px;margin:0 auto 8px}
 .hero-temp{font-size:96px;font-weight:800;letter-spacing:0px;line-height:1;font-variant-numeric:tabular-nums;background:linear-gradient(160deg,var(--text) 20%,var(--accent) 110%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 4px 20px rgba(0,0,0,0.22))}
 .hero-desc{font-size:18px;font-weight:600;color:var(--text-secondary);margin-top:4px}
 .hero-hilo{font-size:15px;color:var(--text-secondary);margin-top:6px;font-weight:500}
@@ -214,17 +214,6 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .detail-card .value{font-size:22px;font-weight:700}
 .detail-card .sub{font-size:12px;color:var(--text-tertiary);margin-top:2px}
 
-/* Hero icon animations */
-@keyframes heroSunPulse{0%,100%{transform:scale(1) rotate(0deg)}50%{transform:scale(1.08) rotate(6deg)}}
-@keyframes heroRainBounce{0%,100%{transform:translateY(0)}45%{transform:translateY(-5px)}75%{transform:translateY(2px)}}
-@keyframes heroSnowFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-7px) rotate(12deg)}}
-@keyframes heroCloudDrift{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
-@keyframes heroStormPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-.hero-icon.anim-sun{animation:heroSunPulse 7s ease-in-out infinite}
-.hero-icon.anim-rain{animation:heroRainBounce 2.2s ease-in-out infinite}
-.hero-icon.anim-snow{animation:heroSnowFloat 3s ease-in-out infinite}
-.hero-icon.anim-cloud{animation:heroCloudDrift 5s ease-in-out infinite}
-.hero-icon.anim-storm{animation:heroStormPulse 1.6s ease-in-out infinite}
 
 /* Top hourly strip */
 .top-hourly-card{margin-bottom:16px;overflow:hidden}
@@ -293,7 +282,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .forecast-day.today{border:2px solid var(--accent);box-shadow:0 0 0 2px rgba(58,143,212,0.12)}
 .forecast-day-header{display:flex;align-items:center;padding:12px 16px;cursor:pointer;gap:10px;-webkit-user-select:none;user-select:none}
 .forecast-day-header:active{background:rgba(128,128,128,0.06)}
-.fd-icon{font-size:24px;flex-shrink:0}
+.fd-icon{width:36px;height:36px;flex-shrink:0}
 .fd-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
 .fd-name{font-weight:700;font-size:15px}
 .fd-desc{font-size:12px;color:var(--text-secondary);font-weight:500;white-space:normal;line-height:1.3}
@@ -311,7 +300,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .hour-item{flex-shrink:0;width:68px;text-align:center;padding:10px 6px;border-radius:12px;background:rgba(128,128,128,0.06);transition:background 0.2s}
 .hour-item.now{background:rgba(58,143,212,0.12);border:1px solid rgba(58,143,212,0.2)}
 .hour-item .h-time{font-size:11px;font-weight:600;color:var(--text-tertiary)}
-.hour-item .h-icon{font-size:22px;margin:6px 0}
+.hour-item .h-icon{width:32px;height:32px;margin:6px auto}
 .hour-item .h-temp{font-size:15px;font-weight:700}
 .hour-item .h-precip{font-size:10px;color:var(--accent);margin-top:3px;font-weight:600}
 .hour-item .h-wind{font-size:10px;color:var(--text-tertiary);margin-top:2px}
@@ -1126,7 +1115,38 @@ OneSignalDeferred.push(async function(OneSignal) {
   });
 });
 
-const WMO_CODES={0:{desc:'Clear Sky',icon:'&#9728;&#65039;',night:'&#127769;'},1:{desc:'Mainly Clear',icon:'&#127780;&#65039;',night:'&#127769;'},2:{desc:'Partly Cloudy',icon:'&#9925;',night:'&#9925;'},3:{desc:'Overcast',icon:'&#9729;&#65039;',night:'&#9729;&#65039;'},45:{desc:'Fog',icon:'&#127787;&#65039;',night:'&#127787;&#65039;'},48:{desc:'Depositing Rime Fog',icon:'&#127787;&#65039;',night:'&#127787;&#65039;'},51:{desc:'Light Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},53:{desc:'Moderate Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},55:{desc:'Dense Drizzle',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},56:{desc:'Freezing Drizzle',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},57:{desc:'Heavy Freezing Drizzle',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},61:{desc:'Slight Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},63:{desc:'Moderate Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},65:{desc:'Heavy Rain',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},66:{desc:'Freezing Rain',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},67:{desc:'Heavy Freezing Rain',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},71:{desc:'Slight Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},73:{desc:'Moderate Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},75:{desc:'Heavy Snow',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},77:{desc:'Snow Grains',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},80:{desc:'Slight Showers',icon:'&#127782;&#65039;',night:'&#127782;&#65039;'},81:{desc:'Moderate Showers',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},82:{desc:'Violent Showers',icon:'&#127783;&#65039;',night:'&#127783;&#65039;'},85:{desc:'Slight Snow Showers',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},86:{desc:'Heavy Snow Showers',icon:'&#127784;&#65039;',night:'&#127784;&#65039;'},95:{desc:'Thunderstorm',icon:'&#9889;',night:'&#9889;'},96:{desc:'Thunderstorm with Hail',icon:'&#9889;',night:'&#9889;'},99:{desc:'Thunderstorm Heavy Hail',icon:'&#9889;',night:'&#9889;'}};
+const WI_CDN='https://basmilius.github.io/weather-icons/production/fill/all/';
+function wIcon(name){return`<img src="${WI_CDN}${name}.svg" alt="" style="width:100%;height:100%;display:block">`;}
+const WMO_CODES={
+  0:{desc:'Clear Sky',day:'clear-day',night:'clear-night',emoji:'☀️'},
+  1:{desc:'Mainly Clear',day:'clear-day',night:'clear-night',emoji:'🌤️'},
+  2:{desc:'Partly Cloudy',day:'partly-cloudy-day',night:'partly-cloudy-night',emoji:'⛅'},
+  3:{desc:'Overcast',day:'overcast-day',night:'overcast-night',emoji:'☁️'},
+  45:{desc:'Foggy',day:'fog-day',night:'fog-night',emoji:'🌫️'},
+  48:{desc:'Icy Fog',day:'fog-day',night:'fog-night',emoji:'🌫️'},
+  51:{desc:'Light Drizzle',day:'partly-cloudy-day-drizzle',night:'partly-cloudy-night-drizzle',emoji:'🌦️'},
+  53:{desc:'Drizzle',day:'drizzle',night:'drizzle',emoji:'🌦️'},
+  55:{desc:'Heavy Drizzle',day:'drizzle',night:'drizzle',emoji:'🌧️'},
+  56:{desc:'Freezing Drizzle',day:'partly-cloudy-day-sleet',night:'partly-cloudy-night-sleet',emoji:'🌨️'},
+  57:{desc:'Heavy Freezing Drizzle',day:'sleet',night:'sleet',emoji:'🌨️'},
+  61:{desc:'Slight Rain',day:'partly-cloudy-day-rain',night:'partly-cloudy-night-rain',emoji:'🌦️'},
+  63:{desc:'Rain',day:'rain',night:'rain',emoji:'🌧️'},
+  65:{desc:'Heavy Rain',day:'rain',night:'rain',emoji:'🌧️'},
+  66:{desc:'Freezing Rain',day:'partly-cloudy-day-sleet',night:'partly-cloudy-night-sleet',emoji:'🌨️'},
+  67:{desc:'Heavy Freezing Rain',day:'sleet',night:'sleet',emoji:'🌨️'},
+  71:{desc:'Slight Snow',day:'partly-cloudy-day-snow',night:'partly-cloudy-night-snow',emoji:'🌨️'},
+  73:{desc:'Snow',day:'snow',night:'snow',emoji:'❄️'},
+  75:{desc:'Heavy Snow',day:'snow',night:'snow',emoji:'❄️'},
+  77:{desc:'Snow Grains',day:'partly-cloudy-day-snow',night:'partly-cloudy-night-snow',emoji:'🌨️'},
+  80:{desc:'Showers',day:'partly-cloudy-day-rain',night:'partly-cloudy-night-rain',emoji:'🌦️'},
+  81:{desc:'Rain Showers',day:'rain',night:'rain',emoji:'🌧️'},
+  82:{desc:'Heavy Showers',day:'rain',night:'rain',emoji:'🌧️'},
+  85:{desc:'Snow Showers',day:'partly-cloudy-day-snow',night:'partly-cloudy-night-snow',emoji:'🌨️'},
+  86:{desc:'Heavy Snow Showers',day:'snow',night:'snow',emoji:'❄️'},
+  95:{desc:'Thunderstorm',day:'thunderstorms-day',night:'thunderstorms-night',emoji:'⛈️'},
+  96:{desc:'Thunderstorm + Hail',day:'thunderstorms-day-rain',night:'thunderstorms-night-rain',emoji:'⛈️'},
+  99:{desc:'Thunderstorm + Hail',day:'thunderstorms-day-rain',night:'thunderstorms-night-rain',emoji:'⛈️'},
+};
 
 let state={lat:null,lon:null,name:'',region:'',country:'',countryCode:'',dark:false,unit:'F',data:null,openDay:0,refreshTimer:null,activeAlerts:[],airQuality:null};
 
@@ -1161,7 +1181,7 @@ function isNight(d,sunrise,sunset){if(!sunrise||!sunset)return false;return d<ne
 // and .getHours()/.getMinutes() return the city's actual local time.
 function getCityNow(){const off=(state.data&&state.data.utc_offset_seconds)||0;return new Date(Date.now()+off*1000+new Date().getTimezoneOffset()*60000);}
 
-function getWeatherInfo(code,night){const w=WMO_CODES[code]||WMO_CODES[0];return{desc:w.desc,icon:night?w.night:w.icon}}
+function getWeatherInfo(code,night){const w=WMO_CODES[code]||WMO_CODES[0];return{desc:w.desc,icon:wIcon(night?w.night:w.day),emoji:w.emoji||'🌡️'}}
 
 function updateGradient(){
   if(!state.data)return;
@@ -1924,7 +1944,7 @@ function render(){
     </div>
     <div id="alertBanner" style="display:none"></div>
     <div class="hero">
-      <div class="hero-icon ${getHeroAnimClass(c.weather_code)}">${wi.icon}</div>
+      <div class="hero-icon">${wi.icon}</div>
       <div class="hero-temp" id="heroTemp">${formatTemp(c.temperature_2m)}&deg;</div>
       <div class="hero-desc">${wi.desc}</div>
       <div class="hero-hilo">H:${formatTemp(daily.temperature_2m_max[0])}&deg; L:${formatTemp(daily.temperature_2m_min[0])}&deg;</div>
@@ -2137,14 +2157,6 @@ function rainNextHour(hourly,now){
   return{icon:'&#10003;',text:'All clear'};
 }
 
-function getHeroAnimClass(code){
-  if([0,1].includes(code))return'anim-sun';
-  if([2,3,45,48].includes(code))return'anim-cloud';
-  if([51,53,55,61,63,65,80,81,82].includes(code))return'anim-rain';
-  if([71,73,75,77,85,86].includes(code))return'anim-snow';
-  if([95,96,99].includes(code))return'anim-storm';
-  return'';
-}
 
 function buildTopHourly(hourly,daily,now){
   let startIdx=-1;
@@ -2214,9 +2226,7 @@ function shareWeather(){
   const now=getCityNow();
   const curUV=c.uv_index!=null?c.uv_index:0;
 
-  // Decode HTML entities so canvas gets real Unicode emoji
-  function htmlDecode(s){const t=document.createElement('textarea');t.innerHTML=s;return t.value;}
-  const emojiChar=htmlDecode(wi.icon);
+  const emojiChar=wi.emoji;
 
 
   // Full AI summary — same text as the app
