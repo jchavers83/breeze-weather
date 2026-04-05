@@ -2055,7 +2055,7 @@ function render(){
         <div class="sub">${c.dew_point_2m!=null?dewComfort(c.dew_point_2m):''}</div>
       </div>
       <div class="detail-card glass">
-        <div class="detail-icon" style="background:rgba(100,116,139,0.15)">${wIcon('wind-beaufort-4')}</div>
+        <div class="detail-icon" style="background:rgba(100,116,139,0.15)">${wIcon('wind')}</div>
         <div class="label">Wind</div>
         <div class="value">${windSpeed(c.wind_speed_10m)}</div>
         <div class="sub">${windUnit()} ${dirStr(c.wind_direction_10m)}</div>
@@ -2226,7 +2226,7 @@ function _updateAqiCard(){
   const info=aqiInfo(aqi);
   if(!info)return;
   const aqiScore=Math.max(1,Math.min(10,Math.ceil(aqi/30)));
-  const aqiIcon=aqiScore<=3?'wind-beaufort-1':aqiScore<=6?'haze':aqiScore<=8?'dust':'dust-wind';
+  const aqiIcon=aqiScore<=3?'clear-day':aqiScore<=6?'haze':aqiScore<=8?'dust':'dust-wind';
   const aqiColor=aqiScore<=3?'rgba(34,197,94,0.18)':aqiScore<=6?'rgba(234,179,8,0.18)':aqiScore<=8?'rgba(249,115,22,0.18)':'rgba(220,38,38,0.18)';
   card.innerHTML=`<div class="detail-icon" style="background:${aqiColor}">${wIcon(aqiIcon)}</div><div class="label">Air Quality</div><div class="value">${aqiScore}</div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="sub">${info.tip}</div>`;
 }
