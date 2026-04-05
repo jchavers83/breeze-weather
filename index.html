@@ -145,7 +145,7 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
 /* Cyan top → blue-teal bottom: original freshness, no mint */
---bg-from:#5ec7f0;--bg-to:#1aa8c8;
+--bg-from:#5ec7f0;--bg-to:#38c8a0;
 --card-bg:rgba(255,255,255,0.66);--card-border:rgba(255,255,255,0.88);
 --text:#182838;--text-secondary:#2e5060;--text-tertiary:#5a7e90;
 --accent:#1a90e4;--card-radius:20px;--card-blur:20px;
@@ -711,6 +711,37 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 /* Paywall overlay */
 .paywall-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,#4A90D9 0%,#357ABD 50%,#2a6aa6 100%);padding:24px;overflow-y:auto}
 .dark .paywall-overlay{background:linear-gradient(155deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)}
+
+/* ── Dark mode landing page overrides ── */
+/* CIRRUS wordmark: dark end becomes invisible on dark bg — lighten it */
+.dark .mkt-wordmark{background:linear-gradient(135deg,#7ecfef,#4ab8f8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+/* Phone: black frame invisible on dark bg — silver titanium */
+.dark .phone-mockup{
+  background:linear-gradient(160deg,#c8c8ca 0%,#98989c 100%);
+  box-shadow:0 0 0 2px #a0a0a8,0 0 0 5px #78787c,0 0 0 6px rgba(0,0,0,0.2),0 36px 90px rgba(0,0,0,0.8),0 12px 30px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.5)
+}
+.dark .phone-mockup::before,.dark .phone-mockup::after{background:linear-gradient(to bottom,#a0a0a4,#888890)}
+/* Pricing cards: keep white but slightly reduce opacity so they feel intentional, not broken */
+.dark .pricing-card{background:rgba(255,255,255,0.10);border-color:rgba(255,255,255,0.18);box-shadow:none}
+.dark .pricing-card.best{background:rgba(26,144,228,0.15);border-color:rgba(74,184,248,0.5);box-shadow:0 0 0 4px rgba(26,144,228,0.08)}
+.dark .pricing-period,.dark .pricing-per{color:rgba(255,255,255,0.55)}
+.dark .pricing-price{color:#fff}
+.dark .pricing-feature-item{color:rgba(255,255,255,0.75)}
+/* Steps: already use glass which adapts, but step desc text may be faint */
+.dark .step-title{color:#e8f0f8}
+.dark .step-desc{color:#b8cedd}
+/* Email inputs */
+.dark .mkt-email-input{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.22)}
+/* iOS share sheet */
+.dark .ios-share-sheet{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1)}
+.dark .ios-share-text{color:#e8f0f8}
+.dark .ios-share-text small{color:#b8cedd}
+/* Review quote */
+.dark .review-quote{color:#e8f0f8}
+.dark .review-author{color:#b8cedd}
+/* Footer */
+.dark .mkt-footer{border-top-color:rgba(255,255,255,0.1)}
+.dark .mkt-footer-url{color:rgba(255,255,255,0.5)}
 .paywall-card{max-width:420px;width:100%;text-align:center}
 .paywall-icon{font-size:56px;margin-bottom:16px}
 .paywall-title{font-size:26px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-0.5px}
