@@ -548,18 +548,17 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .phone-mockup-wrap{max-width:220px;margin:0 auto 32px;position:relative}
 .phone-mockup{
   position:relative;
-  background:linear-gradient(160deg,#1c1c24 0%,#0a0a10 100%);
+  background:linear-gradient(160deg,#2a2a2e 0%,#0a0a0a 100%);
   border-radius:44px;
-  border:6px solid transparent;
-  background-clip:padding-box;
-  outline:1px solid rgba(255,255,255,0.06);
+  border:none;
   padding:10px 8px 16px;
   box-shadow:
-    0 0 0 6px rgba(160,162,175,0.18),
-    0 0 0 7px rgba(80,82,100,0.1),
-    0 32px 80px rgba(0,0,0,0.55),
-    0 8px 24px rgba(0,0,0,0.3),
-    inset 0 1px 0 rgba(255,255,255,0.1)
+    0 0 0 2px #3a3a3c,
+    0 0 0 5px #1c1c1e,
+    0 0 0 6px rgba(255,255,255,0.06),
+    0 36px 90px rgba(0,0,0,0.65),
+    0 12px 30px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.12)
 }
 /* Volume buttons */
 .phone-mockup::before{content:'';position:absolute;left:-10px;top:82px;width:3px;height:52px;background:linear-gradient(to bottom,rgba(160,162,175,0.35),rgba(120,122,140,0.2));border-radius:2px 0 0 2px;box-shadow:-1px 0 2px rgba(0,0,0,0.4)}
@@ -634,16 +633,16 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Pricing */
 .pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.pricing-card{padding:22px 16px;border-radius:22px;background:rgba(255,255,255,0.14);backdrop-filter:blur(var(--card-blur));-webkit-backdrop-filter:blur(var(--card-blur));border:2px solid rgba(255,255,255,0.38);text-align:center;position:relative;display:flex;flex-direction:column}
-.pricing-card.best{border:2px solid var(--accent);background:rgba(255,255,255,0.14);box-shadow:0 0 0 4px rgba(26,144,228,0.12)}
+.pricing-card{padding:22px 16px;border-radius:22px;background:rgba(255,255,255,0.92);backdrop-filter:blur(var(--card-blur));-webkit-backdrop-filter:blur(var(--card-blur));border:2px solid rgba(255,255,255,0.7);text-align:center;position:relative;display:flex;flex-direction:column;box-shadow:0 4px 24px rgba(0,0,0,0.1)}
+.pricing-card.best{border:2px solid var(--accent);background:rgba(255,255,255,0.96);box-shadow:0 4px 32px rgba(26,144,228,0.18),0 0 0 4px rgba(26,144,228,0.1)}
 .pricing-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:10px;font-weight:800;padding:4px 13px;border-radius:20px;white-space:nowrap;box-shadow:0 2px 8px rgba(26,144,228,0.4)}
-.pricing-period{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:rgba(255,255,255,0.6);margin-bottom:8px}
-.pricing-price{font-size:38px;font-weight:800;color:#fff;line-height:1;margin-bottom:3px;letter-spacing:-1px}
-.pricing-per{font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:14px}
+.pricing-period{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#8e8e93;margin-bottom:8px}
+.pricing-price{font-size:38px;font-weight:800;color:#1c1c1e;line-height:1;margin-bottom:3px;letter-spacing:-1px}
+.pricing-per{font-size:11px;color:#8e8e93;margin-bottom:14px}
 .pricing-features{text-align:left;display:flex;flex-direction:column;gap:6px;flex:1}
-.pricing-feature-item{font-size:12px;color:rgba(255,255,255,0.82);display:flex;gap:6px;align-items:flex-start;font-weight:500}
+.pricing-feature-item{font-size:12px;color:#3a3a3c;display:flex;gap:6px;align-items:flex-start;font-weight:500}
 .pricing-feature-item::before{content:'✓';color:#34c759;font-weight:800;flex-shrink:0}
-.pricing-note{font-size:11px;color:rgba(255,255,255,0.5);text-align:center}
+.pricing-note{font-size:11px;color:rgba(255,255,255,0.55);text-align:center}
 
 /* Reviews */
 .reviews-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
@@ -937,115 +936,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
           Try it free &mdash; 3 lookups, no signup
         </button>
-        <div class="mkt-bottom-cta-sub reveal">The weather. Nothing else.</div>
+        <div class="mkt-bottom-cta-sub reveal">Just the weather.</div>
       </div>
 
     </div>
-      <div class="preview-section">
-        <div class="preview-cards">
-
-          <div class="preview-card glass">
-            <div style="display:grid;grid-template-columns:1fr 1px 1fr;column-gap:10px;align-items:center">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:44px;height:44px;flex-shrink:0"><img src="https://basmilius.github.io/weather-icons/production/fill/all/clear-day.svg" style="width:100%;height:100%;display:block" alt=""></div>
-                <div>
-                  <div class="mock-temp" style="line-height:1;margin-bottom:5px">72&deg;</div>
-                  <div style="font-size:13px;font-weight:700;color:var(--text)">Clear Sky</div>
-                  <div style="font-size:11px;color:var(--text-secondary);font-weight:500;margin-top:2px">Houston, TX</div>
-                  <div style="font-size:11px;color:var(--text-tertiary);font-weight:500;margin-top:1px">H:78&deg;&nbsp;&nbsp;L:54&deg;</div>
-                </div>
-              </div>
-              <div style="align-self:stretch;background:rgba(128,128,128,0.18);border-radius:1px"></div>
-              <div style="display:flex;flex-direction:column;gap:6px">
-                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">&#127777;&#65039; Feels 70&deg;</div>
-                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">&#128167; 45% humidity</div>
-                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">&#127788; 8 mph wind</div>
-                <div style="font-size:11px;font-weight:600;color:var(--text-tertiary)">&#128526; UV 5 &middot; Moderate</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="preview-card glass">
-            <div class="preview-summary-mock">
-              <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Next 12 Hours</div>
-              <span class="mock-vibe" style="display:flex;align-items:center;gap:6px"><span style="width:20px;height:20px;flex-shrink:0"><img src="https://basmilius.github.io/weather-icons/production/fill/all/clear-day.svg" style="width:100%;height:100%;display:block" alt=""></span>Absolutely perfect out there</span>
-              &ldquo;Rain moving in this evening around 7 PM &mdash; pack an umbrella if you&rsquo;ll be out. Clear and 72&deg; right now. Hard to ask for more. Get outside while it lasts.&rdquo;
-            </div>
-          </div>
-
-          <div class="preview-card glass">
-            <div class="preview-wear-mock">
-              <div class="mock-wear-title">What to Wear</div>
-              Light layers and sneakers will do the trick &mdash; it's a great day to be outside.
-              <div class="mock-wear-quip">Looking sharp out there &#128085; &#128115;</div>
-            </div>
-          </div>
-
-          <div class="preview-card glass">
-            <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px">Precipitation</div>
-            <div style="font-size:14px;font-weight:500;color:var(--text);line-height:1.45;margin-bottom:12px">Rain expected starting around 7 PM.</div>
-            <div style="display:flex;gap:3px">
-              <div style="flex:1;height:20px;border-radius:4px;background:rgba(128,128,128,0.11)"></div>
-              <div style="flex:1;height:20px;border-radius:4px;background:rgba(128,128,128,0.11)"></div>
-              <div style="flex:1;height:20px;border-radius:4px;background:rgba(128,128,128,0.11)"></div>
-              <div style="flex:1;height:20px;border-radius:4px;background:rgba(128,128,128,0.11)"></div>
-              <div style="flex:1;height:20px;border-radius:4px;background:rgba(128,128,128,0.11)"></div>
-              <div style="flex:1;height:20px;border-radius:4px;background:rgba(58,143,212,0.28)"></div>
-              <div style="flex:1;height:20px;border-radius:4px;background:rgba(58,143,212,0.45)"></div>
-              <div style="flex:1;height:20px;border-radius:4px;background:rgba(58,143,212,0.60)"></div>
-              <div style="flex:1;height:20px;border-radius:4px;background:rgba(58,143,212,0.75)"></div>
-              <div style="flex:1;height:20px;border-radius:4px;background:rgba(58,143,212,0.88)"></div>
-              <div style="flex:1;height:20px;border-radius:4px;background:rgba(58,143,212,0.95)"></div>
-              <div style="flex:1;height:20px;border-radius:4px;background:rgba(58,143,212,1.0)"></div>
-            </div>
-            <div style="display:flex;gap:3px;margin-top:5px">
-              <span style="flex:1;font-size:9px;font-weight:600;color:var(--text-tertiary);text-align:center">Now</span>
-              <span style="flex:1"></span><span style="flex:1"></span>
-              <span style="flex:1;font-size:9px;font-weight:600;color:var(--text-tertiary);text-align:center">4 PM</span>
-              <span style="flex:1"></span><span style="flex:1"></span>
-              <span style="flex:1;font-size:9px;font-weight:600;color:var(--text-tertiary);text-align:center">7 PM</span>
-              <span style="flex:1"></span><span style="flex:1"></span>
-              <span style="flex:1;font-size:9px;font-weight:600;color:var(--text-tertiary);text-align:center">10 PM</span>
-              <span style="flex:1"></span><span style="flex:1"></span>
-            </div>
-            <div style="font-size:12px;font-weight:500;color:var(--text-secondary);margin-top:10px;padding-top:10px;border-top:1px solid var(--card-border)">Next hour &middot; 2% &middot; Very unlikely</div>
-          </div>
-
-          <div class="preview-card glass">
-            <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">5-Day Forecast</div>
-            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Today</span><span class="pf-icon"><img src="https://basmilius.github.io/weather-icons/production/fill/all/clear-day.svg" style="width:100%;height:100%;display:block" alt=""></span><span class="pf-desc">Clear Sky</span><span class="pf-temps">78&deg; <span>54&deg;</span></span></div>
-            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Thu</span><span class="pf-icon"><img src="https://basmilius.github.io/weather-icons/production/fill/all/partly-cloudy-day.svg" style="width:100%;height:100%;display:block" alt=""></span><span class="pf-desc">Partly Cloudy</span><span class="pf-temps">74&deg; <span>58&deg;</span></span></div>
-            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Fri</span><span class="pf-icon"><img src="https://basmilius.github.io/weather-icons/production/fill/all/rain.svg" style="width:100%;height:100%;display:block" alt=""></span><span class="pf-desc">Rain Showers</span><span style="font-size:12px;color:#3a8fd4;font-weight:700;margin-right:4px">60%</span><span class="pf-temps">65&deg; <span>52&deg;</span></span></div>
-            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Sat</span><span class="pf-icon"><img src="https://basmilius.github.io/weather-icons/production/fill/all/overcast.svg" style="width:100%;height:100%;display:block" alt=""></span><span class="pf-desc">Overcast</span><span class="pf-temps">68&deg; <span>55&deg;</span></span></div>
-            <div class="preview-forecast-mock"><span class="pf-day">Sun</span><span class="pf-icon"><img src="https://basmilius.github.io/weather-icons/production/fill/all/partly-cloudy-day.svg" style="width:100%;height:100%;display:block" alt=""></span><span class="pf-desc">Mostly Sunny</span><span class="pf-temps">76&deg; <span>57&deg;</span></span></div>
-          </div>
-
-          <div class="preview-card glass">
-            <div class="preview-stats-mock">
-              <div class="ms-item"><div class="ms-label">Humidity</div><div class="ms-val">48%</div><div class="ms-sub">Comfortable</div></div>
-              <div class="ms-item">
-                <div class="ms-label">UV Index</div>
-                <div class="ms-val">6</div>
-                <div style="width:100%;height:4px;border-radius:2px;background:linear-gradient(to right,#4ade80,#facc15,#f97316,#dc2626,#9333ea);position:relative;margin:4px auto 3px;max-width:48px">
-                  <div style="position:absolute;left:46%;top:50%;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 0 1.5px rgba(0,0,0,0.3)"></div>
-                </div>
-                <div class="ms-sub">High · SPF</div>
-              </div>
-              <div class="ms-item"><div class="ms-label">Wind</div><div class="ms-val">9</div><div class="ms-sub">mph SW</div></div>
-            </div>
-            <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--card-border)">
-              <div class="preview-aqi-mock">
-                <div style="margin-bottom:6px">
-                  <div class="mock-aqi-label">Air Quality</div>
-                </div>
-                <div class="mock-aqi-bar"><div style="position:absolute;left:12%;top:50%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,0.25)"></div></div>
-                <div class="mock-aqi-tip">Outdoor air is excellent today</div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
     </div>
   </div>
 </div>
