@@ -92,6 +92,10 @@
     const lx=lc.getContext('2d');
     function lp(v){return v*(ls/180);}
     lx.clearRect(0,0,ls,ls);
+    // Background gradient — same as PWA icon
+    const lbg=lx.createLinearGradient(0,0,ls,ls);
+    lbg.addColorStop(0,'#38bdf8');lbg.addColorStop(1,'#1a6ed8');
+    lx.fillStyle=lbg;lx.fillRect(0,0,ls,ls);
     // Sun
     lx.fillStyle='#FFD84D';
     lx.beginPath();lx.arc(lp(108),lp(62),lp(26),0,Math.PI*2);lx.fill();
@@ -539,7 +543,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Hero */
 .mkt-hero{text-align:center;padding:28px 0 24px}
-.mkt-hero-icon-wrap{width:88px;height:88px;border-radius:22px;overflow:hidden;margin:0 auto 20px;border:2.5px solid rgba(255,255,255,0.75);box-shadow:0 8px 40px rgba(0,0,0,0.28),0 0 0 4px rgba(255,255,255,0.15);background:rgba(255,255,255,0.88)}
+.mkt-hero-icon-wrap{width:88px;height:88px;border-radius:22px;overflow:hidden;margin:0 auto 20px;border:2px solid rgba(255,255,255,0.5);box-shadow:0 8px 40px rgba(0,0,0,0.32),0 0 0 4px rgba(255,255,255,0.12)}
 .mkt-wordmark{font-size:40px;font-weight:800;letter-spacing:8px;background:linear-gradient(135deg,#182838,#1a90e4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px}
 .mkt-tagline-pre{font-size:17px;font-weight:500;color:rgba(255,255,255,0.82);line-height:1.5;margin-bottom:2px}
 .mkt-tagline-punch{font-size:20px;font-weight:800;color:#fff;display:block;margin-bottom:28px}
