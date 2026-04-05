@@ -250,7 +250,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 /* Sunrise/Sunset bar */
 .sun-bar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;margin-bottom:16px}
 .sun-item{text-align:center}
-.sun-item .sun-icon{font-size:28px;margin-bottom:4px}
+.sun-item .sun-icon{width:36px;height:36px;margin:0 auto 4px}
 .sun-item .sun-label{font-size:11px;color:var(--text-tertiary);text-transform:uppercase;font-weight:600;letter-spacing:0.3px}
 .sun-item .sun-time{font-size:18px;font-weight:700;margin-top:2px}
 .sun-mid{text-align:center}
@@ -395,7 +395,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .preview-summary-mock{font-size:13px;line-height:1.5;color:var(--text-secondary);font-style:italic}
 .preview-forecast-mock{display:flex;align-items:center;gap:10px;font-size:13px}
 .preview-forecast-mock .pf-day{font-weight:700;width:44px}
-.preview-forecast-mock .pf-icon{font-size:20px}
+.preview-forecast-mock .pf-icon{width:24px;height:24px;flex-shrink:0}
 .preview-forecast-mock .pf-desc{flex:1;color:var(--text-secondary);font-weight:500}
 .preview-forecast-mock .pf-temps{font-weight:600}
 .preview-forecast-mock .pf-temps span{color:var(--text-tertiary);font-weight:400}
@@ -412,8 +412,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 /* Summary card */
 .summary-card{padding:18px 20px;margin-bottom:16px}
 .summary-card .summary-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
-.summary-card .vibe-tag{font-size:16px;font-weight:800;margin-bottom:10px;letter-spacing:-0.3px;line-height:1.2;color:var(--text)}
+.summary-card .vibe-tag{font-size:16px;font-weight:800;margin-bottom:10px;letter-spacing:-0.3px;line-height:1.2;color:var(--text);display:flex;align-items:center;gap:8px}
 .summary-card .vibe-tag .vibe-text{color:var(--text)}
+.vibe-wi{width:32px;height:32px;flex-shrink:0}
+.detail-icon{width:32px;height:32px;margin:0 auto 6px}
 .summary-card .summary-text{font-size:14px;line-height:1.55;font-weight:500;color:var(--text)}
 
 /* Refresh indicator */
@@ -736,7 +738,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
               </div>
               <!-- hero -->
               <div style="text-align:center;padding:2px 0 10px">
-                <div style="font-size:46px;line-height:1;margin-bottom:2px">☀️</div>
+                <div style="width:46px;height:46px;margin:0 auto 2px"><img src="https://basmilius.github.io/weather-icons/production/fill/all/clear-day.svg" style="width:100%;height:100%;display:block" alt=""></div>
                 <div style="font-size:60px;font-weight:800;color:#fff;line-height:1;letter-spacing:-2px;filter:drop-shadow(0 2px 10px rgba(0,0,0,0.12))">68°</div>
                 <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);margin:5px 0 2px">Clear Sky</div>
                 <div style="font-size:10px;color:rgba(255,255,255,0.7)">H:72° &nbsp;L:58° &nbsp;·&nbsp; Feels like 65°</div>
@@ -747,10 +749,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
               </div>
               <!-- hourly strip -->
               <div style="display:flex;justify-content:space-between;background:rgba(255,255,255,0.14);border-radius:10px;padding:8px 10px">
-                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">Now</div><div style="font-size:16px;line-height:1">☀️</div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">68°</div></div>
-                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">2 PM</div><div style="font-size:16px;line-height:1">☀️</div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">71°</div></div>
-                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">4 PM</div><div style="font-size:16px;line-height:1">🌤️</div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">69°</div></div>
-                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">6 PM</div><div style="font-size:16px;line-height:1">🌅</div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">64°</div></div>
+                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">Now</div><div style="width:18px;height:18px;margin:0 auto"><img src="https://basmilius.github.io/weather-icons/production/fill/all/clear-day.svg" style="width:100%;height:100%;display:block" alt=""></div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">68°</div></div>
+                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">2 PM</div><div style="width:18px;height:18px;margin:0 auto"><img src="https://basmilius.github.io/weather-icons/production/fill/all/clear-day.svg" style="width:100%;height:100%;display:block" alt=""></div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">71°</div></div>
+                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">4 PM</div><div style="width:18px;height:18px;margin:0 auto"><img src="https://basmilius.github.io/weather-icons/production/fill/all/partly-cloudy-day.svg" style="width:100%;height:100%;display:block" alt=""></div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">69°</div></div>
+                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">6 PM</div><div style="width:18px;height:18px;margin:0 auto"><img src="https://basmilius.github.io/weather-icons/production/fill/all/sunset.svg" style="width:100%;height:100%;display:block" alt=""></div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">64°</div></div>
               </div>
             </div>
             <div class="phone-home-bar"></div>
@@ -918,7 +920,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
           <div class="preview-card glass">
             <div style="display:grid;grid-template-columns:1fr 1px 1fr;column-gap:10px;align-items:center">
               <div style="display:flex;align-items:center;gap:10px">
-                <div style="font-size:44px;line-height:1;flex-shrink:0">&#9728;&#65039;</div>
+                <div style="width:44px;height:44px;flex-shrink:0"><img src="https://basmilius.github.io/weather-icons/production/fill/all/clear-day.svg" style="width:100%;height:100%;display:block" alt=""></div>
                 <div>
                   <div class="mock-temp" style="line-height:1;margin-bottom:5px">72&deg;</div>
                   <div style="font-size:13px;font-weight:700;color:var(--text)">Clear Sky</div>
@@ -939,7 +941,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
           <div class="preview-card glass">
             <div class="preview-summary-mock">
               <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Next 12 Hours</div>
-              <span class="mock-vibe">&#9728;&#65039; Absolutely perfect out there</span>
+              <span class="mock-vibe" style="display:flex;align-items:center;gap:6px"><span style="width:20px;height:20px;flex-shrink:0"><img src="https://basmilius.github.io/weather-icons/production/fill/all/clear-day.svg" style="width:100%;height:100%;display:block" alt=""></span>Absolutely perfect out there</span>
               &ldquo;Rain moving in this evening around 7 PM &mdash; pack an umbrella if you&rsquo;ll be out. Clear and 72&deg; right now. Hard to ask for more. Get outside while it lasts.&rdquo;
             </div>
           </div>
@@ -984,11 +986,11 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
           <div class="preview-card glass">
             <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">5-Day Forecast</div>
-            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Today</span><span class="pf-icon">&#9728;&#65039;</span><span class="pf-desc">Clear Sky</span><span class="pf-temps">78&deg; <span>54&deg;</span></span></div>
-            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Thu</span><span class="pf-icon">&#9925;</span><span class="pf-desc">Partly Cloudy</span><span class="pf-temps">74&deg; <span>58&deg;</span></span></div>
-            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Fri</span><span class="pf-icon">&#127783;&#65039;</span><span class="pf-desc">Rain Showers</span><span style="font-size:12px;color:#3a8fd4;font-weight:700;margin-right:4px">60%</span><span class="pf-temps">65&deg; <span>52&deg;</span></span></div>
-            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Sat</span><span class="pf-icon">&#9729;&#65039;</span><span class="pf-desc">Overcast</span><span class="pf-temps">68&deg; <span>55&deg;</span></span></div>
-            <div class="preview-forecast-mock"><span class="pf-day">Sun</span><span class="pf-icon">&#127780;&#65039;</span><span class="pf-desc">Mostly Sunny</span><span class="pf-temps">76&deg; <span>57&deg;</span></span></div>
+            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Today</span><span class="pf-icon"><img src="https://basmilius.github.io/weather-icons/production/fill/all/clear-day.svg" style="width:100%;height:100%;display:block" alt=""></span><span class="pf-desc">Clear Sky</span><span class="pf-temps">78&deg; <span>54&deg;</span></span></div>
+            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Thu</span><span class="pf-icon"><img src="https://basmilius.github.io/weather-icons/production/fill/all/partly-cloudy-day.svg" style="width:100%;height:100%;display:block" alt=""></span><span class="pf-desc">Partly Cloudy</span><span class="pf-temps">74&deg; <span>58&deg;</span></span></div>
+            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Fri</span><span class="pf-icon"><img src="https://basmilius.github.io/weather-icons/production/fill/all/rain.svg" style="width:100%;height:100%;display:block" alt=""></span><span class="pf-desc">Rain Showers</span><span style="font-size:12px;color:#3a8fd4;font-weight:700;margin-right:4px">60%</span><span class="pf-temps">65&deg; <span>52&deg;</span></span></div>
+            <div class="preview-forecast-mock" style="margin-bottom:9px"><span class="pf-day">Sat</span><span class="pf-icon"><img src="https://basmilius.github.io/weather-icons/production/fill/all/overcast.svg" style="width:100%;height:100%;display:block" alt=""></span><span class="pf-desc">Overcast</span><span class="pf-temps">68&deg; <span>55&deg;</span></span></div>
+            <div class="preview-forecast-mock"><span class="pf-day">Sun</span><span class="pf-icon"><img src="https://basmilius.github.io/weather-icons/production/fill/all/partly-cloudy-day.svg" style="width:100%;height:100%;display:block" alt=""></span><span class="pf-desc">Mostly Sunny</span><span class="pf-temps">76&deg; <span>57&deg;</span></span></div>
           </div>
 
           <div class="preview-card glass">
@@ -1955,7 +1957,7 @@ function render(){
     </div>
     <div class="summary-card glass" id="summaryCard">
       <div class="summary-label">Next 12 Hours</div>
-      <div class="vibe-tag">${(m=>m?m[1].trimEnd()+' ':'')(vibeTag.match(/^([^A-Za-z]+)/))}<span class="vibe-text">${vibeTag.replace(/^[^A-Za-z]+/,'')}</span></div>
+      <div class="vibe-tag"><span class="vibe-wi">${wi.icon}</span><span class="vibe-text">${vibeTag.replace(/^[^A-Za-z]+/,'')}</span></div>
       <div class="summary-text">${summary}</div>
     </div>
     ${buildWearCard(c,daily,hourly,now)}
@@ -1963,17 +1965,17 @@ function render(){
     ${buildTopHourly(hourly,daily,now)}
     <div class="sun-bar glass">
       <div class="sun-item">
-        <div class="sun-icon">&#127749;</div>
+        <div class="sun-icon">${wIcon('sunrise')}</div>
         <div class="sun-label">Sunrise</div>
         <div class="sun-time">${formatTime(daily.sunrise[0])}</div>
       </div>
       <div class="sun-mid">
         <div class="sun-label">Daylight</div>
         <div class="sun-time">${daylightDuration(daily.sunrise[0],daily.sunset[0])}</div>
-        <div class="sun-moon">${getMoonPhase(now).emoji} ${getMoonPhase(now).name}</div>
+        ${(()=>{const mp=getMoonPhase(now);return`<div class="sun-moon" style="display:flex;align-items:center;justify-content:center;gap:4px"><span style="width:18px;height:18px;flex-shrink:0">${wIcon(mp.icon)}</span>${mp.name}</div>`;})()}
       </div>
       <div class="sun-item">
-        <div class="sun-icon">&#127751;</div>
+        <div class="sun-icon">${wIcon('sunset')}</div>
         <div class="sun-label">Sunset</div>
         <div class="sun-time">${formatTime(daily.sunset[0])}</div>
       </div>
@@ -2040,16 +2042,19 @@ function render(){
     <div id="detailsAnchor"></div>
     <div class="detail-grid">
       <div class="detail-card glass">
+        <div class="detail-icon">${wIcon('humidity')}</div>
         <div class="label">Humidity</div>
         <div class="value">${c.relative_humidity_2m}%</div>
         <div class="sub">${c.dew_point_2m!=null?dewComfort(c.dew_point_2m):''}</div>
       </div>
       <div class="detail-card glass">
+        <div class="detail-icon">${wIcon('wind')}</div>
         <div class="label">Wind</div>
         <div class="value">${windSpeed(c.wind_speed_10m)}</div>
         <div class="sub">${windUnit()} ${dirStr(c.wind_direction_10m)}</div>
       </div>
       <div class="detail-card glass">
+        <div class="detail-icon">${wIcon(curUV<1?'uv-index':`uv-index-${Math.min(Math.max(1,Math.ceil(curUV)),11)}`)}</div>
         <div class="label">UV Index</div>
         <div class="value">${curUV.toFixed(0)}</div>
         <div class="uv-bar-wrap"><div class="uv-cursor" style="left:${Math.min(curUV/12*100,100)}%"></div></div>
@@ -2057,6 +2062,7 @@ function render(){
       </div>
       <div id="aqiCard" class="detail-card glass"></div>
       <div class="detail-card glass">
+        <div class="detail-icon">${wIcon(c.cloud_cover<=10?(night?'clear-night':'clear-day'):c.cloud_cover<=60?(night?'partly-cloudy-night':'partly-cloudy-day'):(night?'overcast-night':'overcast-day'))}</div>
         <div class="label">Cloud Cover</div>
         <div class="value" style="font-size:18px">${c.cloud_cover}%</div>
         <div class="sub">${c.cloud_cover<=10?'Clear':c.cloud_cover<=25?'Mostly clear':c.cloud_cover<=60?'Partly cloudy':c.cloud_cover<=85?'Mostly cloudy':'Overcast'}</div>
@@ -2065,9 +2071,9 @@ function render(){
         if(night){
           const mp=getMoonPhase(now);
           const illumSub=mp.illum<=5?'Dark sky \u00b7 great for stargazing':mp.illum<=25?'Slim crescent \u00b7 mostly dark':mp.illum<=50?'Quarter lit \u00b7 soft shadows':mp.illum<=75?'Mostly lit \u00b7 noticeable glow':mp.illum<=95?'Nearly full \u00b7 bright night':'Full moon \u00b7 bright as it gets';
-          return`<div class="detail-card glass"><div class="label">Moon Illumination</div><div class="value" style="font-size:18px">${mp.emoji} ${mp.illum}%</div><div class="sub">${illumSub}</div></div>`;
+          return`<div class="detail-card glass"><div class="detail-icon">${wIcon(mp.icon)}</div><div class="label">Moon</div><div class="value" style="font-size:18px">${mp.illum}%</div><div class="sub">${mp.name}</div><div class="sub" style="margin-top:2px">${illumSub}</div></div>`;
         }
-        return`<div class="detail-card glass"><div class="label">Visibility</div><div class="value" style="font-size:18px">${visUnit(visibility)}</div><div class="sub">${visibility>=16?'Excellent':visibility>=8?'Good':visibility>=2?'Moderate':'Poor'}</div></div>`;
+        return`<div class="detail-card glass"><div class="detail-icon">${wIcon('fog')}</div><div class="label">Visibility</div><div class="value" style="font-size:18px">${visUnit(visibility)}</div><div class="sub">${visibility>=16?'Excellent':visibility>=8?'Good':visibility>=2?'Moderate':'Poor'}</div></div>`;
       })()}
     </div>
     <div class="refresh-bar">Auto-refreshes every 10 min &middot; Updated ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
@@ -3415,15 +3421,15 @@ function getMoonPhase(date){
   const phase=((diff%cycle)+cycle)%cycle;
   // Illumination: 0% at new moon, 100% at full moon
   const illum=Math.round((1-Math.cos(2*Math.PI*phase/cycle))/2*100);
-  if(phase<1.85)return{name:'New Moon',emoji:'\uD83C\uDF11',illum};
-  if(phase<5.53)return{name:'Waxing Crescent',emoji:'\uD83C\uDF12',illum};
-  if(phase<9.22)return{name:'First Quarter',emoji:'\uD83C\uDF13',illum};
-  if(phase<12.91)return{name:'Waxing Gibbous',emoji:'\uD83C\uDF14',illum};
-  if(phase<16.61)return{name:'Full Moon',emoji:'\uD83C\uDF15',illum};
-  if(phase<20.30)return{name:'Waning Gibbous',emoji:'\uD83C\uDF16',illum};
-  if(phase<23.99)return{name:'Last Quarter',emoji:'\uD83C\uDF17',illum};
-  if(phase<27.68)return{name:'Waning Crescent',emoji:'\uD83C\uDF18',illum};
-  return{name:'New Moon',emoji:'\uD83C\uDF11',illum};
+  if(phase<1.85)return{name:'New Moon',emoji:'\uD83C\uDF11',icon:'moon-new',illum};
+  if(phase<5.53)return{name:'Waxing Crescent',emoji:'\uD83C\uDF12',icon:'moon-waxing-crescent',illum};
+  if(phase<9.22)return{name:'First Quarter',emoji:'\uD83C\uDF13',icon:'moon-first-quarter',illum};
+  if(phase<12.91)return{name:'Waxing Gibbous',emoji:'\uD83C\uDF14',icon:'moon-waxing-gibbous',illum};
+  if(phase<16.61)return{name:'Full Moon',emoji:'\uD83C\uDF15',icon:'moon-full',illum};
+  if(phase<20.30)return{name:'Waning Gibbous',emoji:'\uD83C\uDF16',icon:'moon-waning-gibbous',illum};
+  if(phase<23.99)return{name:'Last Quarter',emoji:'\uD83C\uDF17',icon:'moon-last-quarter',illum};
+  if(phase<27.68)return{name:'Waning Crescent',emoji:'\uD83C\uDF18',icon:'moon-waning-crescent',illum};
+  return{name:'New Moon',emoji:'\uD83C\uDF11',icon:'moon-new',illum};
 }
 
 function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,isNight,hour,isPredomNight,outdoorWorthy,niceOutdoor,sunsetH){
