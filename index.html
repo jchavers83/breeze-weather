@@ -564,10 +564,17 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
     0 12px 30px rgba(0,0,0,0.4),
     inset 0 1px 0 rgba(255,255,255,0.12)
 }
-/* Volume buttons */
-.phone-mockup::before{content:'';position:absolute;left:-10px;top:82px;width:3px;height:52px;background:linear-gradient(to bottom,rgba(160,162,175,0.35),rgba(120,122,140,0.2));border-radius:2px 0 0 2px;box-shadow:-1px 0 2px rgba(0,0,0,0.4)}
-/* Power button */
-.phone-mockup::after{content:'';position:absolute;right:-10px;top:96px;width:3px;height:48px;background:linear-gradient(to bottom,rgba(160,162,175,0.35),rgba(120,122,140,0.2));border-radius:0 2px 2px 0;box-shadow:1px 0 2px rgba(0,0,0,0.4)}
+/* Action button (top-left, iPhone 16/17 Pro) + volume below */
+.phone-mockup::before{content:'';position:absolute;left:-10px;top:70px;width:3px;height:80px;
+  background:linear-gradient(to bottom,
+    #4a4a50 0%,#4a4a50 18%,
+    transparent 18%,transparent 26%,
+    #4a4a50 26%,#4a4a50 62%,
+    transparent 62%,transparent 70%,
+    #4a4a50 70%,#4a4a50 100%);
+  border-radius:2px 0 0 2px}
+/* Power / Camera Control button (right) */
+.phone-mockup::after{content:'';position:absolute;right:-10px;top:92px;width:3px;height:52px;background:linear-gradient(to bottom,#4a4a50,#3a3a40);border-radius:0 2px 2px 0}
 /* Dynamic Island pill */
 .phone-notch{width:80px;height:22px;background:#000;border-radius:20px;margin:0 auto 8px;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;gap:5px;box-shadow:0 0 0 1px rgba(255,255,255,0.04)}
 .phone-camera{width:8px;height:8px;border-radius:50%;background:#181828;border:1.5px solid #242438}
@@ -600,14 +607,14 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .mkt-cta-btn:active{transform:scale(0.97)}
 .mkt-cta-btn.secondary{background:rgba(255,255,255,0.14);color:#fff;border:1.5px solid rgba(255,255,255,0.28)}
 .mkt-cta-btn.secondary:hover{background:rgba(255,255,255,0.22)}
-.mkt-trial-terms{font-size:11px;color:rgba(255,255,255,0.58);text-align:center;margin-top:6px}
+.mkt-trial-terms{font-size:13px;color:rgba(255,255,255,0.82);text-align:center;margin-top:6px;font-weight:500}
 .mkt-or-divider{display:flex;align-items:center;gap:10px;margin:18px 0}
 .mkt-or-divider::before,.mkt-or-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.18)}
 .mkt-or-divider span{font-size:11px;color:rgba(255,255,255,0.5);font-weight:600;text-transform:uppercase;letter-spacing:1px}
 
 /* Section wrapper */
 .mkt-section{margin-bottom:36px}
-.mkt-section-label{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);text-align:center;margin-bottom:18px}
+.mkt-section-label{font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.78);text-align:center;margin-bottom:18px}
 
 /* Steps */
 .steps-list{display:flex;flex-direction:column;gap:10px}
@@ -650,13 +657,14 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Reviews */
 .reviews-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.reviews-section-label{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5)}
-.btn-leave-review{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.22);color:rgba(255,255,255,0.85);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.reviews-section-label{font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.78)}
+.btn-leave-review{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:20px;background:rgba(255,255,255,0.14);border:1.5px solid rgba(255,255,255,0.3);color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.btn-leave-review .review-star-icon{color:#FFD84D}
 .btn-leave-review:hover{background:rgba(255,255,255,0.2)}
 .btn-leave-review:active{transform:scale(0.95)}
 .review-cards{display:flex;flex-direction:column;gap:10px}
 .review-card{padding:16px}
-.review-stars{color:#FFD84D;font-size:14px;letter-spacing:2px;margin-bottom:8px}
+.review-stars{color:#F5C842;font-size:14px;letter-spacing:2px;margin-bottom:8px}
 .review-quote{font-size:14px;color:var(--text);line-height:1.6;font-style:italic;margin-bottom:10px}
 .review-author{font-size:12px;font-weight:700;color:var(--text-secondary)}
 .review-author-city{color:var(--text-tertiary);font-weight:500}
@@ -688,7 +696,9 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Bottom CTA */
 .mkt-bottom-cta{text-align:center;padding:8px 0 20px}
-.mkt-bottom-cta-sub{font-size:14px;color:rgba(255,255,255,0.55);margin-top:16px;font-weight:500;letter-spacing:0.3px}
+.mkt-bottom-cta-sub{font-size:16px;color:rgba(255,255,255,0.88);margin-top:16px;font-weight:600;letter-spacing:0.3px}
+.mkt-footer{text-align:center;padding:20px 0 8px;border-top:1px solid rgba(255,255,255,0.14);margin-top:8px}
+.mkt-footer-url{font-size:13px;color:rgba(255,255,255,0.5);letter-spacing:0.5px;margin-top:6px;font-weight:500}
 
 /* Scroll reveal */
 .reveal{opacity:0;transform:translateY(22px);transition:opacity 0.6s ease,transform 0.6s ease}
@@ -917,7 +927,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
       <div class="mkt-section">
         <div class="reviews-header">
           <div class="reviews-section-label">What people are saying</div>
-          <button class="btn-leave-review" onclick="openReviewModal()">&#9733; Leave a review</button>
+          <button class="btn-leave-review" onclick="openReviewModal()"><span class="review-star-icon">★</span> Leave a review</button>
         </div>
         <div class="review-cards" id="curatedReviewsContainer"></div>
       </div>
@@ -926,7 +936,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
       <div class="mkt-bottom-cta">
         <div class="mkt-email-form reveal" style="max-width:400px;margin:0 auto 10px">
           <div class="mkt-email-input-wrap">
-            <input class="mkt-email-input" type="email" id="mktEmail2" placeholder="Enter your email" autocomplete="email" oninput="handleMktEmail(this,'mktEmailIcon2')">
+            <input class="mkt-email-input" type="email" id="mktEmail2" placeholder="Enter your email to get started" autocomplete="email" oninput="handleMktEmail(this,'mktEmailIcon2')">
             <span class="mkt-email-valid-icon" id="mktEmailIcon2">✓</span>
           </div>
           <button class="mkt-cta-btn" onclick="handleMktEmailSubmit('mktEmail2','mktEmailIcon2')">
@@ -934,13 +944,21 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </button>
         </div>
-        <div class="mkt-trial-terms reveal">7-day free trial &middot; No credit card &middot; Cancel anytime</div>
+        <div class="mkt-trial-terms reveal">7-day free trial &middot; No credit card required &middot; Cancel anytime</div>
         <div class="mkt-or-divider reveal"><span>or</span></div>
         <button class="mkt-cta-btn secondary reveal" style="max-width:400px;margin:0 auto" onclick="document.getElementById('btnLocate').click()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
           Try it free &mdash; 3 lookups, no signup
         </button>
-        <div class="mkt-bottom-cta-sub reveal">Just the weather.</div>
+        <div class="mkt-bottom-cta-sub reveal">No ads. No articles. No agenda. Just the weather.</div>
+      </div>
+
+      <!-- ── FOOTER ── -->
+      <div class="mkt-footer reveal">
+        <div class="mkt-wordmark" style="font-size:28px;letter-spacing:6px;margin-bottom:6px">CIRRUS</div>
+        <div class="mkt-tagline-pre" style="font-size:14px;margin-bottom:0">No ads. No articles. No agenda.</div>
+        <div class="mkt-tagline-punch" style="font-size:16px;margin-bottom:10px">Just the weather.</div>
+        <div class="mkt-footer-url">cirrusweather.app</div>
       </div>
 
     </div>
