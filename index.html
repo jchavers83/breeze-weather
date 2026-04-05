@@ -632,8 +632,9 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .ios-share-icon{width:32px;height:32px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .ios-share-icon.green{background:#34c759}
 .ios-share-icon.muted{background:rgba(255,255,255,0.14)}
-.ios-share-text{font-size:13px;font-weight:600;color:var(--text)}
-.ios-share-text small{display:block;font-size:11px;color:var(--text-secondary);font-weight:500;margin-top:1px}
+.ios-share-text{font-size:13px;font-weight:500;color:var(--text)}
+.ios-share-text strong{font-weight:800;color:var(--text)}
+.ios-share-text small{display:block;font-size:11px;color:var(--text-secondary);font-weight:500;margin-top:2px}
 
 /* Feature grid */
 .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -920,25 +921,34 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
       <div class="mkt-section">
         <div class="mkt-section-label">Install on <span style="text-transform:none">i</span>Phone</div>
         <div class="ios-share-demo glass reveal">
-          <div class="ios-share-demo-title">Add Cirrus to your home screen in 3 taps</div>
+          <div class="ios-share-demo-title">Open cirrusweather.app in Safari, then follow these 4 steps</div>
           <div class="ios-share-sheet">
             <div class="ios-share-row">
-              <div class="ios-share-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/><path d="M21 13v8H3V5h8"/></svg>
+              <div class="ios-share-icon" style="background:#636366">
+                <!-- Three dots ··· -->
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg>
               </div>
-              <div class="ios-share-text">Tap the Share button <small>In Safari, tap &#x2B06; at the bottom of the screen</small></div>
+              <div class="ios-share-text">Tap the <strong>···</strong> button <small>It's in the bottom-right corner of Safari</small></div>
+            </div>
+            <div class="ios-share-row">
+              <div class="ios-share-icon">
+                <!-- Share arrow: box with up arrow -->
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><polyline points="7 8 12 3 17 8"/><path d="M20 13v7H4v-7"/></svg>
+              </div>
+              <div class="ios-share-text">Tap <strong>Share</strong> <small>It's right at the top of the menu that appears</small></div>
             </div>
             <div class="ios-share-row">
               <div class="ios-share-icon" style="background:#636366">
+                <!-- Plus in a box = Add to Home Screen -->
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
               </div>
-              <div class="ios-share-text">Tap "Add to Home Screen" <small>Scroll down in the share sheet to find it</small></div>
+              <div class="ios-share-text">Tap <strong>Add to Home Screen</strong> <small>Scroll down a little — it has a &#x2295; icon next to it</small></div>
             </div>
             <div class="ios-share-row">
               <div class="ios-share-icon green">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
               </div>
-              <div class="ios-share-text">Tap "Add" <small>Cirrus appears on your home screen instantly</small></div>
+              <div class="ios-share-text">Tap the blue <strong>Add</strong> button <small>It's in the top-right corner — and you're done!</small></div>
             </div>
           </div>
         </div>
