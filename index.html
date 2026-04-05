@@ -677,6 +677,18 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .reveal-d2{transition-delay:0.14s}
 .reveal-d3{transition-delay:0.21s}
 .reveal-d4{transition-delay:0.28s}
+
+/* Paywall overlay */
+.paywall-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,#4A90D9 0%,#357ABD 50%,#2a6aa6 100%);padding:24px;overflow-y:auto}
+.dark .paywall-overlay{background:linear-gradient(155deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)}
+.paywall-card{max-width:420px;width:100%;text-align:center}
+.paywall-icon{font-size:56px;margin-bottom:16px}
+.paywall-title{font-size:26px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-0.5px}
+.paywall-sub{font-size:15px;color:rgba(255,255,255,0.75);margin-bottom:28px;line-height:1.5}
+.paywall-card .mkt-email-form{max-width:100%}
+.paywall-card .mkt-trial-terms{color:rgba(255,255,255,0.55);font-size:12px;margin-top:10px}
+.paywall-beta-link{color:rgba(255,255,255,0.6);font-size:13px;text-decoration:underline;cursor:pointer;margin-top:14px}
+.paywall-beta-link:hover{color:rgba(255,255,255,0.85)}
 </style>
 </head>
 <body>
@@ -906,7 +918,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
         <div class="mkt-or-divider reveal"><span>or</span></div>
         <button class="mkt-cta-btn secondary reveal" style="max-width:400px;margin:0 auto" onclick="document.getElementById('btnLocate').click()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
-          Try it free &mdash; no signup needed
+          Try it free &mdash; 3 lookups, no signup
         </button>
         <div class="mkt-bottom-cta-sub reveal">The weather. Nothing else.</div>
       </div>
@@ -1819,6 +1831,10 @@ async function fetchAlerts(){
 }
 async function fetchWeather(){
   if(state.lat===null)return;
+  // Subscription gating
+  const gate=checkAccess();
+  if(!gate.allowed){showPaywall(gate.reason);return;}
+  if(gate.free)incrementFreeLookup();
   const app=$('#app');
   app.classList.add('loading');
   try{
@@ -4131,6 +4147,83 @@ function _resetReviewModal(){
     </div>`;
 }
 
+// ── Subscription gating ──────────────────────────────────────────────────────
+const FREE_LOOKUP_LIMIT=3;
+
+function checkAccess(){
+  const access=localStorage.getItem('cirrus_access');
+  if(access==='active'||access==='beta') return {allowed:true};
+  const used=parseInt(localStorage.getItem('cirrus_free_lookups')||'0',10);
+  if(used<FREE_LOOKUP_LIMIT) return {allowed:true,free:true,remaining:FREE_LOOKUP_LIMIT-used-1};
+  return {allowed:false,reason:access?'expired':'free_exhausted'};
+}
+
+function incrementFreeLookup(){
+  const used=parseInt(localStorage.getItem('cirrus_free_lookups')||'0',10);
+  localStorage.setItem('cirrus_free_lookups',String(used+1));
+}
+
+function showPaywall(reason){
+  // Remove existing paywall if any
+  document.getElementById('paywallOverlay')?.remove();
+  const isExpired=reason==='expired';
+  const title=isExpired?'Your subscription has expired':'Your free preview has ended';
+  const sub=isExpired
+    ?'Renew your subscription to keep getting clean, ad-free weather.'
+    :'You\u2019ve used your 3 free lookups. Subscribe to get unlimited access \u2014 no ads, no noise.';
+  const overlay=document.createElement('div');
+  overlay.id='paywallOverlay';
+  overlay.className='paywall-overlay';
+  overlay.innerHTML=`
+    <div class="paywall-card">
+      <div class="paywall-icon">\u2601\uFE0F</div>
+      <div class="paywall-title">${title}</div>
+      <div class="paywall-sub">${sub}</div>
+      <div class="mkt-email-form">
+        <div class="mkt-email-input-wrap">
+          <input class="mkt-email-input" type="email" id="paywallEmail" placeholder="Enter your email to get started" autocomplete="email" oninput="handleMktEmail(this,'paywallEmailIcon')">
+          <span class="mkt-email-valid-icon" id="paywallEmailIcon">\u2713</span>
+        </div>
+        <button class="mkt-cta-btn" onclick="handleMktEmailSubmit('paywallEmail','paywallEmailIcon')">
+          Start Free Trial
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+      <div class="mkt-trial-terms">7-day free trial &middot; Cancel anytime</div>
+      <div class="paywall-beta-link" onclick="toggleBetaForm('paywallBetaForm')">Have a beta code?</div>
+      <div id="paywallBetaForm" style="display:none;margin-top:12px">
+        <div style="display:flex;gap:8px">
+          <input id="paywallBetaCode" class="mkt-email-input" placeholder="CIRRUS-XXXX-0000" style="text-transform:uppercase;letter-spacing:1px;font-size:13px">
+          <button class="mkt-cta-btn" style="width:auto;padding:0 18px;white-space:nowrap" onclick="handleBetaRedeem('paywallEmail','paywallBetaCode')">Redeem</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function dismissPaywall(){
+  document.getElementById('paywallOverlay')?.remove();
+}
+
+async function verifySubscription(){
+  const email=localStorage.getItem('cirrus_email');
+  const access=localStorage.getItem('cirrus_access');
+  if(!email||!access) return;
+  try{
+    const resp=await fetch(`${WORKER_URL}/check-subscription?email=${encodeURIComponent(email)}`);
+    const data=await resp.json();
+    if(data.active){
+      localStorage.setItem('cirrus_access',data.plan||'active');
+    }else{
+      localStorage.removeItem('cirrus_access');
+      showPaywall('expired');
+    }
+  }catch(e){
+    // Network error — don't lock out the user, keep current local state
+    console.warn('Subscription check failed:',e.message);
+  }
+}
+
 // ── Stripe / Worker integration ───────────────────────────────────────────────
 const WORKER_URL='https://cirrus-api.odd-dawn-c281.workers.dev';
 const STRIPE_PUBLISHABLE_KEY='pk_live_51TIeCvJ6cuxHFsnVA1X4AsW1BiJrnCTkwSZ1l3bXvWBWzQ8txD6w5tVXyOiQeYyWioXxA1PjZlXAZyPMBGXFFxfw00rG5GXh1E';
@@ -4197,6 +4290,7 @@ async function handleBetaRedeem(emailId,codeId){
 }
 
 function showSuccessState(){
+  dismissPaywall();
   const hero=document.querySelector('.mkt-hero');
   if(!hero)return;
   hero.innerHTML=`
@@ -4229,6 +4323,9 @@ function showSuccessState(){
     history.replaceState({},'','/');
   }
 })();
+
+// Verify subscription status with server on load
+verifySubscription();
 
 // ── Scroll reveal ─────────────────────────────────────────────────────────────
 (function initReveal(){
