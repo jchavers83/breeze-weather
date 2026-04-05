@@ -977,9 +977,12 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
         </div>
         <div class="mkt-trial-terms reveal">7-day free trial &middot; No credit card required &middot; Cancel anytime</div>
         <div class="mkt-or-divider reveal"><span>or</span></div>
-        <button class="mkt-cta-btn secondary reveal" style="max-width:400px;margin:0 auto" onclick="document.getElementById('btnLocate').click()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
-          Just check the weather &mdash; no account needed
+        <button class="mkt-cta-btn secondary reveal" style="max-width:400px;margin:0 auto;flex-direction:column;gap:3px;padding:14px 24px" onclick="document.getElementById('btnLocate').click()">
+          <span style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
+            Go ahead and check the weather
+          </span>
+          <span style="font-size:12px;font-weight:500;opacity:0.75">No account needed</span>
         </button>
       </div>
 
