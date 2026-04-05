@@ -539,15 +539,34 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Hero */
 .mkt-hero{text-align:center;padding:28px 0 24px}
-.mkt-hero-icon-wrap{width:88px;height:88px;border-radius:22px;overflow:hidden;margin:0 auto 20px;border:1.5px solid rgba(255,255,255,0.28);box-shadow:0 8px 32px rgba(0,0,0,0.18)}
+.mkt-hero-icon-wrap{width:88px;height:88px;border-radius:22px;overflow:hidden;margin:0 auto 20px;border:2.5px solid rgba(255,255,255,0.75);box-shadow:0 8px 40px rgba(0,0,0,0.28),0 0 0 4px rgba(255,255,255,0.15);background:rgba(255,255,255,0.88)}
 .mkt-wordmark{font-size:40px;font-weight:800;letter-spacing:8px;background:linear-gradient(135deg,#182838,#1a90e4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px}
 .mkt-tagline-pre{font-size:17px;font-weight:500;color:rgba(255,255,255,0.82);line-height:1.5;margin-bottom:2px}
 .mkt-tagline-punch{font-size:20px;font-weight:800;color:#fff;display:block;margin-bottom:28px}
 
 /* Phone mockup */
-.phone-mockup-wrap{max-width:220px;margin:0 auto 32px}
-.phone-mockup{position:relative;background:#080810;border-radius:38px;border:2px solid rgba(255,255,255,0.14);padding:12px 8px 16px;box-shadow:0 28px 72px rgba(0,0,0,0.45),0 0 0 1px rgba(255,255,255,0.07),inset 0 1px 0 rgba(255,255,255,0.08)}
-.phone-notch{width:76px;height:20px;background:#080810;border-radius:0 0 14px 14px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;gap:8px}
+.phone-mockup-wrap{max-width:220px;margin:0 auto 32px;position:relative}
+.phone-mockup{
+  position:relative;
+  background:linear-gradient(160deg,#1c1c24 0%,#0a0a10 100%);
+  border-radius:44px;
+  border:6px solid transparent;
+  background-clip:padding-box;
+  outline:1px solid rgba(255,255,255,0.06);
+  padding:10px 8px 16px;
+  box-shadow:
+    0 0 0 6px rgba(160,162,175,0.18),
+    0 0 0 7px rgba(80,82,100,0.1),
+    0 32px 80px rgba(0,0,0,0.55),
+    0 8px 24px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.1)
+}
+/* Volume buttons */
+.phone-mockup::before{content:'';position:absolute;left:-10px;top:82px;width:3px;height:52px;background:linear-gradient(to bottom,rgba(160,162,175,0.35),rgba(120,122,140,0.2));border-radius:2px 0 0 2px;box-shadow:-1px 0 2px rgba(0,0,0,0.4)}
+/* Power button */
+.phone-mockup::after{content:'';position:absolute;right:-10px;top:96px;width:3px;height:48px;background:linear-gradient(to bottom,rgba(160,162,175,0.35),rgba(120,122,140,0.2));border-radius:0 2px 2px 0;box-shadow:1px 0 2px rgba(0,0,0,0.4)}
+/* Dynamic Island pill */
+.phone-notch{width:80px;height:22px;background:#000;border-radius:20px;margin:0 auto 8px;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;gap:5px;box-shadow:0 0 0 1px rgba(255,255,255,0.04)}
 .phone-camera{width:8px;height:8px;border-radius:50%;background:#181828;border:1.5px solid #242438}
 .phone-speaker{width:38px;height:4px;border-radius:2px;background:#181828}
 .phone-screen{border-radius:26px;overflow:hidden;background:linear-gradient(155deg,#38bdf8 0%,#1e72d4 100%);padding:10px 10px 14px;min-height:360px;position:relative}
@@ -590,7 +609,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 /* Steps */
 .steps-list{display:flex;flex-direction:column;gap:10px}
 .step-item{display:flex;align-items:flex-start;gap:14px;padding:16px}
-.step-num{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.16);border:1.5px solid rgba(255,255,255,0.28);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
+.step-num{width:30px;height:30px;border-radius:50%;background:var(--accent);border:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px;box-shadow:0 2px 8px rgba(26,144,228,0.4)}
 .step-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px}
 .step-desc{font-size:13px;color:var(--text-secondary);line-height:1.5}
 
@@ -615,15 +634,15 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Pricing */
 .pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.pricing-card{padding:20px 14px;border-radius:20px;background:var(--card-bg);backdrop-filter:blur(var(--card-blur));-webkit-backdrop-filter:blur(var(--card-blur));border:1px solid var(--card-border);text-align:center;position:relative}
-.pricing-card.best{border:2px solid var(--accent);background:rgba(26,144,228,0.10)}
-.pricing-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:10px;font-weight:800;padding:3px 11px;border-radius:20px;white-space:nowrap}
-.pricing-period{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-tertiary);margin-bottom:6px}
-.pricing-price{font-size:30px;font-weight:800;color:var(--text);line-height:1;margin-bottom:2px}
-.pricing-per{font-size:11px;color:var(--text-secondary);margin-bottom:12px}
-.pricing-features{text-align:left;display:flex;flex-direction:column;gap:5px}
-.pricing-feature-item{font-size:11px;color:var(--text-secondary);display:flex;gap:5px;align-items:flex-start}
-.pricing-feature-item::before{content:'✓';color:#34c759;font-weight:700;flex-shrink:0}
+.pricing-card{padding:22px 16px;border-radius:22px;background:rgba(255,255,255,0.14);backdrop-filter:blur(var(--card-blur));-webkit-backdrop-filter:blur(var(--card-blur));border:2px solid rgba(255,255,255,0.38);text-align:center;position:relative;display:flex;flex-direction:column}
+.pricing-card.best{border:2px solid var(--accent);background:rgba(255,255,255,0.14);box-shadow:0 0 0 4px rgba(26,144,228,0.12)}
+.pricing-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:10px;font-weight:800;padding:4px 13px;border-radius:20px;white-space:nowrap;box-shadow:0 2px 8px rgba(26,144,228,0.4)}
+.pricing-period{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:rgba(255,255,255,0.6);margin-bottom:8px}
+.pricing-price{font-size:38px;font-weight:800;color:#fff;line-height:1;margin-bottom:3px;letter-spacing:-1px}
+.pricing-per{font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:14px}
+.pricing-features{text-align:left;display:flex;flex-direction:column;gap:6px;flex:1}
+.pricing-feature-item{font-size:12px;color:rgba(255,255,255,0.82);display:flex;gap:6px;align-items:flex-start;font-weight:500}
+.pricing-feature-item::before{content:'✓';color:#34c759;font-weight:800;flex-shrink:0}
 .pricing-note{font-size:11px;color:rgba(255,255,255,0.5);text-align:center}
 
 /* Reviews */
@@ -791,6 +810,37 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
       </div>
 
+      <!-- ── PRICING ── -->
+      <div class="mkt-section">
+        <div class="mkt-section-label">Simple pricing</div>
+        <div class="pricing-grid">
+          <div class="pricing-card reveal">
+            <div class="pricing-period">Monthly</div>
+            <div class="pricing-price">$3.99</div>
+            <div class="pricing-per">per month</div>
+            <div class="pricing-features">
+              <div class="pricing-feature-item">All features included</div>
+              <div class="pricing-feature-item">Radar &amp; nowcast</div>
+              <div class="pricing-feature-item">Push alerts</div>
+            </div>
+            <button class="mkt-cta-btn" style="margin-top:16px;font-size:13px;padding:11px 14px" onclick="handleMktEmailSubmit('mktEmail','mktEmailIcon','monthly')">Start free trial</button>
+          </div>
+          <div class="pricing-card best reveal reveal-d1">
+            <div class="pricing-badge">✦ Best value</div>
+            <div class="pricing-period">Annual</div>
+            <div class="pricing-price">$2.08</div>
+            <div class="pricing-per">per month &middot; $24.99/yr</div>
+            <div class="pricing-features">
+              <div class="pricing-feature-item">Everything in monthly</div>
+              <div class="pricing-feature-item">Save 48%</div>
+              <div class="pricing-feature-item">Priority support</div>
+            </div>
+            <button class="mkt-cta-btn" style="margin-top:16px;font-size:13px;padding:11px 14px" onclick="handleMktEmailSubmit('mktEmail','mktEmailIcon','annual')">Start free trial</button>
+          </div>
+        </div>
+        <div class="pricing-note reveal reveal-d2">Both plans include a 7-day free trial &middot; Cancel anytime</div>
+      </div>
+
       <!-- ── HOW IT WORKS ── -->
       <div class="mkt-section">
         <div class="mkt-section-label">How it works</div>
@@ -812,8 +862,8 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
           <div class="step-item glass reveal reveal-d2">
             <div class="step-num">3</div>
             <div>
-              <div class="step-title">Add it to your home screen</div>
-              <div class="step-desc">Install as a PWA for one-tap access. No App Store, no download — it just works.</div>
+              <div class="step-title">Install to your home screen for one-tap access</div>
+              <div class="step-desc">No App Store, no download — add Cirrus directly from your browser and it's there instantly.</div>
             </div>
           </div>
         </div>
@@ -832,8 +882,8 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
               <div class="ios-share-text">Tap the Share button <small>In Safari, tap &#x2B06; at the bottom of the screen</small></div>
             </div>
             <div class="ios-share-row">
-              <div class="ios-share-icon muted">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
+              <div class="ios-share-icon" style="background:#636366">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
               </div>
               <div class="ios-share-text">Tap "Add to Home Screen" <small>Scroll down in the share sheet to find it</small></div>
             </div>
@@ -858,37 +908,6 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
           <div class="feature-card glass reveal"><div class="feature-icon">🌍</div><div class="feature-title">Worldwide</div><div class="feature-desc">Any city, any country. Search or GPS.</div></div>
           <div class="feature-card glass reveal reveal-d1"><div class="feature-icon">🌙</div><div class="feature-title">Dark mode</div><div class="feature-desc">Auto-switches at sunset. Beautiful day and night.</div></div>
         </div>
-      </div>
-
-      <!-- ── PRICING ── -->
-      <div class="mkt-section">
-        <div class="mkt-section-label">Simple pricing</div>
-        <div class="pricing-grid">
-          <div class="pricing-card reveal">
-            <div class="pricing-period">Monthly</div>
-            <div class="pricing-price">$3.99</div>
-            <div class="pricing-per">per month</div>
-            <div class="pricing-features">
-              <div class="pricing-feature-item">All features included</div>
-              <div class="pricing-feature-item">Radar &amp; nowcast</div>
-              <div class="pricing-feature-item">Push alerts</div>
-            </div>
-            <button class="mkt-cta-btn" style="margin-top:14px;font-size:13px;padding:11px 14px" onclick="handleMktEmailSubmit('mktEmail','mktEmailIcon','monthly')">Start free trial</button>
-          </div>
-          <div class="pricing-card best reveal reveal-d1">
-            <div class="pricing-badge">Best value</div>
-            <div class="pricing-period">Annual</div>
-            <div class="pricing-price">$2.08</div>
-            <div class="pricing-per">per month &middot; $24.99/yr</div>
-            <div class="pricing-features">
-              <div class="pricing-feature-item">Everything in monthly</div>
-              <div class="pricing-feature-item">Save 48%</div>
-              <div class="pricing-feature-item">Priority support</div>
-            </div>
-            <button class="mkt-cta-btn" style="margin-top:14px;font-size:13px;padding:11px 14px" onclick="handleMktEmailSubmit('mktEmail','mktEmailIcon','annual')">Start free trial</button>
-          </div>
-        </div>
-        <div class="pricing-note reveal reveal-d2">Both plans include a 7-day free trial. Cancel anytime.</div>
       </div>
 
       <!-- ── REVIEWS ── -->
