@@ -1,0 +1,15 @@
+name = "cirrus-api"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "CIRRUS_SUBSCRIPTIONS"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# Set these in the Cloudflare dashboard → Worker → Settings → Environment Variables
+# Never put real keys in this file.
+# STRIPE_SECRET_KEY
+# STRIPE_WEBHOOK_SECRET
+# STRIPE_MONTHLY_PRICE_ID
+# STRIPE_ANNUAL_PRICE_ID
+# BETA_CODES

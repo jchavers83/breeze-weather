@@ -769,6 +769,15 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
           </button>
         </div>
         <div class="mkt-trial-terms reveal reveal-d2">Free for 7 days &mdash; no credit card required</div>
+        <div class="mkt-trial-terms reveal reveal-d2" style="margin-top:10px">
+          <span style="cursor:pointer;text-decoration:underline;opacity:0.7" onclick="toggleBetaForm('betaFormHero')">Have a beta code?</span>
+        </div>
+        <div id="betaFormHero" style="display:none;margin-top:12px">
+          <div style="display:flex;gap:8px">
+            <input id="betaCodeHero" class="mkt-email-input" placeholder="CIRRUS-XXXX-0000" style="text-transform:uppercase;letter-spacing:1px;font-size:13px">
+            <button class="mkt-cta-btn" style="width:auto;padding:0 18px;white-space:nowrap" onclick="handleBetaRedeem('mktEmail','betaCodeHero')">Redeem</button>
+          </div>
+        </div>
 
       </div>
 
@@ -854,6 +863,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
               <div class="pricing-feature-item">Radar &amp; nowcast</div>
               <div class="pricing-feature-item">Push alerts</div>
             </div>
+            <button class="mkt-cta-btn" style="margin-top:14px;font-size:13px;padding:11px 14px" onclick="handleMktEmailSubmit('mktEmail','mktEmailIcon','monthly')">Start free trial</button>
           </div>
           <div class="pricing-card best reveal reveal-d1">
             <div class="pricing-badge">Best value</div>
@@ -865,6 +875,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
               <div class="pricing-feature-item">Save 48%</div>
               <div class="pricing-feature-item">Priority support</div>
             </div>
+            <button class="mkt-cta-btn" style="margin-top:14px;font-size:13px;padding:11px 14px" onclick="handleMktEmailSubmit('mktEmail','mktEmailIcon','annual')">Start free trial</button>
           </div>
         </div>
         <div class="pricing-note reveal reveal-d2">Both plans include a 7-day free trial. Cancel anytime.</div>
@@ -4120,25 +4131,103 @@ function _resetReviewModal(){
     </div>`;
 }
 
-// ── Email form helpers ────────────────────────────────────────────────────────
+// ── Stripe / Worker integration ───────────────────────────────────────────────
+const WORKER_URL='https://cirrus-api.REPLACE_WITH_YOUR_SUBDOMAIN.workers.dev';
+
 function handleMktEmail(el,iconId){
   const ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim());
   const icon=document.getElementById(iconId);
   if(icon)icon.classList.toggle('show',ok);
 }
-function handleMktEmailSubmit(inputId,iconId){
+
+async function handleMktEmailSubmit(inputId,iconId,plan){
   const el=document.getElementById(inputId);
   if(!el)return;
-  const val=el.value.trim();
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){el.focus();return;}
-  // TODO: wire to backend/Supabase
-  el.value='';
-  const icon=document.getElementById(iconId);
-  if(icon)icon.classList.remove('show');
-  const prev=el.placeholder;
-  el.placeholder='✓ You\'re on the list!';
-  setTimeout(()=>{el.placeholder=prev;},4000);
+  const email=el.value.trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){el.focus();return;}
+  const btn=el.closest('.mkt-email-form')?.querySelector('.mkt-cta-btn');
+  if(btn){btn.disabled=true;btn.textContent='Loading...';}
+  try{
+    const resp=await fetch(`${WORKER_URL}/create-checkout-session`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,plan:plan||'monthly'})
+    });
+    const data=await resp.json();
+    if(data.url){localStorage.setItem('cirrus_email_pending',email);window.location.href=data.url;}
+    else{throw new Error(data.error||'Something went wrong');}
+  }catch(e){
+    alert('Could not start checkout: '+e.message);
+    if(btn){btn.disabled=false;btn.innerHTML='Start Free Trial <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';}
+  }
 }
+
+function toggleBetaForm(id){
+  const f=document.getElementById(id);
+  if(f)f.style.display=f.style.display==='none'?'block':'none';
+}
+
+async function handleBetaRedeem(emailId,codeId){
+  const email=document.getElementById(emailId)?.value.trim();
+  const code=document.getElementById(codeId)?.value.trim();
+  if(!email||!email.includes('@')){alert('Enter your email first');return;}
+  if(!code){alert('Enter your beta code');return;}
+  const btn=event.target;
+  btn.disabled=true;btn.textContent='Checking...';
+  try{
+    const resp=await fetch(`${WORKER_URL}/redeem-beta`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,code})
+    });
+    const data=await resp.json();
+    if(data.active){
+      localStorage.setItem('cirrus_email',email);
+      localStorage.setItem('cirrus_access','beta');
+      showSuccessState();
+    }else{
+      alert(data.error||'Invalid code');
+      btn.disabled=false;btn.textContent='Redeem';
+    }
+  }catch(e){
+    alert('Error: '+e.message);
+    btn.disabled=false;btn.textContent='Redeem';
+  }
+}
+
+function showSuccessState(){
+  const hero=document.querySelector('.mkt-hero');
+  if(!hero)return;
+  hero.innerHTML=`
+    <div style="text-align:center;padding:40px 0">
+      <div style="font-size:64px;margin-bottom:16px">☀️</div>
+      <div class="mkt-wordmark" style="margin-bottom:12px">You're in.</div>
+      <div class="mkt-tagline-pre" style="margin-bottom:24px">Welcome to Cirrus. No ads, no noise — just the weather.</div>
+      <button class="mkt-cta-btn" onclick="document.getElementById('btnLocate').click()">
+        Open the app
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+    </div>`;
+}
+
+// Check URL params on load — handle Stripe redirect back
+(function checkStripeReturn(){
+  const params=new URLSearchParams(window.location.search);
+  if(params.has('session_id')){
+    // Stripe success redirect
+    const email=localStorage.getItem('cirrus_email_pending');
+    if(email){
+      localStorage.setItem('cirrus_email',email);
+      localStorage.setItem('cirrus_access','active');
+      localStorage.removeItem('cirrus_email_pending');
+    }
+    history.replaceState({},'','/');
+    showSuccessState();
+  }
+  if(params.get('cancelled')==='1'){
+    history.replaceState({},'','/');
+  }
+})();
 
 // ── Scroll reveal ─────────────────────────────────────────────────────────────
 (function initReveal(){
