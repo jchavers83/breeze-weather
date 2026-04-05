@@ -449,10 +449,9 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 #settingsView.active{display:block}
 .settings-section{margin-bottom:20px}
 .settings-section-title{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:8px;padding:0 4px}
+.settings-group{border-radius:14px;overflow:hidden;margin-bottom:1px}
 .settings-row{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:var(--card-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--card-border);margin-bottom:1px}
-.settings-row:first-of-type{border-radius:14px 14px 0 0}
-.settings-row:last-of-type{border-radius:0 0 14px 14px;margin-bottom:0}
-.settings-row:only-of-type{border-radius:14px}
+.settings-group .settings-row:last-child{margin-bottom:0}
 .settings-row-label{display:flex;flex-direction:column;gap:2px}
 .settings-row-label span{font-size:15px;font-weight:600;color:var(--text)}
 .settings-row-label small{font-size:12px;color:var(--text-secondary);font-weight:500}
@@ -1455,28 +1454,30 @@ function renderSettings(){
 
   // Default city
   const dc=getSetting(SETTINGS_KEYS.defaultCity);
-  const cityRow=`<div class="settings-row" style="border-radius:14px">
+  const cityRow=`<div class="settings-group"><div class="settings-row">
     <div class="settings-row-label"><span>Default City</span><small>${dc?dc.name+', '+dc.region:'Opens to last viewed city'}</small></div>
     <div style="display:flex;align-items:center;gap:4px">
       ${state.name&&(!dc||dc.name!==state.name)?`<button class="settings-city-clear" onclick="setDefaultCity()" style="color:var(--accent)">Set current</button>`:''}
       ${dc?`<button class="settings-city-clear" onclick="clearDefaultCity()">✕ Clear</button>`:''}
     </div>
-  </div>`;
+  </div></div>`;
 
   const prefsSection=`
     <div class="settings-section">
       <div class="settings-section-title">Preferences</div>
       ${cityRow}
-      <div class="settings-row">
-        <div class="settings-row-label"><span>Temperature</span></div>
-        ${seg(SETTINGS_KEYS.tempUnit,[['auto','Auto'],['F','°F'],['C','°C']])}
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="settings-row-label"><span>Temperature</span></div>
+          ${seg(SETTINGS_KEYS.tempUnit,[['auto','Auto'],['F','°F'],['C','°C']])}
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label"><span>Wind Speed</span></div>
+          ${seg(SETTINGS_KEYS.windUnit,[['auto','Auto'],['mph','mph'],['kmh','km/h'],['knots','kts']])}
+        </div>
+        ${toggle(SETTINGS_KEYS.animations,'Animations','Turn off to save battery')}
+        ${toggle(SETTINGS_KEYS.darkMode,'Dark Mode','')}
       </div>
-      <div class="settings-row">
-        <div class="settings-row-label"><span>Wind Speed</span></div>
-        ${seg(SETTINGS_KEYS.windUnit,[['auto','Auto'],['mph','mph'],['kmh','km/h'],['knots','kts']])}
-      </div>
-      ${toggle(SETTINGS_KEYS.animations,'Animations','Turn off to save battery')}
-      ${toggle(SETTINGS_KEYS.darkMode,'Dark Mode','')}
     </div>`;
 
   const mHour=getSetting(SETTINGS_KEYS.morningHour);
@@ -1484,50 +1485,56 @@ function renderSettings(){
   const notifSection=`
     <div class="settings-section">
       <div class="settings-section-title">Notifications</div>
-      <div class="settings-row">
-        <div class="settings-row-label"><span>Morning Briefing</span><small>Daily forecast, your local time</small></div>
-        <div style="display:flex;align-items:center;gap:8px">
-          ${timeSelect(SETTINGS_KEYS.morningHour,[[5,'5 AM'],[6,'6 AM'],[7,'7 AM'],[8,'8 AM']])}
-          <label class="toggle" style="margin-left:4px">
-            <input type="checkbox" ${getSetting(SETTINGS_KEYS.morningBriefing)?'checked':''} onchange="onSettingToggle('${SETTINGS_KEYS.morningBriefing}',this.checked)">
-            <div class="toggle-track"></div><div class="toggle-thumb"></div>
-          </label>
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="settings-row-label"><span>Morning Briefing</span><small>Daily forecast, your local time</small></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            ${timeSelect(SETTINGS_KEYS.morningHour,[[5,'5 AM'],[6,'6 AM'],[7,'7 AM'],[8,'8 AM']])}
+            <label class="toggle" style="margin-left:4px">
+              <input type="checkbox" ${getSetting(SETTINGS_KEYS.morningBriefing)?'checked':''} onchange="onSettingToggle('${SETTINGS_KEYS.morningBriefing}',this.checked)">
+              <div class="toggle-track"></div><div class="toggle-thumb"></div>
+            </label>
+          </div>
         </div>
-      </div>
-      <div class="settings-row">
-        <div class="settings-row-label"><span>Evening Lookahead</span><small>Tomorrow's weather, your local time</small></div>
-        <div style="display:flex;align-items:center;gap:8px">
-          ${timeSelect(SETTINGS_KEYS.eveningHour,[[18,'6 PM'],[19,'7 PM'],[20,'8 PM'],[21,'9 PM'],[22,'10 PM']])}
-          <label class="toggle" style="margin-left:4px">
-            <input type="checkbox" ${getSetting(SETTINGS_KEYS.eveningBriefing)?'checked':''} onchange="onSettingToggle('${SETTINGS_KEYS.eveningBriefing}',this.checked)">
-            <div class="toggle-track"></div><div class="toggle-thumb"></div>
-          </label>
+        <div class="settings-row">
+          <div class="settings-row-label"><span>Evening Lookahead</span><small>Tomorrow's weather, your local time</small></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            ${timeSelect(SETTINGS_KEYS.eveningHour,[[18,'6 PM'],[19,'7 PM'],[20,'8 PM'],[21,'9 PM'],[22,'10 PM']])}
+            <label class="toggle" style="margin-left:4px">
+              <input type="checkbox" ${getSetting(SETTINGS_KEYS.eveningBriefing)?'checked':''} onchange="onSettingToggle('${SETTINGS_KEYS.eveningBriefing}',this.checked)">
+              <div class="toggle-track"></div><div class="toggle-thumb"></div>
+            </label>
+          </div>
         </div>
+        ${toggle(SETTINGS_KEYS.severeAlerts,'Severe Weather Alerts','Warnings &amp; watches for your area')}
+        ${toggle(SETTINGS_KEYS.precipAlerts,'Precipitation Alerts','Rain or snow starting within the hour')}
       </div>
-      ${toggle(SETTINGS_KEYS.severeAlerts,'Severe Weather Alerts','Warnings &amp; watches for your area')}
-      ${toggle(SETTINGS_KEYS.precipAlerts,'Precipitation Alerts','Rain or snow starting within the hour')}
     </div>`;
 
   const notifCta=`
     <div class="settings-section">
       <div class="settings-section-title">Push Notifications</div>
-      <div class="settings-row" style="border-radius:14px">
-        <div class="settings-row-label">
-          <span id="alertsBtnSettingsLabel">${_alertsGranted()?'Alerts enabled':'Enable alerts'}</span>
-          <small>${_alertsGranted()?'Tap to manage in device Settings':'Get weather alerts on this device'}</small>
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <span id="alertsBtnSettingsLabel">${_alertsGranted()?'Alerts enabled':'Enable alerts'}</span>
+            <small>${_alertsGranted()?'Tap to manage in device Settings':'Get weather alerts on this device'}</small>
+          </div>
+          <button class="alerts-btn" id="alertsBtnSettings" onclick="handleAlertsBtn()" style="margin:0;font-size:13px;padding:6px 12px">
+            ${_alertsGranted()?'&#128276; On':'&#128276; Enable'}
+          </button>
         </div>
-        <button class="alerts-btn" id="alertsBtnSettings" onclick="handleAlertsBtn()" style="margin:0;font-size:13px;padding:6px 12px">
-          ${_alertsGranted()?'&#128276; On':'&#128276; Enable'}
-        </button>
       </div>
     </div>`;
 
   const acctSection=`
     <div class="settings-section">
       <div class="settings-section-title">Account</div>
-      <div class="settings-row" style="border-radius:14px">
-        <div class="settings-row-label"><span>Subscription</span><small>Free — coming soon</small></div>
-        <span style="font-size:13px;font-weight:700;color:var(--accent)">Free</span>
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="settings-row-label"><span>Subscription</span><small>Free — coming soon</small></div>
+          <span style="font-size:13px;font-weight:700;color:var(--accent)">Free</span>
+        </div>
       </div>
     </div>`;
 
@@ -1535,14 +1542,16 @@ function renderSettings(){
   const supportSection=`
     <div class="settings-section">
       <div class="settings-section-title">Support</div>
-      <div class="settings-row" style="cursor:pointer" onclick="window.location='mailto:bugs@cirrusweather.app?subject=Bug%20Report&body=Describe%20the%20issue%3A%0A%0ADevice%2FBrowser%3A%0A%0ASteps%20to%20reproduce%3A'">
-        <div class="settings-row-label"><span>Report a Bug</span></div>${chevron}
-      </div>
-      <div class="settings-row" style="cursor:pointer" onclick="window.open('https://cirrusweather.app/privacy','_blank')">
-        <div class="settings-row-label"><span>Privacy Policy</span></div>${chevron}
-      </div>
-      <div class="settings-row" style="border-radius:0 0 14px 14px;cursor:pointer" onclick="window.open('https://cirrusweather.app/terms','_blank')">
-        <div class="settings-row-label"><span>Terms of Service</span></div>${chevron}
+      <div class="settings-group">
+        <div class="settings-row" style="cursor:pointer" onclick="window.location='mailto:bugs@cirrusweather.app?subject=Bug%20Report&body=Describe%20the%20issue%3A%0A%0ADevice%2FBrowser%3A%0A%0ASteps%20to%20reproduce%3A'">
+          <div class="settings-row-label"><span>Report a Bug</span></div>${chevron}
+        </div>
+        <div class="settings-row" style="cursor:pointer" onclick="window.open('https://cirrusweather.app/privacy','_blank')">
+          <div class="settings-row-label"><span>Privacy Policy</span></div>${chevron}
+        </div>
+        <div class="settings-row" style="cursor:pointer" onclick="window.open('https://cirrusweather.app/terms','_blank')">
+          <div class="settings-row-label"><span>Terms of Service</span></div>${chevron}
+        </div>
       </div>
     </div>`;
 
