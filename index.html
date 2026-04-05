@@ -638,7 +638,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 /* Feature grid */
 .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .feature-card{padding:16px 14px;display:flex;flex-direction:column;gap:7px}
-.feature-icon{font-size:22px;line-height:1}
+.feature-icon{width:44px;height:44px;border-radius:13px;background:rgba(26,144,228,0.12);display:flex;align-items:center;justify-content:center;padding:9px;flex-shrink:0}
+.feature-icon img{width:26px;height:26px;display:block}
+.dark .feature-icon{background:rgba(74,184,248,0.15)}
+.dark .feature-icon img{filter:brightness(1.5) saturate(1.1)}
 .feature-title{font-size:13px;font-weight:700;color:var(--text)}
 .feature-desc{font-size:12px;color:var(--text-secondary);line-height:1.5;font-weight:500}
 
@@ -945,12 +948,12 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
       <div class="mkt-section">
         <div class="mkt-section-label">What makes Cirrus different</div>
         <div class="feature-grid">
-          <div class="feature-card glass reveal"><div class="feature-icon">🚫</div><div class="feature-title">Zero ads, forever</div><div class="feature-desc">No banners. No "weather stories." No sponsored content. Ever.</div></div>
-          <div class="feature-card glass reveal reveal-d1"><div class="feature-icon">🧠</div><div class="feature-title">Plain English</div><div class="feature-desc">Tells you what the weather means, not just what it is.</div></div>
-          <div class="feature-card glass reveal reveal-d2"><div class="feature-icon">👗</div><div class="feature-title">What to wear</div><div class="feature-desc">Daily outfit guidance based on real conditions.</div></div>
-          <div class="feature-card glass reveal reveal-d3"><div class="feature-icon">📡</div><div class="feature-title">Live radar</div><div class="feature-desc">See rain now and where it's headed in the next 40 minutes.</div></div>
-          <div class="feature-card glass reveal"><div class="feature-icon">🌍</div><div class="feature-title">Worldwide</div><div class="feature-desc">Any city, any country. Search or GPS.</div></div>
-          <div class="feature-card glass reveal reveal-d1"><div class="feature-icon">🌙</div><div class="feature-title">Dark mode</div><div class="feature-desc">Auto-switches at sunset. Beautiful day and night.</div></div>
+          <div class="feature-card glass reveal"><div class="feature-icon"><img src="https://api.iconify.design/line-md/cancel.svg?color=%231a90e4" onerror="this.parentElement.textContent='🚫'" alt=""></div><div class="feature-title">Zero ads, forever</div><div class="feature-desc">No banners. No "weather stories." No sponsored content. Ever.</div></div>
+          <div class="feature-card glass reveal reveal-d1"><div class="feature-icon"><img src="https://api.iconify.design/line-md/chat-twotone.svg?color=%231a90e4" onerror="this.parentElement.textContent='🧠'" alt=""></div><div class="feature-title">Plain English</div><div class="feature-desc">Tells you what the weather means, not just what it is.</div></div>
+          <div class="feature-card glass reveal reveal-d2"><div class="feature-icon"><img src="https://api.iconify.design/line-md/thermometer-twotone.svg?color=%231a90e4" onerror="this.parentElement.textContent='👗'" alt=""></div><div class="feature-title">What to wear</div><div class="feature-desc">Daily outfit guidance based on real conditions.</div></div>
+          <div class="feature-card glass reveal reveal-d3"><div class="feature-icon"><img src="https://api.iconify.design/line-md/cloud-rain-twotone-loop.svg?color=%231a90e4" onerror="this.parentElement.textContent='📡'" alt=""></div><div class="feature-title">Live radar</div><div class="feature-desc">See rain now and where it's headed in the next 40 minutes.</div></div>
+          <div class="feature-card glass reveal"><div class="feature-icon"><img src="https://api.iconify.design/line-md/earth-twotone.svg?color=%231a90e4" onerror="this.parentElement.textContent='🌍'" alt=""></div><div class="feature-title">Worldwide</div><div class="feature-desc">Any city, any country. Search or GPS.</div></div>
+          <div class="feature-card glass reveal reveal-d1"><div class="feature-icon"><img src="https://api.iconify.design/line-md/moon-filled-alt-loop.svg?color=%231a90e4" onerror="this.parentElement.textContent='🌙'" alt=""></div><div class="feature-title">Dark mode</div><div class="feature-desc">Auto-switches at sunset. Beautiful day and night.</div></div>
         </div>
       </div>
 
