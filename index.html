@@ -199,7 +199,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 
 /* Hero */
 .hero{text-align:center;padding:16px 0 20px}
-.hero-icon{width:96px;height:96px;margin:0 auto 8px}
+.hero-icon{width:112px;height:112px;margin:0 auto 8px}
 .hero-temp{font-size:96px;font-weight:800;letter-spacing:0px;line-height:1;font-variant-numeric:tabular-nums;background:linear-gradient(160deg,var(--text) 20%,var(--accent) 110%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 4px 20px rgba(0,0,0,0.22))}
 .hero-desc{font-size:18px;font-weight:600;color:var(--text-secondary);margin-top:4px}
 .hero-hilo{font-size:15px;color:var(--text-secondary);margin-top:6px;font-weight:500}
@@ -282,7 +282,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .forecast-day.today{border:2px solid var(--accent);box-shadow:0 0 0 2px rgba(58,143,212,0.12)}
 .forecast-day-header{display:flex;align-items:center;padding:12px 16px;cursor:pointer;gap:10px;-webkit-user-select:none;user-select:none}
 .forecast-day-header:active{background:rgba(128,128,128,0.06)}
-.fd-icon{width:46px;height:46px;flex-shrink:0}
+.fd-icon{width:54px;height:54px;flex-shrink:0}
 .fd-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
 .fd-name{font-weight:700;font-size:15px}
 .fd-desc{font-size:12px;color:var(--text-secondary);font-weight:500;white-space:normal;line-height:1.3}
@@ -300,7 +300,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .hour-item{flex-shrink:0;width:68px;text-align:center;padding:10px 6px;border-radius:12px;background:rgba(128,128,128,0.06);transition:background 0.2s}
 .hour-item.now{background:rgba(58,143,212,0.12);border:1px solid rgba(58,143,212,0.2)}
 .hour-item .h-time{font-size:11px;font-weight:600;color:var(--text-tertiary)}
-.hour-item .h-icon{width:40px;height:40px;margin:6px auto}
+.hour-item .h-icon{width:48px;height:48px;margin:6px auto}
 .hour-item .h-temp{font-size:15px;font-weight:700}
 .hour-item .h-precip{font-size:10px;color:var(--accent);margin-top:3px;font-weight:600}
 .hour-item .h-wind{font-size:10px;color:var(--text-tertiary);margin-top:2px}
@@ -415,7 +415,7 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 .summary-card .vibe-tag{font-size:16px;font-weight:800;margin-bottom:10px;letter-spacing:-0.3px;line-height:1.2;color:var(--text);display:flex;align-items:center;gap:8px}
 .summary-card .vibe-tag .vibe-text{color:var(--text)}
 .vibe-wi{width:32px;height:32px;flex-shrink:0}
-.detail-icon{width:40px;height:40px;margin:0 auto 8px;background:rgba(58,143,212,0.12);border-radius:10px;padding:6px}
+.detail-icon{width:52px;height:52px;margin:0 auto 8px;background:rgba(58,143,212,0.12);border-radius:12px;padding:8px}
 .summary-card .summary-text{font-size:14px;line-height:1.55;font-weight:500;color:var(--text)}
 
 /* Refresh indicator */
@@ -525,6 +525,10 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 }
 .alerts-btn:hover { background: rgba(255,255,255,0.32); }
 .alerts-btn.active { background: rgba(26,144,228,0.35); border-color: rgba(26,144,228,0.6); }
+/* Settings context: use theme colors instead of white-on-transparent */
+.settings-row .alerts-btn { color: var(--accent); background: rgba(58,143,212,0.1); border-color: rgba(58,143,212,0.25); }
+.settings-row .alerts-btn:hover { background: rgba(58,143,212,0.18); }
+.settings-row .alerts-btn.active { color: var(--accent); background: rgba(58,143,212,0.15); border-color: rgba(58,143,212,0.4); }
 
 /* ── Marketing landing page ────────────────────────────────────────────────── */
 .mkt-landing{max-width:500px;margin:0 auto;padding-bottom:48px}
@@ -1970,7 +1974,7 @@ function render(){
       <div class="sun-mid">
         <div class="sun-label">Daylight</div>
         <div class="sun-time">${daylightDuration(daily.sunrise[0],daily.sunset[0])}</div>
-        ${(()=>{const mp=getMoonPhase(now);return`<div class="sun-moon" style="display:flex;align-items:center;justify-content:center;gap:4px"><span style="width:18px;height:18px;flex-shrink:0">${wIcon(mp.icon)}</span>${mp.name}</div>`;})()}
+        ${(()=>{const mp=getMoonPhase(now);return`<div class="sun-moon" style="display:flex;align-items:center;justify-content:center;gap:5px;margin-top:3px"><span style="width:24px;height:24px;flex-shrink:0">${wIcon(mp.icon)}</span>${mp.name}</div>`;})()}
       </div>
       <div class="sun-item">
         <div class="sun-icon">${wIcon('sunset')}</div>
@@ -2053,7 +2057,7 @@ function render(){
       </div>
       <div class="detail-card glass">
         <div class="label">UV Index</div>
-        <div class="detail-icon" style="width:52px;height:52px;margin:6px auto 8px">${wIcon(curUV<1?'uv-index':`uv-index-${Math.min(Math.max(1,Math.ceil(curUV)),11)}`)}</div>
+        <div class="detail-icon" style="width:68px;height:68px;margin:6px auto 8px;padding:10px">${wIcon(curUV<1?'uv-index':`uv-index-${Math.min(Math.max(1,Math.ceil(curUV)),11)}`)}</div>
         <div class="uv-bar-wrap"><div class="uv-cursor" style="left:${Math.min(curUV/12*100,100)}%"></div></div>
         <div class="sub">${uvSub}</div>
       </div>
@@ -2217,7 +2221,8 @@ function _updateAqiCard(){
   const info=aqiInfo(aqi);
   if(!info)return;
   const aqiScore=Math.max(1,Math.min(10,Math.ceil(aqi/30)));
-  card.innerHTML=`<div class="label">Air Quality</div><div class="value">${aqiScore}</div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="sub">${info.tip}</div>`;
+  const aqiIcon=aqiScore<=3?'wind-beaufort-1':aqiScore<=6?'haze':aqiScore<=8?'dust':'dust-wind';
+  card.innerHTML=`<div class="detail-icon">${wIcon(aqiIcon)}</div><div class="label">Air Quality</div><div class="value">${aqiScore}</div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="sub">${info.tip}</div>`;
 }
 
 function shareWeather(){
