@@ -1168,6 +1168,87 @@ const WMO_CODES={
   99:{desc:'Thunderstorm + Hail',day:'thunderstorms-day-rain',night:'thunderstorms-night-rain',emoji:'⛈️'},
 };
 
+// ── XWeather API credentials ────────────────────────────────────────────────
+const XW_ID='Sk3ZP8TlrzjWOiyh7FdR8';
+const XW_SECRET='mWTYZGiOHBcyrGoA207FbkKPHBb1n2jldiVoB5Yg';
+
+// Maps XWeather weatherPrimaryCoded strings → WMO integer codes so all
+// existing render / summary / gradient logic works with zero changes.
+function xwCodeToWMO(coded){
+  if(!coded)return 0;
+  const p=coded.split(':').pop()||'';
+  if(p==='CL')return 0;
+  if(p==='FW')return 1;
+  if(p==='SC')return 2;
+  if(p==='BK'||p==='OV')return 3;
+  if(p==='F'||p==='FR'||p==='H'||p==='HZ'||p==='BR')return 45;
+  if(p==='ZF')return 48;
+  if(p==='L')return 53;
+  if(p==='ZL')return 56;
+  if(p==='ZR')return 66;
+  if(p==='R')return 63;
+  if(p==='RW')return 80;
+  if(p==='S')return 73;
+  if(p==='SW')return 85;
+  if(p==='IP'||p==='RS'||p==='WM')return 77;
+  if(p==='T'||p==='TW')return 95;
+  if(p==='A')return 96;
+  if(p==='BS'||p==='BD')return 75;
+  return 0;
+}
+
+// Converts XWeather API responses into an Open-Meteo-compatible data object
+// so render() and all downstream functions work unchanged.
+function normalizeXWeather(condData,dailyData,hourlyData){
+  const ob=condData.response?.[0]?.ob||{};
+  const dp=dailyData.response?.[0]?.periods||[];
+  const hp=hourlyData.response?.[0]?.periods||[];
+  function utcOff(iso){
+    if(!iso)return 0;
+    const m=iso.match(/([+-])(\d{2}):(\d{2})$/);
+    return m?(m[1]==='+'?1:-1)*(parseInt(m[2])*3600+parseInt(m[3])*60):0;
+  }
+  return{
+    utc_offset_seconds:utcOff(dp[0]?.dateTimeISO||hp[0]?.dateTimeISO||''),
+    current:{
+      temperature_2m:ob.tempC??20,
+      relative_humidity_2m:ob.humidity??50,
+      apparent_temperature:ob.feelslikeC??ob.tempC??20,
+      weather_code:xwCodeToWMO(ob.weatherPrimaryCoded),
+      wind_speed_10m:ob.windSpeedKPH??0,
+      wind_direction_10m:ob.windDirDEG??0,
+      wind_gusts_10m:ob.windGustKPH??0,
+      is_day:ob.isDay?1:0,
+      visibility:(ob.visibilityKM??10)*1000,
+      cloud_cover:ob.sky??0,
+      dew_point_2m:ob.dewpointC??10,
+      uv_index:ob.uvi??0
+    },
+    daily:{
+      time:dp.map(p=>p.dateTimeISO?.slice(0,10)||''),
+      temperature_2m_max:dp.map(p=>p.maxTempC??p.tempC??20),
+      temperature_2m_min:dp.map(p=>p.minTempC??p.tempC??10),
+      weather_code:dp.map(p=>xwCodeToWMO(p.weatherPrimaryCoded)),
+      sunrise:dp.map(p=>p.sunriseISO||''),
+      sunset:dp.map(p=>p.sunsetISO||''),
+      precipitation_probability_max:dp.map(p=>p.pop??0),
+      precipitation_sum:dp.map(p=>p.precipMM??0),
+      uv_index_max:dp.map(p=>p.uvi??0)
+    },
+    hourly:{
+      time:hp.map(p=>p.dateTimeISO?.slice(0,16)||''),
+      temperature_2m:hp.map(p=>p.tempC??20),
+      weather_code:hp.map(p=>xwCodeToWMO(p.weatherPrimaryCoded)),
+      precipitation_probability:hp.map(p=>p.pop??0),
+      precipitation:hp.map(p=>p.precipMM??0),
+      wind_speed_10m:hp.map(p=>p.windSpeedKPH??0),
+      wind_direction_10m:hp.map(p=>p.windDirDEG??0),
+      cloud_cover:hp.map(p=>p.sky??0),
+      relative_humidity_2m:hp.map(p=>p.humidity??50)
+    }
+  };
+}
+
 let state={lat:null,lon:null,name:'',region:'',country:'',countryCode:'',dark:false,unit:'F',data:null,openDay:0,refreshTimer:null,activeAlerts:[],airQuality:null};
 
 const $=s=>document.querySelector(s);
@@ -1885,9 +1966,16 @@ async function fetchWeather(){
   const app=$('#app');
   app.classList.add('loading');
   try{
-    const url=`https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day,visibility,cloud_cover,dew_point_2m,uv_index&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,wind_speed_10m,wind_direction_10m,cloud_cover,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,precipitation_sum,uv_index_max&timezone=auto&forecast_days=5`;
-    const r=await fetch(url);
-    state.data=await r.json();
+    const _loc=`${state.lat},${state.lon}`;
+    const _cr=`client_id=${XW_ID}&client_secret=${XW_SECRET}`;
+    const [_cR,_dR,_hR]=await Promise.all([
+      fetch(`https://data.api.xweather.com/conditions/${_loc}?${_cr}`),
+      fetch(`https://data.api.xweather.com/forecasts/${_loc}?${_cr}&filter=day&limit=5`),
+      fetch(`https://data.api.xweather.com/forecasts/${_loc}?${_cr}&filter=1hr&limit=48`)
+    ]);
+    const [_cD,_dD,_hD]=await Promise.all([_cR.json(),_dR.json(),_hR.json()]);
+    if(!_cD.success)throw new Error(_cD.error?.description||'Weather data unavailable');
+    state.data=normalizeXWeather(_cD,_dD,_hD);
     state.openDay=0;
     render();
     updateGradient();
@@ -2221,10 +2309,12 @@ function aqiInfo(aqi){
 async function fetchAirQuality(){
   if(state.lat===null)return;
   try{
-    const r=await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${state.lat}&longitude=${state.lon}&current=us_aqi,pm2_5&timezone=auto`);
+    const _loc=`${state.lat},${state.lon}`;
+    const r=await fetch(`https://data.api.xweather.com/airquality/${_loc}?client_id=${XW_ID}&client_secret=${XW_SECRET}&fields=aqi,category,dominant`);
     if(!r.ok)return;
     const d=await r.json();
-    state.airQuality=d.current||null;
+    if(!d.success||!d.response?.[0])return;
+    state.airQuality={us_aqi:d.response[0].aqi||0};
     _updateAqiCard();
   }catch(e){}
 }
