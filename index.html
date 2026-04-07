@@ -157,15 +157,19 @@
 --text:#e8f0f8;--text-secondary:#b8cedd;--text-tertiary:#8aaec4;
 --accent:#4ab8f8;
 }
-/* Night time in light mode: dark navy sky needs light text + crisper cards */
-.night:not(.dark){
---card-bg:rgba(255,255,255,0.20);--card-border:rgba(255,255,255,0.35);
---text:#f0f6fc;--text-secondary:#d0e0ef;--text-tertiary:#b0cfe0;
+/* Dark weather backgrounds (night, rain, storm, overcast) — force light text
+   regardless of user theme. Covers every condition with a dark gradient. */
+.wx-dark:not(.dark){
+--card-bg:rgba(255,255,255,0.15);--card-border:rgba(255,255,255,0.28);
+--text:#f0f6fc;--text-secondary:#d0e4f4;--text-tertiary:#aacce0;
 }
-/* Nav bar at night: solid enough to read without squinting */
-.night:not(.dark) .mobile-nav{background:rgba(12,22,44,0.92);border-top-color:rgba(255,255,255,0.18)}
-.night:not(.dark) .nav-tab{color:rgba(180,210,230,0.85)}
-.night:not(.dark) .nav-tab.active{color:var(--accent)}
+/* Nav bar on dark weather backgrounds */
+.wx-dark:not(.dark) .mobile-nav{background:rgba(10,20,40,0.90);border-top-color:rgba(255,255,255,0.16)}
+.wx-dark:not(.dark) .nav-tab{color:rgba(180,210,230,0.85)}
+.wx-dark:not(.dark) .nav-tab.active{color:var(--accent)}
+/* Search input on dark weather background */
+.wx-dark:not(.dark) .search-wrap input{background:rgba(255,255,255,0.18);border-color:rgba(255,255,255,0.28);color:#f0f6fc}
+.wx-dark:not(.dark) .search-wrap input::placeholder{color:rgba(240,246,252,0.50)}
 html{font-family:'Outfit',-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--bg-from),var(--bg-to));color:var(--text);transition:background var(--transition),color var(--transition);overflow-x:hidden}
 /* Canvas sits above the body gradient but below all app content */
@@ -1213,15 +1217,21 @@ function updateGradient(){
   document.body.classList.toggle('night',night);
   if(window.setWeatherAnim)setWeatherAnim(code,night);
   let from,to;
+  const _isSnow=(code>=71&&code<=77)||(code>=85&&code<=86);
   if(night){from=state.dark?'#0a1428':'#1a2a4a';to=state.dark?'#0a2018':'#1a3a4a'}
   // Thunderstorms: dramatic deep blue-slate
-  else if([95,96,99].includes(code)){from=state.dark?'#18283a':'#3a6888';to=state.dark?'#18302a':'#3a7880'}
-  // Rain / drizzle: deep dramatic slate-blue
-  else if(code>=61||code>=51&&code<=57){from=state.dark?'#1a2a3a':'#2d6499';to=state.dark?'#1a3030':'#3a85a8'}
+  else if(code>=95){from=state.dark?'#18283a':'#3a6888';to=state.dark?'#18302a':'#3a7880'}
+  // Snow & snow showers: crisp pale blue-white (must come before >=61 rain check)
+  else if(_isSnow){from=state.dark?'#1c2a3c':'#c8e4f6';to=state.dark?'#1e2e44':'#dff2fc'}
+  // Rain / drizzle / showers: deep dramatic slate-blue
+  else if(code>=51&&code<=82){from=state.dark?'#1a2a3a':'#2d6499';to=state.dark?'#1a3030':'#3a85a8'}
   // Cloudy / fog: rich cobalt-to-sky — premium, confident, not dull gray
   else if(code>=3&&code<=48){from=state.dark?'#1a2030':'#3a82cc';to=state.dark?'#1a2a40':'#5aaee0'}
   // Clear / partly cloudy: vivid sky-blue → vivid mint (the money shot)
   else{from=state.dark?'#1a2a3a':'#5ec7f0';to=state.dark?'#1a3a2a':'#52d4a0'}
+  // wx-dark: any condition whose background is dark needs white text in light mode
+  const _isBgDark=night||code>=95||(code>=51&&code<=82&&!_isSnow)||(code>=3&&code<=48);
+  document.body.classList.toggle('wx-dark',_isBgDark);
   document.documentElement.style.setProperty('--bg-from',from);
   document.documentElement.style.setProperty('--bg-to',to);
 }
