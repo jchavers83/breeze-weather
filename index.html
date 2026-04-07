@@ -1046,13 +1046,13 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
     <div id="nowcastBadge" class="nowcast-badge"></div>
   </div>
   <div class="radar-overlay-bar">
-    <button class="radar-overlay-btn active" onclick="setXWOverlay('radar',this)">📡 Radar</button>
-    <button class="radar-overlay-btn" onclick="setXWOverlay('satellite-geocolor',this)">🛰 Satellite</button>
-    <button class="radar-overlay-btn" onclick="setXWOverlay('precip',this)">🌧 Rain</button>
-    <button class="radar-overlay-btn" onclick="setXWOverlay('wind-speeds',this)">💨 Wind</button>
-    <button class="radar-overlay-btn" onclick="setXWOverlay('temperatures',this)">🌡 Temp</button>
-    <button class="radar-overlay-btn" onclick="setXWOverlay('humidity',this)">☁️ Clouds</button>
-    <button class="radar-overlay-btn" onclick="setXWOverlay('fsnow-depth',this)">❄️ Snow</button>
+    <button class="radar-overlay-btn active" onclick="setXWOverlay('radar',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M6.34 6.34a8 8 0 1 0 11.32 0"/><path d="M9.17 9.17a4 4 0 1 0 5.66 0"/></svg> Radar</button>
+    <button class="radar-overlay-btn" onclick="setXWOverlay('satellite-geocolor',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="m14.83 9.17 4.24-4.24M4.93 19.07l4.24-4.24"/><path d="M19.07 4.93 4.93 19.07"/><path d="M14.83 14.83 19.07 19.07M4.93 4.93l4.24 4.24"/></svg> Satellite</button>
+    <button class="radar-overlay-btn" onclick="setXWOverlay('precip',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><path d="M8 19v1m0-7v1m4 5v1m0-7v1m4 5v1m0-7v1"/></svg> Rain</button>
+    <button class="radar-overlay-btn" onclick="setXWOverlay('wind-speeds',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg> Wind</button>
+    <button class="radar-overlay-btn" onclick="setXWOverlay('temperatures',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg> Temp</button>
+    <button class="radar-overlay-btn" onclick="setXWOverlay('humidity',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/></svg> Clouds</button>
+    <button class="radar-overlay-btn" onclick="setXWOverlay('fsnow-depth',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M4.93 4.93l14.14 14.14M2 12h20M4.93 19.07 19.07 4.93"/><circle cx="12" cy="12" r="2"/></svg> Snow</button>
   </div>
 </div>
 
@@ -4093,7 +4093,7 @@ function buildSparkline(hourly,daily,now){
 })();
 
 // ===================== RADAR (XWeather maps + Leaflet) =====================
-let _xwMap=null,_xwOverlayLayer=null,_xwAnimLayers=[],_xwAnimTimer=null,_xwAnimIdx=0;
+let _xwMap=null,_xwMapDark=null,_xwOverlayLayer=null,_xwAnimLayers=[],_xwAnimTimer=null,_xwAnimIdx=0;
 
 function _loadAsset(tag,attr,val){
   return new Promise(res=>{
@@ -4120,10 +4120,19 @@ async function initRadar(){
   const lat=state.lat||39,lon=state.lon||-98,zoom=state.lat?7:4;
   await _loadAsset('link','href','https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
   await _loadAsset('script','src','https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+  // Recreate map if dark mode has changed since last open
+  if(_xwMap&&_xwMapDark!==state.dark){
+    _xwClearOverlay();
+    _xwMap.remove();
+    _xwMap=null;
+  }
   if(!_xwMap){
+    _xwMapDark=state.dark;
     _xwMap=window.L.map('xwMap',{zoomControl:true,attributionControl:false});
-    window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(_xwMap);
-    window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:19,pane:'shadowPane'}).addTo(_xwMap);
+    const base=state.dark?'dark_nolabels':'light_nolabels';
+    const labels=state.dark?'dark_only_labels':'light_only_labels';
+    window.L.tileLayer(`https://{s}.basemaps.cartocdn.com/${base}/{z}/{x}/{y}{r}.png`,{maxZoom:19}).addTo(_xwMap);
+    window.L.tileLayer(`https://{s}.basemaps.cartocdn.com/${labels}/{z}/{x}/{y}{r}.png`,{maxZoom:19,pane:'shadowPane'}).addTo(_xwMap);
   }
   _xwMap.setView([lat,lon],zoom);
   setTimeout(()=>_xwMap.invalidateSize(),150);
