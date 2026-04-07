@@ -476,9 +476,8 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 /* Radar */
 #radarView{display:none;position:fixed;inset:0;z-index:51;padding:env(safe-area-inset-top,0px) 0 0;box-sizing:border-box;flex-direction:column}
 #radarView.active{display:flex}
-#windyFrame{flex:1;min-height:0;width:100%;border:none}
-#nowcastView{display:none;flex:1;min-height:0;width:100%;position:relative}
-#nowcastMap{width:100%;height:100%}
+#xwMapView{flex:1;min-height:0;width:100%;position:relative;display:flex}
+#xwMap{width:100%;height:100%;flex:1}
 .nowcast-badge{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:#fff;padding:5px 16px;border-radius:14px;font-size:13px;font-weight:700;z-index:400;pointer-events:none;white-space:nowrap;letter-spacing:0.3px}
 .radar-overlay-bar{display:flex;gap:8px;padding:8px 14px calc(env(safe-area-inset-bottom,8px) + 68px);flex-shrink:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;background:var(--card-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--card-border)}
 .radar-overlay-bar::-webkit-scrollbar{display:none}
@@ -1042,20 +1041,18 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 </div>
 
 <div id="radarView">
-  <iframe id="windyFrame" frameborder="0" allowfullscreen></iframe>
-  <div id="nowcastView">
-    <div id="nowcastMap"></div>
+  <div id="xwMapView">
+    <div id="xwMap"></div>
     <div id="nowcastBadge" class="nowcast-badge"></div>
   </div>
   <div class="radar-overlay-bar">
-    <button class="radar-overlay-btn active" onclick="setWindyOverlay('radar',this)">📡 Past Hour</button>
-    <button class="radar-overlay-btn" onclick="setWindyNextHour(this)">⏩ Next Hour</button>
-    <button class="radar-overlay-btn" onclick="setWindyOverlay('satellite',this)">🛰 Satellite</button>
-    <button class="radar-overlay-btn" onclick="setWindyOverlay('rain',this)">🌧 Rain</button>
-    <button class="radar-overlay-btn" onclick="setWindyOverlay('wind',this)">💨 Wind</button>
-    <button class="radar-overlay-btn" onclick="setWindyOverlay('temp',this)">🌡 Temp</button>
-    <button class="radar-overlay-btn" onclick="setWindyOverlay('clouds',this)">☁️ Clouds</button>
-    <button class="radar-overlay-btn" onclick="setWindyOverlay('snowcover',this)">❄️ Snow</button>
+    <button class="radar-overlay-btn active" onclick="setXWOverlay('radar',this)">📡 Radar</button>
+    <button class="radar-overlay-btn" onclick="setXWOverlay('satellite-geocolor',this)">🛰 Satellite</button>
+    <button class="radar-overlay-btn" onclick="setXWOverlay('precip',this)">🌧 Rain</button>
+    <button class="radar-overlay-btn" onclick="setXWOverlay('wind-speeds',this)">💨 Wind</button>
+    <button class="radar-overlay-btn" onclick="setXWOverlay('temperatures',this)">🌡 Temp</button>
+    <button class="radar-overlay-btn" onclick="setXWOverlay('humidity',this)">☁️ Clouds</button>
+    <button class="radar-overlay-btn" onclick="setXWOverlay('fsnow-depth',this)">❄️ Snow</button>
   </div>
 </div>
 
@@ -1357,30 +1354,29 @@ $('#searchInput').addEventListener('input',e=>{
 
 async function searchCity(q){
   try{
-    // Open-Meteo geocoding returns population data — fetch more than we show so we can sort
-    const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=15&language=en&format=json');
+    const r=await fetch(`https://data.api.xweather.com/places/${encodeURIComponent(q)}?client_id=${XW_ID}&client_secret=${XW_SECRET}&limit=10`);
     const d=await r.json();
     const sg=$('#suggestions');
-    const raw=(d.results||[]);
-    if(!raw.length){sg.classList.remove('show');return}
-    // Sort by population, with a 2x boost for US cities so e.g. Austin TX beats a tiny foreign town
+    const raw=(d.response||[]);
+    if(!raw.length){sg.classList.remove('show');return;}
+    // Sort by population, 2x boost for US cities
     const results=raw.slice().sort((a,b)=>{
-      const sa=(a.population||0)*(a.country_code==='US'?2:1);
-      const sb=(b.population||0)*(b.country_code==='US'?2:1);
-      return sb-sa;
+      const pa=(a.profile?.population||0)*((a.place?.country||'')==='us'?2:1);
+      const pb=(b.profile?.population||0)*((b.place?.country||'')==='us'?2:1);
+      return pb-pa;
     }).slice(0,6);
     sg.innerHTML=results.map((r,i)=>{
-      const region=[r.admin1,r.country].filter(Boolean).join(', ');
-      return `<div class="suggestion-item" data-i="${i}"><strong>${r.name}</strong><small>${region}</small></div>`;
+      const region=[r.place?.stateFull||r.place?.state,r.place?.countryFull].filter(Boolean).join(', ');
+      return `<div class="suggestion-item" data-i="${i}"><strong>${r.place?.name}</strong><small>${region}</small></div>`;
     }).join('');
     sg.classList.add('show');
     sg.querySelectorAll('.suggestion-item').forEach((el,i)=>{
       el.addEventListener('click',()=>{
         const loc=results[i];
-        state.lat=loc.latitude;state.lon=loc.longitude;state.isGPS=false;
-        state.name=loc.name;
-        state.region=[loc.admin1,loc.country].filter(Boolean).join(', ');
-        state.countryCode=loc.country_code||'';
+        state.lat=loc.loc?.lat;state.lon=loc.loc?.long;state.isGPS=false;
+        state.name=loc.place?.name||'';
+        state.region=[loc.place?.stateFull||loc.place?.state,loc.place?.countryFull].filter(Boolean).join(', ');
+        state.countryCode=(loc.place?.country||'').toUpperCase();
         autoUnit(state.countryCode);
         addRecentSearch({name:state.name,region:state.region,lat:state.lat,lon:state.lon});
         sg.classList.remove('show');
@@ -1388,7 +1384,7 @@ async function searchCity(q){
         fetchWeather();
       });
     });
-  }catch(e){console.error(e)}
+  }catch(e){console.error(e);}
 }
 
 document.addEventListener('click',e=>{if(!e.target.closest('.search-wrap'))$('#suggestions').classList.remove('show')});
@@ -1414,12 +1410,12 @@ $('#btnLocate').addEventListener('click',()=>{
   navigator.geolocation.getCurrentPosition(async pos=>{
     state.lat=pos.coords.latitude;state.lon=pos.coords.longitude;state.isGPS=true;
     try{
-      const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=&count=1&language=en&format=json&latitude=${state.lat}&longitude=${state.lon}`);
-      const rr=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${state.lat}&lon=${state.lon}&format=json`);
+      const rr=await fetch(`https://data.api.xweather.com/places/${state.lat},${state.lon}?client_id=${XW_ID}&client_secret=${XW_SECRET}`);
       const rd=await rr.json();
-      state.name=rd.address?.city||rd.address?.town||rd.address?.village||'Current Location';
-      state.region=[rd.address?.state,rd.address?.country].filter(Boolean).join(', ');
-      state.countryCode=rd.address?.country_code?.toUpperCase()||'';
+      const pl=rd.response?.[0]?.place||{};
+      state.name=pl.name||'Current Location';
+      state.region=[pl.stateFull||pl.state,pl.countryFull].filter(Boolean).join(', ');
+      state.countryCode=(pl.country||'').toUpperCase();
       autoUnit(state.countryCode);
     }catch(e){state.name='Current Location';state.region=''}
     btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>';
@@ -1450,12 +1446,14 @@ $$('.nav-tab').forEach(btn=>{
       initRadar();
     }else if(tab==='settings'){
       $('#radarView').classList.remove('active');
+      _xwClearOverlay();
       $('#app').style.display='none';
       $('#settingsView').classList.add('active');
       window.scrollTo(0,0);
       renderSettings();
     }else{
       $('#radarView').classList.remove('active');
+      _xwClearOverlay();
       $('#settingsView').classList.remove('active');
       $('#app').style.display='';
       $('.header').style.display='';
@@ -4094,34 +4092,8 @@ function buildSparkline(hourly,daily,now){
   },{passive:true});
 })();
 
-// ===================== RADAR (Windy embed) =====================
-let windyOverlay='radar';
-
-function windySrc(overlay, calendarMs){
-  const lat=state.lat||39,lon=state.lon||-98,zoom=state.lat?7:4;
-  const tUnit=state.unit==='F'?encodeURIComponent('°F'):encodeURIComponent('°C');
-  const wUnit=state.unit==='F'?'mph':encodeURIComponent('km/h');
-  const cal=calendarMs||'now';
-  const radarRange=overlay==='radar'?-1:'';
-  return `https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=${zoom}&level=surface&overlay=${overlay}&product=ecmwf&menu=&message=&marker=&calendar=${cal}&pressure=&type=map&location=coordinates&detail=&metricWind=${wUnit}&metricTemp=${tUnit}&radarRange=${radarRange}`;
-}
-
-function initRadar(){
-  const frame=document.getElementById('windyFrame');
-  if(!frame.src||frame.src===window.location.href)frame.src=windySrc(windyOverlay);
-}
-
-function setWindyOverlay(overlay,btn){
-  windyOverlay=overlay;
-  document.querySelectorAll('.radar-overlay-btn').forEach(b=>b.classList.remove('active'));
-  if(btn)btn.classList.add('active');
-  _destroyNowcast();
-  document.getElementById('windyFrame').style.display='';
-  document.getElementById('windyFrame').src=windySrc(overlay);
-}
-
-// ── Nowcast map (RainViewer) — precise short-range only ──────────────────────
-let _ncMap=null,_ncLayers=[],_ncTimer=null,_ncIdx=0;
+// ===================== RADAR (XWeather maps + Leaflet) =====================
+let _xwMap=null,_xwOverlayLayer=null,_xwAnimLayers=[],_xwAnimTimer=null,_xwAnimIdx=0;
 
 function _loadAsset(tag,attr,val){
   return new Promise(res=>{
@@ -4133,67 +4105,64 @@ function _loadAsset(tag,attr,val){
   });
 }
 
-async function setWindyNextHour(btn){
-  windyOverlay='nowcast';
-  document.querySelectorAll('.radar-overlay-btn').forEach(b=>b.classList.remove('active'));
-  if(btn)btn.classList.add('active');
-
-  // Swap Windy out, show nowcast container
-  document.getElementById('windyFrame').style.display='none';
-  document.getElementById('nowcastView').style.display='flex';
-
-  // Lazy-load Leaflet
-  await _loadAsset('link','href','https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-  await _loadAsset('script','src','https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
-
-  const lat=state.lat||39,lon=state.lon||-98,zoom=state.lat?7:4;
-
-  if(!_ncMap){
-    _ncMap=window.L.map('nowcastMap',{zoomControl:true,attributionControl:false});
-    window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(_ncMap);
-    window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:19,pane:'shadowPane'}).addTo(_ncMap);
-  }
-  _ncMap.setView([lat,lon],zoom);
-  setTimeout(()=>_ncMap.invalidateSize(),150);
-
-  // Clear previous frames & timer
-  clearInterval(_ncTimer);
-  _ncLayers.forEach(f=>f.layer.remove());
-  _ncLayers=[];
-
-  try{
-    const data=await fetch('https://api.rainviewer.com/public/weather-maps.json').then(r=>r.json());
-    const past=(data.radar.past||[]).slice(-3);      // last ~30 min
-    const nowcast=(data.radar.nowcast||[]).slice(0,4); // next ~40 min
-    const frames=[...past,...nowcast];
-    if(!frames.length)return;
-
-    frames.forEach(fr=>{
-      const layer=window.L.tileLayer(
-        `https://tilecache.rainviewer.com${fr.path}/256/{z}/{x}/{y}/4/1_1.png`,
-        {opacity:0,maxZoom:19,zIndex:2}
-      ).addTo(_ncMap);
-      _ncLayers.push({layer,time:fr.time});
-    });
-
-    const badge=document.getElementById('nowcastBadge');
-    const now=Math.floor(Date.now()/1000);
-
-    function showFrame(i){
-      _ncLayers.forEach((f,j)=>f.layer.setOpacity(j===i?0.85:0));
-      const diff=Math.round((_ncLayers[i].time-now)/60);
-      badge.textContent=diff===0?'● NOW':diff>0?`▶ +${diff} min`:`◀ ${diff} min`;
-    }
-
-    _ncIdx=0;showFrame(0);
-    _ncTimer=setInterval(()=>{_ncIdx=(_ncIdx+1)%_ncLayers.length;showFrame(_ncIdx);},900);
-  }catch(e){console.warn('RainViewer nowcast error',e);}
+function _xwTileUrl(layer,offset='current'){
+  return `https://maps.api.xweather.com/${XW_ID}_${XW_SECRET}/${layer}/{z}/{x}/{y}/${offset}.png`;
 }
 
-function _destroyNowcast(){
-  clearInterval(_ncTimer);_ncTimer=null;
-  _ncLayers.forEach(f=>f.layer.remove());_ncLayers=[];
-  document.getElementById('nowcastView').style.display='none';
+function _xwClearOverlay(){
+  clearInterval(_xwAnimTimer);_xwAnimTimer=null;
+  _xwAnimLayers.forEach(f=>f.layer.remove());_xwAnimLayers=[];
+  if(_xwOverlayLayer){_xwOverlayLayer.remove();_xwOverlayLayer=null;}
+  const b=document.getElementById('nowcastBadge');if(b)b.textContent='';
+}
+
+async function initRadar(){
+  const lat=state.lat||39,lon=state.lon||-98,zoom=state.lat?7:4;
+  await _loadAsset('link','href','https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+  await _loadAsset('script','src','https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+  if(!_xwMap){
+    _xwMap=window.L.map('xwMap',{zoomControl:true,attributionControl:false});
+    window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(_xwMap);
+    window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:19,pane:'shadowPane'}).addTo(_xwMap);
+  }
+  _xwMap.setView([lat,lon],zoom);
+  setTimeout(()=>_xwMap.invalidateSize(),150);
+  setXWOverlay('radar',document.querySelector('.radar-overlay-btn.active'));
+}
+
+function setXWOverlay(overlay,btn){
+  if(!_xwMap)return;
+  document.querySelectorAll('.radar-overlay-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  _xwClearOverlay();
+  if(overlay==='radar'){
+    // Animated loop: 3 past frames + current + 3 forecast frames
+    const frames=[
+      {o:'-60minutes',label:'60 min ago'},
+      {o:'-30minutes',label:'30 min ago'},
+      {o:'-10minutes',label:'10 min ago'},
+      {o:'current',   label:'● Now'},
+      {o:'+20minutes',label:'+20 min'},
+      {o:'+40minutes',label:'+40 min'},
+      {o:'+60minutes',label:'+60 min'},
+    ];
+    frames.forEach(({o,label})=>{
+      const layer=window.L.tileLayer(_xwTileUrl('radar-global',o),{opacity:0,maxZoom:19,zIndex:2});
+      layer.addTo(_xwMap);
+      _xwAnimLayers.push({layer,label});
+    });
+    _xwAnimIdx=0;_xwShowFrame(0);
+    _xwAnimTimer=setInterval(()=>{_xwAnimIdx=(_xwAnimIdx+1)%_xwAnimLayers.length;_xwShowFrame(_xwAnimIdx);},900);
+  }else{
+    _xwOverlayLayer=window.L.tileLayer(_xwTileUrl(overlay),{opacity:0.85,maxZoom:19,zIndex:2});
+    _xwOverlayLayer.addTo(_xwMap);
+  }
+}
+
+function _xwShowFrame(i){
+  _xwAnimLayers.forEach((f,j)=>f.layer.setOpacity(j===i?0.85:0));
+  const b=document.getElementById('nowcastBadge');
+  if(b)b.textContent=_xwAnimLayers[i]?.label||'';
 }
 
 // ── Curated reviews — edit this array to control what's displayed ──────────
