@@ -144,15 +144,15 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-/* Cyan top → blue-teal bottom: original freshness, no mint */
---bg-from:#5ec7f0;--bg-to:#38c8a0;
+/* 3-stop depth gradient: sky → mid → deep, revealed by scroll */
+--bg-sky:#bde8f8;--bg-mid:#5ec7f0;--bg-deep:#28b87a;
 --card-bg:rgba(255,255,255,0.66);--card-border:rgba(255,255,255,0.88);
 --text:#182838;--text-secondary:#2e5060;--text-tertiary:#5a7e90;
 --accent:#1a90e4;--card-radius:20px;--card-blur:20px;
 --transition:0.4s cubic-bezier(.4,0,.2,1);
 }
 .dark{
---bg-from:#1a2a3a;--bg-to:#1a3a2a;
+--bg-sky:#0e1828;--bg-mid:#1a2a4a;--bg-deep:#0c2018;
 --card-bg:rgba(255,255,255,0.10);--card-border:rgba(255,255,255,0.16);
 --text:#e8f0f8;--text-secondary:#b8cedd;--text-tertiary:#8aaec4;
 --accent:#4ab8f8;
@@ -171,7 +171,8 @@
 .wx-dark:not(.dark) .search-wrap input{background:rgba(255,255,255,0.18);border-color:rgba(255,255,255,0.28);color:#f0f6fc}
 .wx-dark:not(.dark) .search-wrap input::placeholder{color:rgba(240,246,252,0.50)}
 html{font-family:'Outfit',-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--bg-from),var(--bg-to));color:var(--text);transition:background var(--transition),color var(--transition);overflow-x:hidden}
+html,body{background:transparent}
+body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(--transition);overflow-x:hidden}
 /* Canvas sits above the body gradient but below all app content */
 #weatherCanvas{z-index:1!important}
 .app{max-width:1200px;margin:0 auto;padding:env(safe-area-inset-top,16px) 16px calc(env(safe-area-inset-bottom,16px) + 70px) 16px;opacity:1;transition:opacity 0.3s;position:relative;z-index:2}
@@ -760,6 +761,8 @@ body{min-height:100vh;min-height:100dvh;background:linear-gradient(135deg,var(--
 </style>
 </head>
 <body>
+<!-- Full-screen gradient layer — sits behind canvas and all content -->
+<div id="bgLayer" style="position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,var(--bg-sky,#bde8f8),var(--bg-mid,#5ec7f0) 50%,var(--bg-deep,#28b87a));background-size:100% 200%;background-position:0 0%;transition:background 0.6s ease;"></div>
 <canvas id="weatherCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
 <div id="pullIndicator">
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="pullIcon"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -1218,22 +1221,47 @@ function updateGradient(){
   if(window.setWeatherAnim)setWeatherAnim(code,night);
   let from,to;
   const _isSnow=(code>=71&&code<=77)||(code>=85&&code<=86);
-  if(night){from=state.dark?'#0a1428':'#1a2a4a';to=state.dark?'#0a2018':'#1a3a4a'}
-  // Thunderstorms: dramatic deep blue-slate
-  else if(code>=95){from=state.dark?'#18283a':'#3a6888';to=state.dark?'#18302a':'#3a7880'}
-  // Snow & snow showers: crisp pale blue-white (must come before >=61 rain check)
-  else if(_isSnow){from=state.dark?'#1c2a3c':'#c8e4f6';to=state.dark?'#1e2e44':'#dff2fc'}
-  // Rain / drizzle / showers: deep dramatic slate-blue
-  else if(code>=51&&code<=82){from=state.dark?'#1a2a3a':'#2d6499';to=state.dark?'#1a3030':'#3a85a8'}
-  // Cloudy / fog: rich cobalt-to-sky — premium, confident, not dull gray
-  else if(code>=3&&code<=48){from=state.dark?'#1a2030':'#3a82cc';to=state.dark?'#1a2a40':'#5aaee0'}
-  // Clear / partly cloudy: vivid sky-blue → vivid mint (the money shot)
-  else{from=state.dark?'#1a2a3a':'#5ec7f0';to=state.dark?'#1a3a2a':'#52d4a0'}
-  // wx-dark: any condition whose background is dark needs white text in light mode
+  let sky,mid,deep;
+  if(night){
+    // Night — deep navy atmosphere, subtly deepening
+    sky=state.dark?'#08101c':'#182040';
+    mid=state.dark?'#0a1528':'#1a2a4a';
+    deep=state.dark?'#060c14':'#0e1828';
+  }else if(code>=95){
+    // Thunderstorm — dark dramatic slate, like a bruised sky
+    sky=state.dark?'#0e1420':'#3e6478';
+    mid=state.dark?'#18283a':'#3a6888';
+    deep=state.dark?'#0c1018':'#182838';
+  }else if(_isSnow){
+    // Snow — clean white-to-icy-blue, bright and crisp
+    sky=state.dark?'#182234':'#eef6fc';
+    mid=state.dark?'#1c2a3c':'#c8e4f6';
+    deep=state.dark?'#141e2c':'#90c0e0';
+  }else if(code>=51&&code<=82){
+    // Rain/drizzle/showers — deep slate-blue dropping into navy
+    sky=state.dark?'#0e1a28':'#4e82b4';
+    mid=state.dark?'#1a2a3a':'#2d6499';
+    deep=state.dark?'#0a1420':'#162840';
+  }else if(code>=3&&code<=48){
+    // Overcast/fog — rich cobalt dropping into premium deep blue
+    sky=state.dark?'#121820':'#7ab8dc';
+    mid=state.dark?'#1a2030':'#3a82cc';
+    deep=state.dark?'#0e1428':'#1e4898';
+  }else{
+    // Clear/partly cloudy — the money shot: pale sky → vivid blue → rich teal-green
+    sky=state.dark?'#0e1828':'#bde8f8';
+    mid=state.dark?'#1a2a4a':'#5ec7f0';
+    deep=state.dark?'#0c2018':'#28b87a';
+  }
+  // wx-dark: dark-background conditions need white text in light mode
   const _isBgDark=night||code>=95||(code>=51&&code<=82&&!_isSnow)||(code>=3&&code<=48);
   document.body.classList.toggle('wx-dark',_isBgDark);
-  document.documentElement.style.setProperty('--bg-from',from);
-  document.documentElement.style.setProperty('--bg-to',to);
+  document.documentElement.style.setProperty('--bg-sky',sky);
+  document.documentElement.style.setProperty('--bg-mid',mid);
+  document.documentElement.style.setProperty('--bg-deep',deep);
+  // Push new gradient directly to bgLayer so inline style stays in sync
+  const _bg=document.getElementById('bgLayer');
+  if(_bg){_bg.style.backgroundImage=`linear-gradient(to bottom,${sky},${mid} 50%,${deep})`;_bg.style.backgroundSize='100% 200%';}
 }
 
 // Recent searches
@@ -1321,14 +1349,24 @@ document.addEventListener('click',e=>{if(!e.target.closest('.search-wrap'))$('#s
 
 // Locate
 // Auto-hide nav on scroll down, reveal on scroll up
+// Also drives the scroll-depth gradient effect on bgLayer
 (function(){
   let lastY=0,ticking=false;
   window.addEventListener('scroll',()=>{
     if(!ticking){requestAnimationFrame(()=>{
       const y=window.scrollY;
+      // Nav hide/show
       const nav=document.getElementById('mobileNav');
       if(nav){nav.classList.toggle('nav-hidden',y>lastY&&y>60);}
-      lastY=y;ticking=false;
+      lastY=y;
+      // Scroll-depth gradient: shift bgLayer background-position as you scroll
+      const bg=document.getElementById('bgLayer');
+      if(bg){
+        const max=Math.max(1,document.documentElement.scrollHeight-window.innerHeight);
+        const ratio=Math.min(1,Math.max(0,y/max));
+        bg.style.backgroundPosition=`0 ${(ratio*100).toFixed(2)}%`;
+      }
+      ticking=false;
     });ticking=true;}
   },{passive:true});
 })();
