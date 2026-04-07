@@ -1165,86 +1165,6 @@ const WMO_CODES={
   99:{desc:'Thunderstorm + Hail',day:'thunderstorms-day-rain',night:'thunderstorms-night-rain',emoji:'⛈️'},
 };
 
-// ── XWeather API credentials ────────────────────────────────────────────────
-const XW_ID='Sk3ZP8TlrzjWOiyh7FdR8';
-const XW_SECRET='mWTYZGiOHBcyrGoA207FbkKPHBb1n2jldiVoB5Yg';
-
-// Maps XWeather weatherPrimaryCoded strings → WMO integer codes so all
-// existing render / summary / gradient logic works with zero changes.
-function xwCodeToWMO(coded){
-  if(!coded)return 0;
-  const p=coded.split(':').pop()||'';
-  if(p==='CL')return 0;
-  if(p==='FW')return 1;
-  if(p==='SC')return 2;
-  if(p==='BK'||p==='OV')return 3;
-  if(p==='F'||p==='FR'||p==='H'||p==='HZ'||p==='BR')return 45;
-  if(p==='ZF')return 48;
-  if(p==='L')return 53;
-  if(p==='ZL')return 56;
-  if(p==='ZR')return 66;
-  if(p==='R')return 63;
-  if(p==='RW')return 80;
-  if(p==='S')return 73;
-  if(p==='SW')return 85;
-  if(p==='IP'||p==='RS'||p==='WM')return 77;
-  if(p==='T'||p==='TW')return 95;
-  if(p==='A')return 96;
-  if(p==='BS'||p==='BD')return 75;
-  return 0;
-}
-
-// Converts XWeather API responses into an Open-Meteo-compatible data object
-// so render() and all downstream functions work unchanged.
-function normalizeXWeather(condData,dailyData,hourlyData){
-  const ob=condData.response?.[0]?.ob||{};
-  const dp=dailyData.response?.[0]?.periods||[];
-  const hp=hourlyData.response?.[0]?.periods||[];
-  function utcOff(iso){
-    if(!iso)return 0;
-    const m=iso.match(/([+-])(\d{2}):(\d{2})$/);
-    return m?(m[1]==='+'?1:-1)*(parseInt(m[2])*3600+parseInt(m[3])*60):0;
-  }
-  return{
-    utc_offset_seconds:utcOff(dp[0]?.dateTimeISO||hp[0]?.dateTimeISO||''),
-    current:{
-      temperature_2m:ob.tempC??20,
-      relative_humidity_2m:ob.humidity??50,
-      apparent_temperature:ob.feelslikeC??ob.tempC??20,
-      weather_code:xwCodeToWMO(ob.weatherPrimaryCoded),
-      wind_speed_10m:ob.windSpeedKPH??0,
-      wind_direction_10m:ob.windDirDEG??0,
-      wind_gusts_10m:ob.windGustKPH??0,
-      is_day:ob.isDay!=null?(ob.isDay?1:0):(dp[0]?.sunriseISO&&dp[0]?.sunsetISO?(new Date()>=new Date(dp[0].sunriseISO)&&new Date()<=new Date(dp[0].sunsetISO)?1:0):1),
-      visibility:(ob.visibilityKM??10)*1000,
-      cloud_cover:ob.sky??0,
-      dew_point_2m:ob.dewpointC??10,
-      uv_index:ob.uvi??0
-    },
-    daily:{
-      time:dp.map(p=>p.dateTimeISO?.slice(0,10)||''),
-      temperature_2m_max:dp.map(p=>p.maxTempC??p.tempC??20),
-      temperature_2m_min:dp.map(p=>p.minTempC??p.tempC??10),
-      weather_code:dp.map(p=>xwCodeToWMO(p.weatherPrimaryCoded)),
-      sunrise:dp.map(p=>p.sunriseISO||''),
-      sunset:dp.map(p=>p.sunsetISO||''),
-      precipitation_probability_max:dp.map(p=>p.pop??0),
-      precipitation_sum:dp.map(p=>p.precipMM??0),
-      uv_index_max:dp.map(p=>p.uvi??0)
-    },
-    hourly:{
-      time:hp.map(p=>p.dateTimeISO?.slice(0,16)||''),
-      temperature_2m:hp.map(p=>p.tempC??20),
-      weather_code:hp.map(p=>xwCodeToWMO(p.weatherPrimaryCoded)),
-      precipitation_probability:hp.map(p=>p.pop??0),
-      precipitation:hp.map(p=>p.precipMM??0),
-      wind_speed_10m:hp.map(p=>p.windSpeedKPH??0),
-      wind_direction_10m:hp.map(p=>p.windDirDEG??0),
-      cloud_cover:hp.map(p=>p.sky??0),
-      relative_humidity_2m:hp.map(p=>p.humidity??50)
-    }
-  };
-}
 
 let state={lat:null,lon:null,name:'',region:'',country:'',countryCode:'',dark:false,unit:'F',data:null,openDay:0,refreshTimer:null,activeAlerts:[],airQuality:null};
 
@@ -1354,29 +1274,29 @@ $('#searchInput').addEventListener('input',e=>{
 
 async function searchCity(q){
   try{
-    const r=await fetch(`https://data.api.xweather.com/places/${encodeURIComponent(q)}?client_id=${XW_ID}&client_secret=${XW_SECRET}&limit=10`);
+    const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=10&language=en&format=json`);
     const d=await r.json();
     const sg=$('#suggestions');
-    const raw=(d.response||[]);
+    const raw=(d.results||[]);
     if(!raw.length){sg.classList.remove('show');return;}
     // Sort by population, 2x boost for US cities
     const results=raw.slice().sort((a,b)=>{
-      const pa=(a.profile?.population||0)*((a.place?.country||'')==='us'?2:1);
-      const pb=(b.profile?.population||0)*((b.place?.country||'')==='us'?2:1);
+      const pa=(a.population||0)*((a.country_code||'')==='US'?2:1);
+      const pb=(b.population||0)*((b.country_code||'')==='US'?2:1);
       return pb-pa;
     }).slice(0,6);
     sg.innerHTML=results.map((r,i)=>{
-      const region=[r.place?.stateFull||r.place?.state,r.place?.countryFull].filter(Boolean).join(', ');
-      return `<div class="suggestion-item" data-i="${i}"><strong>${r.place?.name}</strong><small>${region}</small></div>`;
+      const region=[r.admin1,r.country].filter(Boolean).join(', ');
+      return `<div class="suggestion-item" data-i="${i}"><strong>${r.name}</strong><small>${region}</small></div>`;
     }).join('');
     sg.classList.add('show');
     sg.querySelectorAll('.suggestion-item').forEach((el,i)=>{
       el.addEventListener('click',()=>{
         const loc=results[i];
-        state.lat=loc.loc?.lat;state.lon=loc.loc?.long;state.isGPS=false;
-        state.name=loc.place?.name||'';
-        state.region=[loc.place?.stateFull||loc.place?.state,loc.place?.countryFull].filter(Boolean).join(', ');
-        state.countryCode=(loc.place?.country||'').toUpperCase();
+        state.lat=loc.latitude;state.lon=loc.longitude;state.isGPS=false;
+        state.name=loc.name||'';
+        state.region=[loc.admin1,loc.country].filter(Boolean).join(', ');
+        state.countryCode=(loc.country_code||'').toUpperCase();
         autoUnit(state.countryCode);
         addRecentSearch({name:state.name,region:state.region,lat:state.lat,lon:state.lon});
         sg.classList.remove('show');
@@ -1410,12 +1330,12 @@ $('#btnLocate').addEventListener('click',()=>{
   navigator.geolocation.getCurrentPosition(async pos=>{
     state.lat=pos.coords.latitude;state.lon=pos.coords.longitude;state.isGPS=true;
     try{
-      const rr=await fetch(`https://data.api.xweather.com/places/${state.lat},${state.lon}?client_id=${XW_ID}&client_secret=${XW_SECRET}`);
+      const rr=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${state.lat}&lon=${state.lon}`);
       const rd=await rr.json();
-      const pl=rd.response?.[0]?.place||{};
-      state.name=pl.name||'Current Location';
-      state.region=[pl.stateFull||pl.state,pl.countryFull].filter(Boolean).join(', ');
-      state.countryCode=(pl.country||'').toUpperCase();
+      const addr=rd.address||{};
+      state.name=addr.city||addr.town||addr.village||addr.hamlet||rd.name||'Current Location';
+      state.region=[addr.state,addr.country].filter(Boolean).join(', ');
+      state.countryCode=(addr.country_code||'').toUpperCase();
       autoUnit(state.countryCode);
     }catch(e){state.name='Current Location';state.region='';autoUnit(state.countryCode||'US');}
     btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>';
@@ -1964,16 +1884,11 @@ async function fetchWeather(){
   const app=$('#app');
   app.classList.add('loading');
   try{
-    const _loc=`${state.lat},${state.lon}`;
-    const _cr=`client_id=${XW_ID}&client_secret=${XW_SECRET}`;
-    const [_cR,_dR,_hR]=await Promise.all([
-      fetch(`https://data.api.xweather.com/conditions/${_loc}?${_cr}&fields=tempC,feelslikeC,dewpointC,humidity,windSpeedKPH,windDirDEG,windGustKPH,weatherPrimaryCoded,isDay,visibilityKM,sky,uvi`),
-      fetch(`https://data.api.xweather.com/forecasts/${_loc}?${_cr}&filter=day&limit=5`),
-      fetch(`https://data.api.xweather.com/forecasts/${_loc}?${_cr}&filter=1hr&limit=48`)
-    ]);
-    const [_cD,_dD,_hD]=await Promise.all([_cR.json(),_dR.json(),_hR.json()]);
-    if(!_cD.success)throw new Error(_cD.error?.description||'Weather data unavailable');
-    state.data=normalizeXWeather(_cD,_dD,_hD);
+    const _url=`https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover,visibility,dew_point_2m,uv_index&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_direction_10m,cloud_cover,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,precipitation_probability_max,uv_index_max&timezone=auto&forecast_days=5`;
+    const _r=await fetch(_url);
+    const _d=await _r.json();
+    if(_d.error)throw new Error(_d.reason||'Weather data unavailable');
+    state.data=_d;
     state.openDay=0;
     render();
     updateGradient();
@@ -2307,12 +2222,11 @@ function aqiInfo(aqi){
 async function fetchAirQuality(){
   if(state.lat===null)return;
   try{
-    const _loc=`${state.lat},${state.lon}`;
-    const r=await fetch(`https://data.api.xweather.com/airquality/${_loc}?client_id=${XW_ID}&client_secret=${XW_SECRET}&fields=aqi,category,dominant`);
+    const r=await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${state.lat}&longitude=${state.lon}&current=us_aqi&timezone=auto`);
     if(!r.ok)return;
     const d=await r.json();
-    if(!d.success||!d.response?.[0])return;
-    state.airQuality={us_aqi:d.response[0].aqi||0};
+    if(d.error||d.current?.us_aqi==null)return;
+    state.airQuality={us_aqi:d.current.us_aqi||0};
     _updateAqiCard();
   }catch(e){}
 }
@@ -4092,7 +4006,7 @@ function buildSparkline(hourly,daily,now){
   },{passive:true});
 })();
 
-// ===================== RADAR (XWeather maps + Leaflet) =====================
+// ===================== RADAR (Leaflet + RainViewer) =====================
 let _xwMap=null,_xwMapDark=null,_xwOverlayLayer=null,_xwAnimLayers=[],_xwAnimTimer=null,_xwAnimIdx=0;
 
 function _loadAsset(tag,attr,val){
@@ -4103,10 +4017,6 @@ function _loadAsset(tag,attr,val){
     else{el.rel='stylesheet';el.href=val;res();}
     document.head.appendChild(el);
   });
-}
-
-function _xwTileUrl(layer,offset='current'){
-  return `https://maps.api.xweather.com/${XW_ID}_${XW_SECRET}/${layer}/{z}/{x}/{y}/${offset}.png`;
 }
 
 function _xwClearOverlay(){
@@ -4122,9 +4032,7 @@ async function initRadar(){
   await _loadAsset('script','src','https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
   // Recreate map if dark mode has changed since last open
   if(_xwMap&&_xwMapDark!==state.dark){
-    _xwClearOverlay();
-    _xwMap.remove();
-    _xwMap=null;
+    _xwClearOverlay();_xwMap.remove();_xwMap=null;
   }
   if(!_xwMap){
     _xwMapDark=state.dark;
@@ -4139,32 +4047,38 @@ async function initRadar(){
   setXWOverlay('radar',document.querySelector('.radar-overlay-btn.active'));
 }
 
-function setXWOverlay(overlay,btn){
+async function setXWOverlay(overlay,btn){
   if(!_xwMap)return;
   document.querySelectorAll('.radar-overlay-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   _xwClearOverlay();
   if(overlay==='radar'){
-    // Animated loop: 3 past frames + current + 3 forecast frames
-    const frames=[
-      {o:'-60minutes',label:'60 min ago'},
-      {o:'-30minutes',label:'30 min ago'},
-      {o:'-10minutes',label:'10 min ago'},
-      {o:'current',   label:'● Now'},
-      {o:'+20minutes',label:'+20 min'},
-      {o:'+40minutes',label:'+40 min'},
-      {o:'+60minutes',label:'+60 min'},
-    ];
-    frames.forEach(({o,label})=>{
-      const layer=window.L.tileLayer(_xwTileUrl('radar-global',o),{opacity:0,maxZoom:19,zIndex:2});
-      layer.addTo(_xwMap);
-      _xwAnimLayers.push({layer,label});
-    });
-    _xwAnimIdx=0;_xwShowFrame(0);
-    _xwAnimTimer=setInterval(()=>{_xwAnimIdx=(_xwAnimIdx+1)%_xwAnimLayers.length;_xwShowFrame(_xwAnimIdx);},900);
+    try{
+      const rv=await fetch('https://api.rainviewer.com/public/weather-maps.json').then(r=>r.json());
+      const host=rv.host||'https://tilecache.rainviewer.com';
+      const nowTs=Math.floor(Date.now()/1000);
+      const past=(rv.radar?.past||[]).slice(-4);
+      const nowcast=(rv.radar?.nowcast||[]).slice(0,3);
+      const frames=[...past,...nowcast];
+      frames.forEach(({time,path})=>{
+        const diffMin=Math.round((time-nowTs)/60);
+        const label=Math.abs(diffMin)<=5?'● Now':(diffMin<0?`${diffMin}min`:`+${diffMin}min`);
+        const url=`${host}${path}/256/{z}/{x}/{y}/2/1_1.png`;
+        const layer=window.L.tileLayer(url,{opacity:0,maxZoom:19,zIndex:2,crossOrigin:true});
+        layer.addTo(_xwMap);
+        _xwAnimLayers.push({layer,label});
+      });
+      _xwAnimIdx=0;_xwShowFrame(0);
+      _xwAnimTimer=setInterval(()=>{_xwAnimIdx=(_xwAnimIdx+1)%_xwAnimLayers.length;_xwShowFrame(_xwAnimIdx);},900);
+    }catch(e){console.error('RainViewer radar error',e);}
   }else{
-    _xwOverlayLayer=window.L.tileLayer(_xwTileUrl(overlay),{opacity:0.85,maxZoom:19,zIndex:2});
-    _xwOverlayLayer.addTo(_xwMap);
+    // Additional overlays available in XWeather launch version
+    const b=document.getElementById('nowcastBadge');
+    if(b)b.textContent='Radar only in this version';
+    setTimeout(()=>{if(b)b.textContent='';},2500);
+    document.querySelectorAll('.radar-overlay-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelector('.radar-overlay-btn')?.classList.add('active');
+    setXWOverlay('radar',document.querySelector('.radar-overlay-btn'));
   }
 }
 
