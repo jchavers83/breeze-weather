@@ -1184,6 +1184,97 @@ const WMO_CODES={
   99:{desc:'Thunderstorm + Hail',day:'thunderstorms-day-rain',night:'thunderstorms-night-rain',emoji:'⛈️'},
 };
 
+const WAPI_KEY='8b90a885f818451385530906260804';
+
+function wapiCodeToWMO(code){
+  if(code===1000)return 0;
+  if(code===1003)return 2;
+  if(code===1006)return 3;
+  if(code===1009)return 3;
+  if(code===1030)return 45;
+  if(code===1063||code===1180||code===1183)return 61;
+  if(code===1066||code===1210||code===1213)return 71;
+  if(code===1069||code===1249)return 77;
+  if(code===1072||code===1168||code===1171)return 56;
+  if(code===1087)return 95;
+  if(code===1114||code===1216||code===1219)return 73;
+  if(code===1117||code===1222||code===1225)return 75;
+  if(code===1135||code===1147)return 45;
+  if(code===1150||code===1153)return 51;
+  if(code===1168)return 56;
+  if(code===1186||code===1189)return 63;
+  if(code===1192||code===1195)return 65;
+  if(code===1198||code===1201)return 66;
+  if(code===1204||code===1207)return 77;
+  if(code===1240)return 80;
+  if(code===1243||code===1246)return 82;
+  if(code===1252)return 77;
+  if(code===1255||code===1258)return 85;
+  if(code===1261||code===1264)return 77;
+  if(code===1273||code===1276)return 95;
+  if(code===1279||code===1282)return 95;
+  return 0;
+}
+
+function _wapiAstro(date,timeStr){
+  if(!timeStr)return '';
+  const [time,ampm]=timeStr.split(' ');
+  let [h,m]=time.split(':').map(Number);
+  if(ampm==='PM'&&h!==12)h+=12;
+  if(ampm==='AM'&&h===12)h=0;
+  return `${date}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
+}
+
+function normalizeWeatherAPI(d){
+  const _utcNow=Math.floor(Date.now()/1000);
+  const _localEpoch=d.location.localtime_epoch;
+  const _rawOffset=_localEpoch-_utcNow;
+  const utc_offset_seconds=Math.round(_rawOffset/900)*900;
+
+  const fp=d.forecast.forecastday;
+  const hp=fp.flatMap(day=>day.hour);
+
+  return {
+    utc_offset_seconds,
+    current:{
+      temperature_2m:d.current.temp_c,
+      relative_humidity_2m:d.current.humidity,
+      apparent_temperature:d.current.feelslike_c,
+      weather_code:wapiCodeToWMO(d.current.condition.code),
+      wind_speed_10m:d.current.wind_kph,
+      wind_direction_10m:d.current.wind_degree,
+      wind_gusts_10m:d.current.wind_gust_kph,
+      is_day:d.current.is_day,
+      visibility:(d.current.vis_km||10)*1000,
+      cloud_cover:d.current.cloud,
+      dew_point_2m:d.current.dewpoint_c,
+      uv_index:d.current.uv,
+      precipitation:0
+    },
+    daily:{
+      time:fp.map(p=>p.date),
+      temperature_2m_max:fp.map(p=>p.day.maxtemp_c),
+      temperature_2m_min:fp.map(p=>p.day.mintemp_c),
+      weather_code:fp.map(p=>wapiCodeToWMO(p.day.condition.code)),
+      sunrise:fp.map(p=>_wapiAstro(p.date,p.astro.sunrise)),
+      sunset:fp.map(p=>_wapiAstro(p.date,p.astro.sunset)),
+      precipitation_probability_max:fp.map(p=>p.day.daily_chance_of_rain||0),
+      precipitation_sum:fp.map(p=>p.day.totalprecip_mm||0),
+      uv_index_max:fp.map(p=>p.day.uv||0)
+    },
+    hourly:{
+      time:hp.map(h=>h.time.replace(' ','T')),
+      temperature_2m:hp.map(h=>h.temp_c),
+      weather_code:hp.map(h=>wapiCodeToWMO(h.condition.code)),
+      precipitation_probability:hp.map(h=>h.chance_of_rain||0),
+      precipitation:hp.map(h=>h.precip_mm||0),
+      wind_speed_10m:hp.map(h=>h.wind_kph||0),
+      wind_direction_10m:hp.map(h=>h.wind_degree||0),
+      cloud_cover:hp.map(h=>h.cloud||0),
+      relative_humidity_2m:hp.map(h=>h.humidity||50)
+    }
+  };
+}
 
 let state={lat:null,lon:null,name:'',region:'',country:'',countryCode:'',dark:false,unit:'F',data:null,openDay:0,refreshTimer:null,activeAlerts:[],airQuality:null};
 
@@ -1944,16 +2035,20 @@ async function fetchWeather(){
   const app=$('#app');
   app.classList.add('loading');
   try{
-    const _url=`https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover,visibility,dew_point_2m,uv_index&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_direction_10m,cloud_cover,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,precipitation_probability_max,uv_index_max&timezone=auto&forecast_days=5`;
+    const _url=`https://api.weatherapi.com/v1/forecast.json?key=${WAPI_KEY}&q=${state.lat},${state.lon}&days=5&aqi=yes&alerts=no`;
     const _r=await fetch(_url);
     const _d=await _r.json();
-    if(_d.error)throw new Error(_d.reason||'Weather data unavailable');
-    state.data=_d;
+    if(_d.error)throw new Error(_d.error.message||'Weather data unavailable');
+    state.data=normalizeWeatherAPI(_d);
+    if(_d.current?.air_quality){
+      const aqi=_d.current.air_quality['us-epa-index'];
+      const epaToAqi=[0,25,75,125,175,250,350];
+      state.airQuality={us_aqi:epaToAqi[Math.min(6,Math.max(0,aqi))]||0};
+    }
     state.openDay=0;
     render();
     updateGradient();
     fetchAlerts();
-    fetchAirQuality();
     $('#mobileNav').style.display='';
     renderSavedBar();
     // Animate hero temperature
@@ -2300,15 +2395,7 @@ function aqiInfo(aqi){
 }
 
 async function fetchAirQuality(){
-  if(state.lat===null)return;
-  try{
-    const r=await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${state.lat}&longitude=${state.lon}&current=us_aqi&timezone=auto`);
-    if(!r.ok)return;
-    const d=await r.json();
-    if(d.error||d.current?.us_aqi==null)return;
-    state.airQuality={us_aqi:d.current.us_aqi||0};
-    _updateAqiCard();
-  }catch(e){}
+  // AQI now loaded as part of fetchWeather() via WeatherAPI
 }
 
 function _updateAqiCard(){
