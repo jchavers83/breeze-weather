@@ -2286,40 +2286,57 @@ function render(){
 }
 
 // ── OneSignal alerts button helpers ─────────────────────────────────────────
-function _setAlertsBtnsOn(){
+function _alertsOptedIn(){
+  try{
+    const os=window.OneSignal;
+    if(!os||!os.Notifications||!os.Notifications.permission)return false;
+    // optedIn may be on User.PushSubscription (v16) or Notifications (v15)
+    if(os.User&&os.User.PushSubscription)return os.User.PushSubscription.optedIn!==false;
+    return true; // permission granted, no optedIn property → assume on
+  }catch(e){return false;}
+}
+
+function _refreshAlertsBtn(){
+  const on=_alertsOptedIn();
   const btn=document.getElementById('alertsBtn');
   if(btn){
-    btn.classList.add('active');
+    btn.classList.toggle('active',on);
     const lbl=btn.querySelector('.alerts-label');
     if(lbl)lbl.textContent=`Alerts for ${state.name||'your city'}`;
     const sub=btn.querySelector('.alerts-sublabel');
-    if(sub)sub.textContent='Push notifications on';
+    if(sub)sub.textContent=on?'Severe weather \xb7 Daily forecast':'Tap to enable push alerts';
     // Re-copy icon in case it wasn't ready on first render
     const ac=document.getElementById('alertsIconCanvas');
     const lc=document.getElementById('landingIcon');
     if(ac&&lc){ac.getContext('2d').drawImage(lc,0,0,80,80);}
   }
   const sb=document.getElementById('alertsBtnSettings');
-  if(sb){sb.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> On';}
+  if(sb){sb.innerHTML=on?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> On':'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Enable';}
   const sl=document.getElementById('alertsBtnSettingsLabel');
-  if(sl){sl.textContent='Alerts enabled';}
+  if(sl){sl.textContent=on?'Alerts enabled':'Enable alerts';}
 }
+
+// Keep old name as alias (used in render)
+function _setAlertsBtnsOn(){_refreshAlertsBtn();}
 
 function _initAlertsBtn(){
   if(window.OneSignalDeferred){
     OneSignalDeferred.push(async function(OneSignal){
-      if(OneSignal.Notifications.permission) _setAlertsBtnsOn();
+      _refreshAlertsBtn();
     });
   }
 }
 
 function handleAlertsBtn(){
-  if(window.OneSignalDeferred){
-    OneSignalDeferred.push(async function(OneSignal){
+  if(!window.OneSignalDeferred)return;
+  OneSignalDeferred.push(async function(OneSignal){
+    const permission=OneSignal.Notifications.permission;
+    const ps=OneSignal.User&&OneSignal.User.PushSubscription;
+    if(!permission){
+      // No permission yet — request it
       await OneSignal.Notifications.requestPermission();
-      const granted=OneSignal.Notifications.permission;
-      if(granted){
-        _setAlertsBtnsOn();
+      if(OneSignal.Notifications.permission){
+        if(ps)await ps.optIn();
         if(state.name){
           OneSignal.User.addTag('city',state.name.toLowerCase());
           OneSignal.User.addTag('timezone',Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -2327,8 +2344,15 @@ function handleAlertsBtn(){
           OneSignal.User.addTag('lon',String(state.lon||''));
         }
       }
-    });
-  }
+    } else if(ps&&ps.optedIn===false){
+      // Permission granted but opted out — opt back in
+      await ps.optIn();
+    } else {
+      // Currently on — soft opt out (pauses delivery, doesn't revoke permission)
+      if(ps)await ps.optOut();
+    }
+    _refreshAlertsBtn();
+  });
 }
 
 function uvLabel(uv){
