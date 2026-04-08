@@ -801,9 +801,10 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
   </header>
   <div id="savedBar" class="saved-bar" style="display:none"></div>
 
+  <!-- landingIcon canvas kept hidden — used for PWA icon, alerts icon + settings logo. Must live OUTSIDE #content so render() doesn't wipe it. -->
+  <canvas id="landingIcon" width="260" height="260" style="display:none;position:absolute;pointer-events:none"></canvas>
+
   <div id="content">
-    <!-- landingIcon canvas kept hidden — used for PWA icon + settings logo -->
-    <canvas id="landingIcon" width="260" height="260" style="display:none"></canvas>
     <div class="mkt-landing">
 
       <!-- ── HERO ── -->
