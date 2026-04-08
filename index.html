@@ -3117,8 +3117,20 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
 
   const parts=[];
 
-  // ── PART 1: Core condition ──────────────────────────────────
-  if(stormHours.length>0){
+  // ── Current-condition anchors: always know what's happening RIGHT NOW ────────
+  const _curRainCodes=[51,53,55,56,57,61,63,65,66,67,80,81,82];
+  const _curSnowCodes=[71,73,75,77,85,86];
+  const nowIsStorm=[95,96,99].includes(currentCode);
+  const nowIsSnow=_curSnowCodes.includes(currentCode);
+  const nowIsHeavyRain=[63,65,66,67,81,82].includes(currentCode);
+  const nowIsRain=_curRainCodes.includes(currentCode);
+  // Back half of the window (hours 6-12): does it clear out?
+  const late6h=hours.slice(6);
+  const clearingLater=late6h.length>0&&late6h.filter(h=>[0,1,2].includes(h.code)).length>=late6h.length*0.55&&late6h.filter(h=>h.precip>35).length<2;
+  const clearingAfterRain=(nowIsRain||nowIsHeavyRain)&&clearingLater;
+
+  // ── PART 1: Core condition — ANCHORED to current reality first ───────────────
+  if(nowIsStorm||stormHours.length>0){
     parts.push(pick([
       isNight?`Thunderstorms overnight. Charge your phone and stay put.`:`Thunderstorms in the mix ${timeframe}. If you can hear it, you're close enough — go inside.`,
       isNight?`The sky is having a whole moment tonight. Inside is the right answer.`:`Storms today. Cancel, reschedule, or get very wet. Those are the options.`,
@@ -3128,7 +3140,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       `Real storm energy ${timeframe}. Not a drill. Inside is the correct location.`,
       isNight?`Pouring and stormy out there tonight. The bed wins.`:`Thunderstorms ${timeframe}. The weather made your decision for you — you're welcome.`,
     ]));
-  }else if(snowHours.length>2){
+  }else if(nowIsSnow||snowHours.length>2){
     parts.push(pick([
       isNight?`Snowing overnight, down to ${minTDisp}\u00b0. The morning commute is already plotting against you.`:`Snow moving in at ${minTDisp}\u00b0. The roads will have opinions. Drive accordingly.`,
       `${minTDisp}\u00b0 and snowing. Everything takes longer, looks prettier, and feels slightly more dangerous. Plan for all three.`,
@@ -3137,7 +3149,27 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       `It's snowing. Your schedule would like a word with the weather, but the weather isn't listening.`,
       `${minTDisp}\u00b0 and snow. The kind of day that makes your commute an adventure nobody signed up for.`,
     ]));
-  }else if(heavyRain.length>2){
+  }else if(nowIsHeavyRain&&clearingAfterRain){
+    // Raining hard RIGHT NOW but clearing later — lead with reality, end with hope
+    parts.push(isNight?pick([
+      `It's really coming down right now — but it clears out before morning.`,
+      `Pouring at the moment. The good news: it improves overnight.`,
+      `Heavy rain right now, lighter conditions moving in later.`,
+    ]):pick([
+      `It's raining hard right now. Should start clearing out later — patience is the whole strategy.`,
+      `Coming down out there at the moment. The back half of the day looks much better.`,
+      city?`${city} is soaked right now. Better conditions moving in later.`:`Heavy rain right now, but it clears up later.`,
+      `Currently a full-send rainstorm. Clears out later — hold tight.`,
+    ]));
+  }else if(nowIsRain&&clearingAfterRain){
+    // Raining now but clearing later
+    parts.push(pick([
+      `It's raining right now, but it clears up later.`,
+      `Wet at the moment — better conditions moving in later on.`,
+      city?`${city} is damp right now. It dries out later.`:`Rain right now, clearing later. The second half wins.`,
+      `Drizzling at the moment. Hang tight — it improves.`,
+    ]));
+  }else if(nowIsHeavyRain||heavyRain.length>2){
     parts.push(isNight?pick([
       `It's really coming down tonight. Perfect excuse to do absolutely nothing.`,
       `Pouring outside — crack a window, fall asleep to it. You've earned it.`,
@@ -3152,10 +3184,15 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       `Heavy rain on the way. Waterproof your plans or cancel them.`,
       city?`${city}'s getting a proper soaking ${timeframe}. The umbrella earns its keep today.`:`Heavy rain incoming. The umbrella earns its keep today.`,
     ]));
-  }else if(rainHours.length>0){
-    const rainStart=rainHours[0].h;
-    const when=rainStart<nowHour?'later tonight':rainStart<6?'overnight':rainStart<12?'tomorrow morning':rainStart<17?'this afternoon':rainStart<20?'this evening':'tonight';
-    parts.push(pick([
+  }else if(nowIsRain||rainHours.length>0){
+    const rainStart=nowIsRain?null:(rainHours[0]?.h??null);
+    const when=rainStart===null?'right now':rainStart<nowHour?'later tonight':rainStart<6?'overnight':rainStart<12?'this morning':rainStart<17?'this afternoon':rainStart<20?'this evening':'tonight';
+    parts.push(nowIsRain?pick([
+      `It's raining right now. Umbrella is non-negotiable.`,
+      `Rain is coming down at the moment. That umbrella in your bag earns its keep today.`,
+      `Currently raining outside. Plan accordingly.`,
+      city?`It's raining in ${city} right now. The umbrella wins.`:`Rain right now — the outdoor plans are on hold.`,
+    ]):pick([
       `Showers possible ${when}. Classic "should I bring the umbrella" weather. Yes. Bring the umbrella.`,
       `Rain moving in around ${when}. That umbrella in your car? Now's the time.`,
       `A little rain ${when} — not a washout, just annoying without an umbrella.`,
@@ -3163,7 +3200,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       `Showers sliding in ${when}. Not catastrophic. Just the universe testing you a little.`,
       `Umbrella situation ${when}. The weather app is nudging you. Take the hint.`,
     ]));
-  }else if(clearHours.length>hours.length*0.7){
+  }else if(clearHours.length>hours.length*0.7&&!nowIsRain&&!nowIsStorm&&!nowIsSnow){
     if(isPredomNight){
       if(minT>65){
         parts.push(pick([
