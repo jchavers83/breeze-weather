@@ -265,7 +265,9 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .sun-mid{text-align:center}
 .sun-mid .sun-label{font-size:11px;color:var(--text-tertiary);text-transform:uppercase;font-weight:600;letter-spacing:0.3px}
 .sun-mid .sun-time{font-size:16px;font-weight:600;margin-top:4px}
-.sun-mid .sun-moon{font-size:11px;color:var(--text-tertiary);margin-top:5px;font-weight:500}
+.sun-mid .sun-moon{margin-top:8px}
+.moon-emoji-lg{font-size:40px;line-height:1;margin-bottom:4px}
+.moon-name-lbl{font-size:11px;color:var(--text-tertiary);font-weight:500}
 
 /* Wind compass */
 .wind-card{display:flex;align-items:center;gap:20px;padding:20px;margin-bottom:16px}
@@ -1243,9 +1245,12 @@ function _wapiAstro(date,timeStr){
 
 function normalizeWeatherAPI(d){
   const _utcNow=Math.floor(Date.now()/1000);
-  const _localEpoch=d.location.localtime_epoch;
-  const _rawOffset=_localEpoch-_utcNow;
-  const utc_offset_seconds=Math.round(_rawOffset/900)*900;
+  // Derive UTC offset from the localtime STRING (e.g. "2026-04-08 17:00") vs real UTC.
+  // WeatherAPI's localtime_epoch is a real UTC epoch, so subtracting it from Date.now gives ~0.
+  // Instead: parse localtime as if UTC, then diff with actual UTC to get the true city offset.
+  const _localStr=(d.location?.localtime||'').replace(' ','T');
+  const _localAsUtcSec=_localStr?Math.floor(new Date(_localStr+':00Z').getTime()/1000):_utcNow;
+  const utc_offset_seconds=Math.round((_localAsUtcSec-_utcNow)/900)*900;
 
   const fp=d.forecast.forecastday;
   const hp=fp.flatMap(day=>day.hour);
@@ -2181,7 +2186,6 @@ function render(){
       <div class="summary-text">${summary}</div>
     </div>
     ${buildWearCard(c,daily,hourly,now)}
-    ${buildPrecipTimeline(hourly,now,night,state.dark)}
     ${buildTopHourly(hourly,daily,now)}
     <div class="sun-bar glass">
       <div class="sun-item">
@@ -2192,7 +2196,7 @@ function render(){
       <div class="sun-mid">
         <div class="sun-label">Daylight</div>
         <div class="sun-time">${daylightDuration(daily.sunrise[0],daily.sunset[0])}</div>
-        ${(()=>{const mp=getMoonPhase(now);return`<div class="sun-moon" style="display:flex;align-items:center;justify-content:center;gap:5px;margin-top:3px"><span style="width:24px;height:24px;flex-shrink:0">${wIcon(mp.icon)}</span>${mp.name}</div>`;})()}
+        ${(()=>{const mp=getMoonPhase(now);return`<div class="sun-moon"><div class="moon-emoji-lg">${mp.emoji}</div><div class="moon-name-lbl">${mp.name}</div></div>`;})()}
       </div>
       <div class="sun-item">
         <div class="sun-icon">${wIcon('sunset')}</div>
@@ -2815,60 +2819,63 @@ function shareWeather(){
 
 function buildWearCard(c,daily,hourly,now){
   const feelsF=toF(c.apparent_temperature);
+  const highF=toF(daily.temperature_2m_max[0]);
   const isAfterSunset=c.is_day===0;
+  const isMorning=!isAfterSunset&&now.getHours()<12;
+  // Temperature swing: if it's cool now but warming up significantly by afternoon
+  const swing=isMorning&&(highF-feelsF)>=18;
   let clothing='',quip='',clothingEmoji='';
-  if(feelsF<25){
-    clothing='Heavy coat, hat, and gloves';
-    quip="You're basically dressing for an arctic expedition. Godspeed.";
+  if(feelsF<20){
+    clothing='Heavy coat, thermal underlayers, hat, scarf, mittens, and warm boots';
+    quip=`Arctic-level cold out there. ❄️ Layer everything. Don't skip the mittens — fingers will thank you. 🧤`;
     clothingEmoji='❄️🧥🧤';
   }else if(feelsF<35){
-    clothing='Heavy coat';
-    quip="The coat is non-negotiable. Your future self will thank you.";
-    clothingEmoji='🥶🧥';
+    clothing='Heavy coat, hat, gloves, and warm boots';
+    quip=`It's genuinely cold. 🥶 Heavy coat is non-negotiable — your future self will thank you. Toss on a hat and gloves before you head out. 🧥`;
+    clothingEmoji='🥶🧥🧤';
   }else if(feelsF<45){
-    clothing='Coat';
-    quip="Coat weather. No, really — don't talk yourself out of it.";
-    clothingEmoji='🧥';
+    clothing=swing?`Coat to start — but pack layers, it'll warm up to ${Math.round(highF)}° by afternoon`:'Coat, hat, and consider ear warmers';
+    quip=swing?`Cool morning, but it opens up nicely. 🌤️ A coat now, maybe just a hoodie by noon.`:`Coat weather. 🧥 Don't talk yourself out of it — a hat and ear warmers wouldn't hurt either.`;
+    clothingEmoji=swing?'🧥🌤️':'🧥🧢';
   }else if(feelsF<55){
-    clothing='Light jacket';
-    quip="That light jacket is about to earn its keep.";
-    clothingEmoji='🍂🧥';
+    clothing=swing?`Light jacket now — by afternoon you'll be down to a t-shirt (high ${Math.round(highF)}°)`:'Light jacket or fleece';
+    quip=swing?`Classic "coat in the morning, t-shirt by lunch" day. 🌡️ Pack something you can tie around your waist.`:`That light jacket is about to earn its keep. 🍂`;
+    clothingEmoji=swing?'🧥☀️':'🍂🧥';
   }else if(feelsF<65){
-    clothing='Light layers';
-    quip=isAfterSunset?"Nice evening for a walk. Grab a light layer just in case.":"Peak layering season. The good kind of weather problem to have.";
-    clothingEmoji=isAfterSunset?'🌙👕':'🌤️👕';
+    clothing=swing?`Light hoodie or long sleeves to start — shorts-worthy by ${Math.round(highF)}° this afternoon`:'Light layers — a hoodie or long sleeves';
+    quip=swing?`Nice warm-up today. 🌤️ Start with a light layer, you'll be shedding it before long.`:(isAfterSunset?'Nice evening for a walk. 🌙 Grab a hoodie just in case.':'Perfect layering weather. The good kind of weather problem. 🌤️');
+    clothingEmoji=swing?'👕☀️':(isAfterSunset?'🌙👕':'🌤️👕');
   }else if(feelsF<75){
-    clothing='T-shirt weather';
-    quip=isAfterSunset?"Perfect evening weather. Get outside while it lasts.":"The sweet spot. Enjoy it — it won't last forever.";
+    clothing='T-shirt and jeans, or shorts if you run warm';
+    quip=isAfterSunset?`Perfect evening out. 🌙 T-shirt weather — get outside while it lasts.`:`The sweet spot. ☀️ T-shirt weather. Enjoy it — it won't stick around forever.`;
     clothingEmoji=isAfterSunset?'🌙👕':'☀️👕';
   }else if(feelsF<88){
-    clothing='Dress light';
-    quip=isAfterSunset?"Warm evening — light clothes, windows open, good night for it.":"Sun's out. Keep it breezy, keep it easy.";
+    clothing='Shorts, a light tee, and flip-flops if you've got them';
+    quip=isAfterSunset?`Still warm out tonight. 🌙 Keep it light — windows open, good night for it.`:`Sun's out, keep it breezy. 🌞 Shorts and flip-flops are the right call today.`;
     clothingEmoji=isAfterSunset?'🌙🩴':'🌞🩴';
   }else{
-    clothing='As little as socially acceptable';
-    quip=isAfterSunset?"Still hot out. Hydrate and find the AC.":"It's hot. Just accept it. Hydrate aggressively.";
+    clothing='As little as socially acceptable — think shorts and a tank top';
+    quip=isAfterSunset?`Still hot out. 🥵 Find the AC, stay hydrated.`:`It is hot. Like, really hot. 🥵 Shorts, tank top, cold drink in hand. Sunscreen mandatory.`;
     clothingEmoji='🥵🌡️';
   }
   const extras=[];
   const extraEmojis=[];
   const nowMs=now.getTime();
   for(let i=0;i<hourly.time.length;i++){
-    if(new Date(hourly.time[i]).getTime()>=nowMs&&new Date(hourly.time[i]).getTime()<nowMs+6*3600000){
+    const t=new Date(hourly.time[i]).getTime();
+    if(t>=nowMs&&t<nowMs+6*3600000){
       if((hourly.precipitation_probability[i]||0)>=50){extras.push('umbrella');extraEmojis.push('☂️');break;}
     }
   }
   const _sunsetFrac=(()=>{const p=(daily.sunset[0].split('T')[1]||'');const[h,m]=p.split(':');return parseInt(h)+(parseInt(m)||0)/60;})();
   const _hrsToSunset=Math.max(0,_sunsetFrac-now.getHours()-now.getMinutes()/60);
   if(daily.uv_index_max[0]>=6&&c.is_day===1&&_hrsToSunset>2){extras.push('sunscreen');extraEmojis.push('🕶️');}
-  if(c.wind_speed_10m>32){extras.push('windproof layer');extraEmojis.push('💨');}
-  let sentence=clothing;
-  if(extras.length===1)sentence+=` — bring a ${extras[0]}`;
-  else if(extras.length===2)sentence+=` — bring a ${extras[0]} and ${extras[1]}`;
-  else if(extras.length>2)sentence+=` — ${extras.slice(0,-1).join(', ')}, and ${extras[extras.length-1]}`;
-  sentence+='.';
-  const allEmojis=clothingEmoji+(extraEmojis.length?' '+extraEmojis.join(''):'');
-  return`<div class="wear-card glass"><div class="wear-label">What to Wear</div><div class="wear-text">${sentence}</div><div class="wear-quip">${quip} <span style="font-size:16px;vertical-align:middle">${allEmojis}</span></div></div>`;
+  if(c.wind_speed_10m>32){extras.push('a windproof layer');extraEmojis.push('💨');}
+  let extrasLine='';
+  if(extras.length===1)extrasLine=` Don't forget ${extras[0]}. ${extraEmojis[0]}`;
+  else if(extras.length===2)extrasLine=` Grab ${extras[0]} and ${extras[1]}. ${extraEmojis.join('')}`;
+  else if(extras.length>2)extrasLine=` Also grab ${extras.slice(0,-1).join(', ')}, and ${extras[extras.length-1]}. ${extraEmojis.join('')}`;
+  return`<div class="wear-card glass"><div class="wear-label">What to Wear</div><div class="wear-text">${clothing}.</div><div class="wear-quip">${quip}${extrasLine}</div></div>`;
 }
 
 function buildPrecipTimeline(hourly,now,isNight,isDark){
