@@ -2126,8 +2126,7 @@ function render(){
   const visibility=(c.visibility!=null?c.visibility/1000:10); // API returns meters, convert to km
   // Use real-time uv_index (not daily max) so evening/morning shows accurate low UV
   const curUV=c.uv_index!=null?c.uv_index:0;
-  const uvEmo=(!c.is_day||curUV<1)?'':curUV<=3?'\u{1F324}\uFE0F':curUV<=5?'\u{1F60E}':'\u{1F9F4}';
-  const uvSub=!c.is_day?'None \u00b7 Nighttime':curUV<0.5?(effectiveCode>=51?'None \u00b7 Rain blocking UV':effectiveCode>=3?'None \u00b7 Cloud cover':'None \u00b7 Minimal'):(uvEmo?uvEmo+' ':'')+uvLabel(curUV);
+  const uvSub=!c.is_day?'None \u00b7 Nighttime':curUV<0.5?(effectiveCode>=51?'None \u00b7 Rain blocking UV':effectiveCode>=3?'None \u00b7 Cloud cover':'None \u00b7 Minimal'):uvLabel(curUV);
   const summary=generateSummary(hourly,daily,effectiveCode,now.getHours()+now.getMinutes()/60,daily.sunrise[0],daily.sunset[0],{feelsLike:c.apparent_temperature,tempActual:c.temperature_2m,dewPoint:c.dew_point_2m,humidity:c.relative_humidity_2m,isDay:c.is_day});
   const vibeTag=getVibeTag(hourly,daily,effectiveCode,now,daily.sunrise[0],daily.sunset[0]);
 
@@ -2279,7 +2278,7 @@ function render(){
         <div class="sub">${windUnit()} · ${dirStr(c.wind_direction_10m)}</div>
       </div>
       <div class="detail-card glass">
-        <div class="detail-icon" style="background:linear-gradient(135deg,${curUV<3?'#0ea5e9,#38bdf8':curUV<6?'#f59e0b,#d97706':curUV<8?'#f97316,#ea580c':curUV<11?'#ef4444,#dc2626':'#a855f7,#7c3aed'})">${wIcon(curUV<1?'uv-index':`uv-index-${Math.min(Math.max(1,Math.ceil(curUV)),11)}`)}</div>
+        <div class="detail-icon" style="background:linear-gradient(135deg,${curUV<3?'#0ea5e9,#38bdf8':curUV<6?'#f59e0b,#d97706':curUV<8?'#f97316,#ea580c':curUV<11?'#ef4444,#dc2626':'#a855f7,#7c3aed'})">${wIcon('uv-index')}</div>
         <div class="label">UV Index</div>
         <div class="value">${Math.round(curUV)}</div>
         <div class="uv-bar-wrap"><div class="uv-cursor" style="left:${Math.min(curUV/12*100,100)}%"></div></div>
