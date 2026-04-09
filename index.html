@@ -426,7 +426,7 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .summary-card .vibe-tag{font-size:16px;font-weight:800;margin-bottom:10px;letter-spacing:-0.3px;line-height:1.2;color:var(--text);display:flex;align-items:center;gap:8px}
 .summary-card .vibe-tag .vibe-text{color:var(--text)}
 .vibe-wi{width:32px;height:32px;flex-shrink:0}
-.detail-icon{width:56px;height:56px;margin:0 auto 10px;border-radius:14px;padding:10px;flex-shrink:0}
+.detail-icon{width:56px;height:56px;margin:0 auto 10px;border-radius:14px;padding:6px;flex-shrink:0}
 .detail-icon img{width:100%;height:100%;display:block}
 .detail-section-title{font-size:13px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;padding:0 4px}
 .summary-card .summary-text{font-size:14px;line-height:1.55;font-weight:500;color:var(--text)}
@@ -1261,9 +1261,9 @@ function normalizeWeatherAPI(d){
       relative_humidity_2m:d.current.humidity,
       apparent_temperature:d.current.feelslike_c,
       weather_code:wapiCodeToWMO(d.current.condition.code),
-      wind_speed_10m:d.current.wind_kph,
-      wind_direction_10m:d.current.wind_degree,
-      wind_gusts_10m:d.current.wind_gust_kph,
+      wind_speed_10m:d.current.wind_kph||0,
+      wind_direction_10m:d.current.wind_degree||0,
+      wind_gusts_10m:d.current.wind_gust_kph||0,
       is_day:d.current.is_day,
       visibility:(d.current.vis_km||10)*1000,
       cloud_cover:d.current.cloud,
@@ -1305,6 +1305,7 @@ function toF(c){return c*9/5+32}
 function formatTemp(c){return state.unit==='F'?Math.round(toF(c)):Math.round(c)}
 function tempUnit(){return state.unit}
 function windSpeed(kmh){
+  if(kmh==null||isNaN(kmh))return 0;
   const wu=localStorage.getItem(SETTINGS_KEYS.windUnit)||'auto';
   if(wu==='mph'||(wu==='auto'&&state.unit==='F'))return Math.round(kmh*0.621371);
   if(wu==='knots')return Math.round(kmh*0.539957);
@@ -2266,7 +2267,7 @@ function render(){
     <div class="detail-section-title">Conditions</div>
     <div class="detail-grid">
       <div class="detail-card glass">
-        <div class="detail-icon" style="background:linear-gradient(135deg,#3b82f6,#06b6d4)">${wIcon('raindrops')}</div>
+        <div class="detail-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">${wIcon('raindrops')}</div>
         <div class="label">Humidity</div>
         <div class="value">${c.relative_humidity_2m}%</div>
         <div class="sub">${c.dew_point_2m!=null?dewComfort(c.dew_point_2m):''}</div>
@@ -2278,14 +2279,15 @@ function render(){
         <div class="sub">${windUnit()} · ${dirStr(c.wind_direction_10m)}</div>
       </div>
       <div class="detail-card glass">
+        <div class="detail-icon" style="background:linear-gradient(135deg,${curUV<3?'#0ea5e9,#38bdf8':curUV<6?'#f59e0b,#d97706':curUV<8?'#f97316,#ea580c':curUV<11?'#ef4444,#dc2626':'#a855f7,#7c3aed'})">${wIcon(curUV<1?'uv-index':`uv-index-${Math.min(Math.max(1,Math.ceil(curUV)),11)}`)}</div>
         <div class="label">UV Index</div>
-        <div class="detail-icon" style="width:56px;height:56px;margin:6px auto 10px;padding:10px;background:linear-gradient(135deg,${curUV<3?'#22c55e,#16a34a':curUV<6?'#f59e0b,#d97706':curUV<8?'#f97316,#ea580c':curUV<11?'#ef4444,#dc2626':'#a855f7,#7c3aed'})">${wIcon(curUV<1?'uv-index':`uv-index-${Math.min(Math.max(1,Math.ceil(curUV)),11)}`)}</div>
+        <div class="value">${curUV}</div>
         <div class="uv-bar-wrap"><div class="uv-cursor" style="left:${Math.min(curUV/12*100,100)}%"></div></div>
         <div class="sub">${uvSub}</div>
       </div>
       <div id="aqiCard" class="detail-card glass"></div>
       <div class="detail-card glass">
-        <div class="detail-icon" style="background:linear-gradient(135deg,#94a3b8,#64748b)">${wIcon(c.cloud_cover<=10?(night?'clear-night':'clear-day'):c.cloud_cover<=60?(night?'partly-cloudy-night':'partly-cloudy-day'):(night?'overcast-night':'overcast-day'))}</div>
+        <div class="detail-icon" style="background:linear-gradient(135deg,#60a5fa,#818cf8)">${wIcon(c.cloud_cover<=10?(night?'clear-night':'clear-day'):c.cloud_cover<=60?(night?'partly-cloudy-night':'partly-cloudy-day'):(night?'overcast-night':'overcast-day'))}</div>
         <div class="label">Cloud Cover</div>
         <div class="value" style="font-size:18px">${c.cloud_cover}%</div>
         <div class="sub">${c.cloud_cover<=10?'Clear':c.cloud_cover<=25?'Mostly clear':c.cloud_cover<=60?'Partly cloudy':c.cloud_cover<=85?'Mostly cloudy':'Overcast'}</div>
@@ -2296,7 +2298,7 @@ function render(){
           const illumSub=mp.illum<=5?'Dark sky \u00b7 great for stargazing':mp.illum<=25?'Slim crescent \u00b7 mostly dark':mp.illum<=50?'Quarter lit \u00b7 soft shadows':mp.illum<=75?'Mostly lit \u00b7 noticeable glow':mp.illum<=95?'Nearly full \u00b7 bright night':'Full moon \u00b7 bright as it gets';
           return`<div class="detail-card glass"><div class="detail-icon" style="background:linear-gradient(135deg,#a855f7,#6366f1)">${wIcon(mp.icon)}</div><div class="label">Moon</div><div class="value" style="font-size:18px">${mp.illum}%</div><div class="sub">${mp.name}</div><div class="sub" style="margin-top:2px">${illumSub}</div></div>`;
         }
-        return`<div class="detail-card glass"><div class="detail-icon" style="background:linear-gradient(135deg,#14b8a6,#0ea5e9)">${wIcon('haze')}</div><div class="label">Visibility</div><div class="value" style="font-size:18px">${visUnit(visibility)}</div><div class="sub">${visibility>=16?'Excellent':visibility>=8?'Good':visibility>=2?'Moderate':'Poor'}</div></div>`;
+        return`<div class="detail-card glass"><div class="detail-icon" style="background:linear-gradient(135deg,#06b6d4,#0284c7)">${wIcon('fog')}</div><div class="label">Visibility</div><div class="value" style="font-size:18px">${visUnit(visibility)}</div><div class="sub">${visibility>=16?'Excellent':visibility>=8?'Good':visibility>=2?'Moderate':'Poor'}</div></div>`;
       })()}
     </div>
     <div class="refresh-bar">Auto-refreshes every 10 min &middot; Updated ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
@@ -2524,7 +2526,7 @@ function _updateAqiCard(){
   if(!info)return;
   const aqiScore=Math.max(1,Math.min(10,Math.ceil(aqi/30)));
   const aqiIcon=aqiScore<=3?'clear-day':aqiScore<=6?'haze':aqiScore<=8?'dust':'dust-wind';
-  const aqiGradient=aqiScore<=3?'linear-gradient(135deg,#22c55e,#16a34a)':aqiScore<=6?'linear-gradient(135deg,#f59e0b,#d97706)':aqiScore<=8?'linear-gradient(135deg,#f97316,#ea580c)':'linear-gradient(135deg,#ef4444,#dc2626)';
+  const aqiGradient=aqiScore<=3?'linear-gradient(135deg,#14b8a6,#0d9488)':aqiScore<=6?'linear-gradient(135deg,#f59e0b,#d97706)':aqiScore<=8?'linear-gradient(135deg,#f97316,#ea580c)':'linear-gradient(135deg,#ef4444,#dc2626)';
   card.innerHTML=`<div class="detail-icon" style="background:${aqiGradient}">${wIcon(aqiIcon)}</div><div class="label">Air Quality</div><div class="value">${aqiScore}</div><div class="aqi-bar-wrap"><div class="aqi-cursor" style="left:${Math.min(info.pct,99)}%"></div></div><div class="sub">${info.tip}</div>`;
 }
 
