@@ -2278,7 +2278,7 @@ function render(){
         <div class="sub">${windUnit()} · ${dirStr(c.wind_direction_10m)}</div>
       </div>
       <div class="detail-card glass">
-        <div class="detail-icon" style="background:linear-gradient(135deg,${curUV<3?'#0ea5e9,#38bdf8':curUV<6?'#f59e0b,#d97706':curUV<8?'#f97316,#ea580c':curUV<11?'#ef4444,#dc2626':'#a855f7,#7c3aed'})">${wIcon('uv-index')}</div>
+        <div class="detail-icon" style="background:linear-gradient(135deg,${curUV<3?'#0ea5e9,#38bdf8':curUV<6?'#f59e0b,#d97706':curUV<8?'#f97316,#ea580c':curUV<11?'#ef4444,#dc2626':'#a855f7,#7c3aed'})">${wIcon('clear-day')}</div>
         <div class="label">UV Index</div>
         <div class="value">${Math.round(curUV)}</div>
         <div class="uv-bar-wrap"><div class="uv-cursor" style="left:${Math.min(curUV/12*100,100)}%"></div></div>
@@ -2294,8 +2294,7 @@ function render(){
       ${(()=>{
         if(night){
           const mp=getMoonPhase(now);
-          const illumSub=mp.illum<=5?'Dark sky \u00b7 great for stargazing':mp.illum<=25?'Slim crescent \u00b7 mostly dark':mp.illum<=50?'Quarter lit \u00b7 soft shadows':mp.illum<=75?'Mostly lit \u00b7 noticeable glow':mp.illum<=95?'Nearly full \u00b7 bright night':'Full moon \u00b7 bright as it gets';
-          return`<div class="detail-card glass"><div class="detail-icon" style="background:linear-gradient(135deg,#a855f7,#6366f1)">${wIcon(mp.icon)}</div><div class="label">Moon</div><div class="value" style="font-size:18px">${mp.illum}%</div><div class="sub">${mp.name}</div><div class="sub" style="margin-top:2px">${illumSub}</div></div>`;
+          return`<div class="detail-card glass"><div class="detail-icon" style="background:linear-gradient(135deg,#a855f7,#6366f1)">${wIcon(mp.icon)}</div><div class="label">Moon</div><div class="value" style="font-size:18px">${mp.illum}%</div><div class="sub">${mp.name}</div></div>`;
         }
         return`<div class="detail-card glass"><div class="detail-icon" style="background:linear-gradient(135deg,#06b6d4,#0284c7)">${wIcon('fog-day')}</div><div class="label">Visibility</div><div class="value" style="font-size:18px">${visUnit(visibility)}</div><div class="sub">${visibility>=16?'Excellent':visibility>=8?'Good':visibility>=2?'Moderate':'Poor'}</div></div>`;
       })()}
