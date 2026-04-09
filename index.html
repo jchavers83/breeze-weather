@@ -561,7 +561,8 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .alert-opt{display:flex;align-items:center;gap:12px;padding:11px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;transition:background 0.15s}
 .alert-opt:active{background:rgba(0,0,0,0.04)}
 .alert-opt+.alert-opt{border-top:1px solid var(--card-border)}
-.alert-opt-icon{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.alert-opt-icon{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.14)}
+.alert-opt-icon img{width:24px;height:24px;display:block}
 .alert-opt-text{flex:1;min-width:0}
 .alert-opt-label{font-size:13px;font-weight:600;color:var(--text)}
 .alert-opt-hint{font-size:11px;color:var(--text-secondary);margin-top:1px}
@@ -2154,7 +2155,7 @@ function render(){
       </div>
       <div class="alerts-options${_alertsOptedIn()?' visible':''}" id="alertsOptions">
         <div class="alert-opt${_getAlertPref('morning')?' on':''}" data-alert-pref="morning" onclick="event.stopPropagation();_toggleAlertPref('morning')">
-          <div class="alert-opt-icon">${wIcon('clear-day')}</div>
+          <div class="alert-opt-icon" style="background:linear-gradient(135deg,#f59e0b,#f97316)">${wIcon('clear-day')}</div>
           <div class="alert-opt-text">
             <div class="alert-opt-label">Morning forecast</div>
             <div class="alert-opt-hint">7 AM daily</div>
@@ -2162,7 +2163,7 @@ function render(){
           <div class="alert-opt-mini-toggle"></div>
         </div>
         <div class="alert-opt${_getAlertPref('evening')?' on':''}" data-alert-pref="evening" onclick="event.stopPropagation();_toggleAlertPref('evening')">
-          <div class="alert-opt-icon">${wIcon('clear-night')}</div>
+          <div class="alert-opt-icon" style="background:linear-gradient(135deg,#4f46e5,#7c3aed)">${wIcon('clear-night')}</div>
           <div class="alert-opt-text">
             <div class="alert-opt-label">Evening look-ahead</div>
             <div class="alert-opt-hint">9 PM daily</div>
@@ -2170,7 +2171,7 @@ function render(){
           <div class="alert-opt-mini-toggle"></div>
         </div>
         <div class="alert-opt${_getAlertPref('severe')?' on':''}" data-alert-pref="severe" onclick="event.stopPropagation();_toggleAlertPref('severe')">
-          <div class="alert-opt-icon">${wIcon('thunderstorms-extreme')}</div>
+          <div class="alert-opt-icon" style="background:linear-gradient(135deg,#ef4444,#f97316)">${wIcon('thunderstorms')}</div>
           <div class="alert-opt-text">
             <div class="alert-opt-label">Severe weather</div>
             <div class="alert-opt-hint">Real-time · Tornado, flood &amp; storm warnings</div>
