@@ -2267,13 +2267,13 @@ function render(){
     <div class="detail-section-title">Conditions</div>
     <div class="detail-grid">
       <div class="detail-card glass">
-        <div class="detail-icon" style="background:linear-gradient(135deg,#f43f5e,#db2777)">${wIcon('raindrops')}</div>
+        <div class="detail-icon" style="background:linear-gradient(135deg,#0284c7,#0c4a6e)"><img src="https://basmilius.github.io/weather-icons/production/fill/all/raindrops.svg" style="width:100%;height:100%;display:block;filter:brightness(0) invert(1)"></div>
         <div class="label">Humidity</div>
         <div class="value">${c.relative_humidity_2m}%</div>
         <div class="sub">${c.dew_point_2m!=null?dewComfort(c.dew_point_2m):''}</div>
       </div>
       <div class="detail-card glass">
-        <div class="detail-icon" style="background:linear-gradient(135deg,#0284c7,#0c4a6e)">${wIcon((()=>{const kph=c.wind_speed_10m;if(kph<2)return'wind-beaufort-0';if(kph<6)return'wind-beaufort-1';if(kph<12)return'wind-beaufort-2';if(kph<20)return'wind-beaufort-3';if(kph<29)return'wind-beaufort-4';if(kph<39)return'wind-beaufort-5';if(kph<50)return'wind-beaufort-6';if(kph<62)return'wind-beaufort-7';if(kph<75)return'wind-beaufort-8';if(kph<89)return'wind-beaufort-9';if(kph<103)return'wind-beaufort-10';if(kph<117)return'wind-beaufort-11';return'wind-beaufort-12';})())}</div>
+        <div class="detail-icon" style="background:linear-gradient(135deg,#0284c7,#0c4a6e)">${wIcon('wind')}</div>
         <div class="label">Wind</div>
         <div class="value">${windSpeed(c.wind_speed_10m)}</div>
         <div class="sub">${windUnit()} · ${dirStr(c.wind_direction_10m)}</div>
