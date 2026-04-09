@@ -237,12 +237,16 @@ jobs:
                   print(f"  Title: {title}")
                   print(f"  Body:  {body}")
 
-                  # Send via OneSignal — filter by city tag.
-                  # If no subscribers have this city tag, OneSignal sends 0 notifications (not an error).
+                  # Send via OneSignal — filter by city tag + morning alerts preference.
+                  # alerts_morning != "0" catches both "1" (explicitly on) and users who
+                  # subscribed before per-type prefs existed (tag not set → excluded by !=,
+                  # but _initAlertsBtn backfills the tag on next app load).
                   payload = {
                       "app_id": APP_ID,
                       "filters": [
-                          {"field": "tag", "key": "city", "relation": "=", "value": city}
+                          {"field": "tag", "key": "city", "relation": "=", "value": city},
+                          {"operator": "AND"},
+                          {"field": "tag", "key": "alerts_morning", "relation": "!=", "value": "0"}
                       ],
                       "headings": {"en": title},
                       "contents": {"en": body},
@@ -482,7 +486,9 @@ jobs:
                   payload = {
                       "app_id": APP_ID,
                       "filters": [
-                          {"field": "tag", "key": "city", "relation": "=", "value": city}
+                          {"field": "tag", "key": "city", "relation": "=", "value": city},
+                          {"operator": "AND"},
+                          {"field": "tag", "key": "alerts_evening", "relation": "!=", "value": "0"}
                       ],
                       "headings": {"en": title},
                       "contents": {"en": body},
@@ -898,7 +904,9 @@ jobs:
                           payload = {
                               "app_id": APP_ID,
                               "filters": [
-                                  {"field": "tag", "key": "city", "relation": "=", "value": city}
+                                  {"field": "tag", "key": "city", "relation": "=", "value": city},
+                                  {"operator": "AND"},
+                                  {"field": "tag", "key": "alerts_severe", "relation": "!=", "value": "0"}
                               ],
                               "headings": {"en": notif_title},
                               "contents": {"en": notif_body},
@@ -928,7 +936,9 @@ jobs:
                   try:
                       payload = {
                           "app_id": APP_ID,
-                          "included_segments": ["All"],
+                          "filters": [
+                              {"field": "tag", "key": "alerts_severe", "relation": "!=", "value": "0"}
+                          ],
                           "headings": {"en": notif_title},
                           "contents": {"en": broadcast_body},
                           "priority": 10,
