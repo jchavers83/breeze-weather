@@ -755,8 +755,9 @@ jobs:
           try:
               nws_data = fetch_json(nws_url, headers=NWS_HEADERS)
           except Exception as e:
-              print(f"ERROR fetching NWS alerts: {e}")
-              sys.exit(1)
+              print(f"NWS fetch failed (timeout or network): {e}")
+              print("Treating as no active alerts — exiting cleanly.")
+              sys.exit(0)
 
           features = nws_data.get("features", [])
           print(f"Total NWS alerts fetched: {len(features)}")

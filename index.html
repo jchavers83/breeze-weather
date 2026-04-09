@@ -2954,6 +2954,7 @@ function getVibeTag(hourly,daily,currentCode,now,sunrise,sunset){
   const sunriseH=fracHour(sunrise)||6;
   const sunsetH=fracHour(sunset)||20;
   const isDaytime=nowFrac>=sunriseH&&nowFrac<sunsetH;
+  const isPreDawn=!isDaytime&&nowFrac<sunriseH; // before sunrise, early AM
   const isNight=!isDaytime;
   const hours=[];
   // Collect next 12 hours across day boundaries
@@ -2983,7 +2984,7 @@ function getVibeTag(hourly,daily,currentCode,now,sunrise,sunset){
   if(snowCount>0)return vpick(['\u2744\uFE0F Snow day energy','\u2744\uFE0F Let it snow','\u2744\uFE0F Winter showing up','\u2744\uFE0F Snowy stretch ahead']);
   if(rainCount>4)return vpick(['\uD83C\uDF27\uFE0F Indoor day. No debate.','\uD83C\uDF27\uFE0F Stay in. It\u2019s fine.','\uD83C\uDF27\uFE0F Full washout','\uD83C\uDF27\uFE0F Committed rain day']);
   if(rainCount>2)return vpick(['\uD83C\uDF26\uFE0F Umbrella weather','\uD83C\uDF26\uFE0F Grab a jacket','\uD83C\uDF26\uFE0F Rain\u2019s in the mix','\uD83C\uDF26\uFE0F Damp one ahead']);
-  if(isPredomNight||isNight){
+  if(isPredomNight||(isNight&&!isPreDawn)){
     if(minT>65)return vpick(['\uD83C\uDF19 Good sleeping weather','\uD83C\uDF19 Warm night ahead',rainCount===0?'\uD83C\uDF19 Open the windows':'\uD83C\uDF19 Quiet night ahead','\uD83C\uDF19 Mild and quiet']);
     if(minT<32)return vpick(['\uD83E\uDD76 Cold night. Stay warm.','\uD83E\uDD76 Freezing out there','\uD83E\uDD76 Extra blanket night','\uD83E\uDD76 Bundle up before bed']);
     if(clearCount>3)return vpick(['\u2728 Clear and quiet tonight','\uD83C\uDF1F Good night to look up','\uD83C\uDF19 Stars are out','\u2728 Calm and clear']);
@@ -3281,12 +3282,13 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
   const tomorrowPrecip=futurePrecip[1]||0;
   const bigTempSwingTomorrow=Math.abs(tomorrowMaxF-maxT)>15;
 
-  const isNight=!isDaytime;
-  const isMorning=isDaytime&&nowHour<12;
+  const isPreDawn=!isDaytime&&nowHour<12; // before sunrise but early morning (e.g. 5-6 AM)
+  const isNight=!isDaytime; // all non-daytime hours (pre-dawn + post-sunset)
+  const isMorning=(isDaytime||isPreDawn)&&nowHour<12; // includes pre-dawn
   const isAfternoon=isDaytime&&nowHour>=12&&nowHour<17;
   const isEvening=isDaytime&&nowHour>=17;
-  // After 7 PM focus shifts to overnight + tomorrow
-  const isLateEvening=nowHour>=19||isNight;
+  // After 7 PM focus shifts to overnight + tomorrow (but NOT pre-dawn)
+  const isLateEvening=(nowHour>=19||isNight)&&!isPreDawn;
   const dayHoursInWindow=hours.filter(h=>h.h+0.5>=sunriseH&&h.h+0.5<sunsetH).length;
   const isPredomNight=dayHoursInWindow<hours.length*0.35;
   const outdoorWorthy=isDaytime&&maxT>=50&&rainHours.length<3&&stormHours.length===0&&snowHours.length<2;
@@ -3295,7 +3297,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
   const dayOfYear=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000);
   const city=(!state.isGPS&&state.name)?state.name.split(',')[0]:'';
   const month=now.toLocaleString('en-US',{month:'long'});
-  const timeframe=isNight?'tonight':isMorning?'this morning':isAfternoon?'this afternoon':isEvening?'this evening':'ahead';
+  const timeframe=isPreDawn?'this morning':isNight?'tonight':isMorning?'this morning':isAfternoon?'this afternoon':isEvening?'this evening':'ahead';
   const cityHash=(state.name||'').split('').reduce((a,c)=>(a*31+c.charCodeAt(0))&0xffff,0);
   const seed=((now.getDate()*31+Math.floor(nowHour))*7+cityHash)%13;
   const pick=(arr)=>arr[seed%arr.length];
