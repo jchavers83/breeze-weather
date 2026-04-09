@@ -44,7 +44,7 @@ jobs:
   # JOB 1: Morning Briefing — city-tag broadcasts for today's forecast
   # ---------------------------------------------------------------------------
   morning-briefing:
-    name: Morning Briefing (7 AM per subscriber timezone)
+    name: Morning Briefing (6 AM per subscriber timezone)
     runs-on: ubuntu-latest
     if: >
       (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'morning-briefing' || github.event.inputs.job == 'all')) ||
@@ -253,7 +253,7 @@ jobs:
                       "url": "https://cirrusweather.app",
                       "chrome_web_icon": "https://cirrusweather.app/icon.png",
                       "delayed_option": "timezone",
-                      "delivery_time_of_day": "7:00AM"
+                      "delivery_time_of_day": "6:00AM"
                   }
                   resp = post_json(
                       "https://api.onesignal.com/notifications",
@@ -293,7 +293,7 @@ jobs:
                       "url": "https://cirrusweather.app",
                       "chrome_web_icon": "https://cirrusweather.app/icon.png",
                       "delayed_option": "timezone",
-                      "delivery_time_of_day": "7:00AM"
+                      "delivery_time_of_day": "6:00AM"
                   }
                   resp = post_json(
                       "https://api.onesignal.com/notifications",

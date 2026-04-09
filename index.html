@@ -560,6 +560,7 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .alerts-options.visible{display:block}
 .alert-opt{display:flex;align-items:center;gap:12px;padding:11px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;transition:background 0.15s}
 .alert-opt:active{background:rgba(0,0,0,0.04)}
+.dark .alert-opt:active{background:rgba(255,255,255,0.06)}
 .alert-opt+.alert-opt{border-top:1px solid var(--card-border)}
 .alert-opt-icon{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.14)}
 .alert-opt-icon img{width:24px;height:24px;display:block}
@@ -1584,7 +1585,7 @@ function getSetting(key){
     if(key===SETTINGS_KEYS.darkMode)return state.dark;
     if(key===SETTINGS_KEYS.tempUnit)return 'auto';
     if(key===SETTINGS_KEYS.windUnit)return 'auto';
-    if(key===SETTINGS_KEYS.morningHour)return 7;
+    if(key===SETTINGS_KEYS.morningHour)return 6;
     if(key===SETTINGS_KEYS.eveningHour)return 21;
     if(key===SETTINGS_KEYS.animations)return true;
     if(key===SETTINGS_KEYS.defaultCity)return null;
@@ -2158,7 +2159,7 @@ function render(){
           <div class="alert-opt-icon" style="background:linear-gradient(135deg,#f59e0b,#f97316)">${wIcon('clear-day')}</div>
           <div class="alert-opt-text">
             <div class="alert-opt-label">Morning forecast</div>
-            <div class="alert-opt-hint">7 AM daily</div>
+            <div class="alert-opt-hint">6 AM daily</div>
           </div>
           <div class="alert-opt-mini-toggle"></div>
         </div>
