@@ -580,36 +580,56 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .mkt-tagline-pre{font-size:17px;font-weight:500;color:rgba(255,255,255,0.82);line-height:1.5;margin-bottom:2px}
 .mkt-tagline-punch{font-size:20px;font-weight:800;color:#fff;display:block;margin-bottom:28px}
 
-/* Phone mockup */
-.phone-mockup-wrap{max-width:220px;margin:0 auto 32px;position:relative}
-.phone-mockup{
+/* iPhone 15 Pro Max shell — SVG frame overlay approach */
+.phone-mockup-wrap{max-width:260px;margin:0 auto 32px;position:relative}
+
+/* Side buttons — Natural Titanium color, positioned outside phone-shell */
+.phone-btn-left{position:absolute;left:-4px;top:0;width:4px;height:180px;pointer-events:none;
+  background:
+    linear-gradient(to bottom,
+      transparent 0%, transparent 17%,
+      #b0a89e 17%, #b0a89e 22%,
+      transparent 22%, transparent 32%,
+      #a09890 32%, #a09890 49%,
+      transparent 49%, transparent 59%,
+      #a09890 59%, #a09890 76%,
+      transparent 76%, transparent 100%);
+  border-radius:3px 0 0 3px}
+.phone-btn-right{position:absolute;right:-4px;top:110px;width:4px;height:90px;
+  background:linear-gradient(to bottom,#b0a89e,#9a9290);border-radius:0 3px 3px 0}
+
+/* Phone shell container — sized to iPhone 15 Pro Max proportions */
+.phone-shell{
   position:relative;
-  background:linear-gradient(160deg,#2a2a2e 0%,#0a0a0a 100%);
-  border-radius:44px;
-  border:none;
-  padding:4px 8px 16px;
-  overflow:hidden;
-  box-shadow:
-    0 0 0 2px #3a3a3c,
-    0 0 0 5px #1c1c1e,
-    0 0 0 6px rgba(255,255,255,0.06),
-    0 36px 90px rgba(0,0,0,0.65),
-    0 12px 30px rgba(0,0,0,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.12)
+  width:236px;
+  height:490px;
+  filter:drop-shadow(0 36px 60px rgba(0,0,0,0.55)) drop-shadow(0 8px 20px rgba(0,0,0,0.35));
 }
-/* Side buttons — real elements so overflow:hidden on phone-mockup doesn't clip them */
-.phone-btn-left{position:absolute;left:-10px;top:70px;width:3px;height:80px;border-radius:2px 0 0 2px;
-  background:linear-gradient(to bottom,
-    #4a4a50 0%,#4a4a50 18%,
-    transparent 18%,transparent 26%,
-    #4a4a50 26%,#4a4a50 62%,
-    transparent 62%,transparent 70%,
-    #4a4a50 70%,#4a4a50 100%)}
-.phone-btn-right{position:absolute;right:-10px;top:92px;width:3px;height:52px;background:linear-gradient(to bottom,#4a4a50,#3a3a40);border-radius:0 2px 2px 0}
-/* Dynamic Island pill */
-.phone-notch{width:80px;height:22px;background:#000;border-radius:20px;margin:0 auto 8px;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;gap:5px;box-shadow:0 0 0 1px rgba(255,255,255,0.04)}
-.phone-camera{width:8px;height:8px;border-radius:50%;background:#181828;border:1.5px solid #242438}
-.phone-speaker{width:38px;height:4px;border-radius:2px;background:#181828}
+
+/* Screen area — video lives here, perfectly proportioned */
+.phone-screen-area{
+  position:absolute;
+  top:9px; left:9px; right:9px; bottom:13px;
+  border-radius:34px;
+  overflow:hidden;
+  background:#000;
+  cursor:pointer;
+}
+
+/* Dynamic Island */
+.phone-dynamic-island{
+  position:absolute;
+  top:13px;left:50%;transform:translateX(-50%);
+  width:88px;height:32px;
+  background:#000;border-radius:20px;
+  z-index:3;pointer-events:none;
+}
+
+/* Home indicator */
+.phone-home-bar{width:72px;height:4px;background:rgba(255,255,255,0.28);border-radius:2px;
+  position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:3;pointer-events:none}
+
+/* Legacy static content classes (unused but kept) */
 .phone-screen{border-radius:2px;overflow:hidden;background:linear-gradient(155deg,#38bdf8 0%,#1e72d4 100%);padding:10px 10px 14px;min-height:360px;position:relative}
 .phone-screen-status{display:flex;justify-content:space-between;align-items:center;padding:0 2px;margin-bottom:8px}
 .phone-status-time{font-size:11px;font-weight:700;color:rgba(255,255,255,0.85)}
@@ -750,12 +770,7 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 /* ── Dark mode landing page overrides ── */
 /* CIRRUS wordmark: dark end becomes invisible on dark bg — lighten it */
 .dark .mkt-wordmark{background:linear-gradient(135deg,#7ecfef,#4ab8f8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-/* Phone: black frame invisible on dark bg — silver titanium */
-.dark .phone-mockup{
-  background:linear-gradient(160deg,#c8c8ca 0%,#98989c 100%);
-  box-shadow:0 0 0 2px #a0a0a8,0 0 0 5px #78787c,0 0 0 6px rgba(0,0,0,0.2),0 36px 90px rgba(0,0,0,0.8),0 12px 30px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.5)
-}
-.dark .phone-btn-left,.dark .phone-btn-right{background:linear-gradient(to bottom,#a0a0a4,#888890)}
+/* Phone shell looks identical in dark mode — titanium is already neutral */
 /* Pricing cards: keep white but slightly reduce opacity so they feel intentional, not broken */
 .dark .pricing-card{background:rgba(255,255,255,0.10);border-color:rgba(255,255,255,0.18);box-shadow:none}
 .dark .pricing-card.best{background:rgba(26,144,228,0.15);border-color:rgba(74,184,248,0.5);box-shadow:0 0 0 4px rgba(26,144,228,0.08)}
@@ -833,23 +848,60 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 
         <!-- Phone mockup -->
         <div class="phone-mockup-wrap reveal">
+          <!-- Side buttons positioned outside the shell -->
           <div class="phone-btn-left"></div>
           <div class="phone-btn-right"></div>
-          <div class="phone-mockup">
-            <div class="phone-screen" id="promoWrap" style="padding:0;background:#000;cursor:pointer;min-height:0;position:relative">
-              <!-- Video fills full screen edge-to-edge -->
+
+          <div class="phone-shell">
+            <!-- Screen area: video lives here, perfectly fitted -->
+            <div class="phone-screen-area" id="promoWrap">
               <video id="promoVid" autoplay muted loop playsinline
-                style="width:100%;height:auto;display:block;border-radius:0">
+                style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block">
                 <source src="promo.mp4" type="video/mp4">
               </video>
-              <!-- Dynamic Island overlaid on top of video, like a real iPhone -->
-              <div class="phone-notch" style="position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:3;margin:0"><div class="phone-speaker"></div><div class="phone-camera"></div></div>
               <!-- Tap-for-sound hint -->
-              <div id="promoHint" style="position:absolute;bottom:14px;right:10px;background:rgba(0,0,0,0.48);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:20px;padding:4px 9px;pointer-events:none;display:flex;align-items:center;gap:3px">
+              <div id="promoHint" style="position:absolute;bottom:48px;right:10px;background:rgba(0,0,0,0.48);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:20px;padding:4px 9px;pointer-events:none;display:flex;align-items:center;gap:3px;z-index:4">
                 <span style="font-size:10px;color:#fff;font-weight:600;font-family:'Outfit',sans-serif;letter-spacing:0.2px">🔇 Tap</span>
               </div>
             </div>
+
+            <!-- Dynamic Island overlay on top of video -->
+            <div class="phone-dynamic-island"></div>
+
+            <!-- Home indicator -->
             <div class="phone-home-bar"></div>
+
+            <!-- SVG titanium frame — sits on top, screen area is transparent hole -->
+            <svg class="phone-frame-svg" viewBox="0 0 236 490"
+                 style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:block">
+              <defs>
+                <!-- Natural Titanium gradient -->
+                <linearGradient id="titaniumGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%"   stop-color="#d6cec6"/>
+                  <stop offset="20%"  stop-color="#bdb4aa"/>
+                  <stop offset="45%"  stop-color="#a09890"/>
+                  <stop offset="70%"  stop-color="#8e8680"/>
+                  <stop offset="100%" stop-color="#7a7268"/>
+                </linearGradient>
+                <!-- Subtle inner edge highlight -->
+                <linearGradient id="edgeHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   stop-color="rgba(255,255,255,0.18)"/>
+                  <stop offset="50%"  stop-color="rgba(255,255,255,0.04)"/>
+                  <stop offset="100%" stop-color="rgba(0,0,0,0.12)"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Frame with evenodd cutout: outer shape minus screen hole = titanium bezel -->
+              <path fill-rule="evenodd" fill="url(#titaniumGrad)" d="
+                M 43,0 H 193 Q 236,0 236,43 V 447 Q 236,490 193,490 H 43 Q 0,490 0,447 V 43 Q 0,0 43,0 Z
+                M 43,9 H 193 Q 227,9 227,43 V 447 Q 227,477 193,477 H 43 Q 9,477 9,447 V 43 Q 9,9 43,9 Z
+              "/>
+              <!-- Subtle edge highlight over frame -->
+              <path fill-rule="evenodd" fill="url(#edgeHighlight)" opacity="0.6" d="
+                M 43,0 H 193 Q 236,0 236,43 V 447 Q 236,490 193,490 H 43 Q 0,490 0,447 V 43 Q 0,0 43,0 Z
+                M 43,9 H 193 Q 227,9 227,43 V 447 Q 227,477 193,477 H 43 Q 9,477 9,447 V 43 Q 9,9 43,9 Z
+              "/>
+            </svg>
           </div>
         </div>
 
