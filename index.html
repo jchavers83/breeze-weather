@@ -324,7 +324,7 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 }
 
 /* Mobile nav */
-.mobile-nav{display:none!important;position:fixed;bottom:0;left:0;right:0;background:var(--card-bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-top:1px solid var(--card-border);display:flex;justify-content:space-around;padding:8px 16px calc(env(safe-area-inset-bottom,4px) + 2px);z-index:100;transform:translateY(0);transition:transform 0.3s cubic-bezier(.4,0,.2,1)}
+.mobile-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card-bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-top:1px solid var(--card-border);display:flex;justify-content:space-around;padding:8px 16px calc(env(safe-area-inset-bottom,4px) + 2px);z-index:100;transform:translateY(0);transition:transform 0.3s cubic-bezier(.4,0,.2,1)}
 .mobile-nav.nav-hidden{transform:translateY(110%)}
 .nav-tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text-tertiary);font-size:10px;font-weight:600;cursor:pointer;transition:color 0.2s;border:none;background:none;-webkit-tap-highlight-color:transparent}
 .nav-tab.active{color:var(--accent)}
@@ -853,22 +853,13 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
           <div class="phone-btn-right"></div>
 
           <div class="phone-shell">
-            <!-- Screen area: video lives here, perfectly fitted -->
-            <div class="phone-screen-area" id="promoWrap">
-              <video id="promoVid" autoplay muted loop playsinline
+            <!-- Screen area: app screenshot -->
+            <div class="phone-screen-area">
+              <img src="app-screenshot.png" alt="Cirrus weather app — Malibu, Clear Sky 65°"
                 style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block">
-                <source src="promo.mp4" type="video/mp4">
-              </video>
-              <!-- Tap-for-sound hint -->
-              <div id="promoHint" style="position:absolute;bottom:48px;right:10px;background:rgba(0,0,0,0.48);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:20px;padding:4px 9px;pointer-events:none;display:flex;align-items:center;gap:3px;z-index:4">
-                <span style="font-size:10px;color:#fff;font-weight:600;font-family:'Outfit',sans-serif;letter-spacing:0.2px">🔇 Tap</span>
-              </div>
             </div>
 
-            <!-- Dynamic Island overlay on top of video -->
-            <div class="phone-dynamic-island"></div>
-
-            <!-- Home indicator -->
+            <!-- Home indicator bar -->
             <div class="phone-home-bar"></div>
 
             <!-- SVG titanium frame — sits on top, screen area is transparent hole -->
@@ -4644,39 +4635,6 @@ async function handleMktEmailSubmit(inputId,iconId,plan){
   }
 }
 
-// ── Promo video: tap to fullscreen + unmute ──────────────────
-(function(){
-  function initPromo(){
-    const wrap=document.getElementById('promoWrap');
-    const vid=document.getElementById('promoVid');
-    const hint=document.getElementById('promoHint');
-    if(!wrap||!vid)return;
-    wrap.addEventListener('click',function(){
-      // Unmute
-      vid.muted=false;
-      if(hint)hint.style.opacity='0';
-      // Fullscreen — iOS uses webkitEnterFullscreen, others use requestFullscreen
-      if(vid.webkitEnterFullscreen){vid.webkitEnterFullscreen();}
-      else if(vid.requestFullscreen){vid.requestFullscreen();}
-      else if(vid.webkitRequestFullscreen){vid.webkitRequestFullscreen();}
-    });
-    // Re-mute and restore hint when exiting fullscreen
-    function onExitFullscreen(){
-      if(!document.fullscreenElement&&!document.webkitFullscreenElement){
-        vid.muted=true;
-        if(hint)hint.style.opacity='1';
-      }
-    }
-    document.addEventListener('fullscreenchange',onExitFullscreen);
-    document.addEventListener('webkitfullscreenchange',onExitFullscreen);
-    vid.addEventListener('webkitendfullscreen',function(){
-      vid.muted=true;
-      if(hint)hint.style.opacity='1';
-    });
-  }
-  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initPromo);}
-  else{initPromo();}
-})();
 
 function toggleBetaForm(id){
   const f=document.getElementById(id);
