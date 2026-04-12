@@ -836,33 +836,14 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
         <div class="phone-mockup-wrap reveal">
           <div class="phone-mockup">
             <div class="phone-notch"><div class="phone-speaker"></div><div class="phone-camera"></div></div>
-            <div class="phone-screen" style="background:linear-gradient(155deg,#4bc8ee 0%,#38c8a0 100%)">
-              <div class="phone-screen-status">
-                <span class="phone-status-time">9:41</span>
-                <span class="phone-status-icons">●●● 5G 100%</span>
-              </div>
-              <!-- header bar -->
-              <div style="background:rgba(255,255,255,0.18);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:10px;padding:6px 10px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                <span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.9)">San Francisco, CA</span>
-              </div>
-              <!-- hero -->
-              <div style="text-align:center;padding:2px 0 10px">
-                <div style="width:46px;height:46px;margin:0 auto 2px"><img src="https://cdn.jsdelivr.net/npm/@meteocons/svg@latest/fill/clear-day.svg" style="width:100%;height:100%;display:block" alt=""></div>
-                <div style="font-size:60px;font-weight:800;color:#fff;line-height:1;letter-spacing:-2px;filter:drop-shadow(0 2px 10px rgba(0,0,0,0.12))">68°</div>
-                <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);margin:5px 0 2px">Clear Sky</div>
-                <div style="font-size:10px;color:rgba(255,255,255,0.7)">H:72° &nbsp;L:58° &nbsp;·&nbsp; Feels like 65°</div>
-              </div>
-              <!-- summary card -->
-              <div style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.22);border-radius:10px;padding:8px 10px;margin-bottom:8px">
-                <div style="font-size:9px;color:rgba(255,255,255,0.92);line-height:1.55;font-style:italic">"Beautiful afternoon ahead — low humidity, no clouds in sight."</div>
-              </div>
-              <!-- hourly strip -->
-              <div style="display:flex;justify-content:space-between;background:rgba(255,255,255,0.14);border-radius:10px;padding:8px 10px">
-                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">Now</div><div style="width:18px;height:18px;margin:0 auto"><img src="https://cdn.jsdelivr.net/npm/@meteocons/svg@latest/fill/clear-day.svg" style="width:100%;height:100%;display:block" alt=""></div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">68°</div></div>
-                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">2 PM</div><div style="width:18px;height:18px;margin:0 auto"><img src="https://cdn.jsdelivr.net/npm/@meteocons/svg@latest/fill/clear-day.svg" style="width:100%;height:100%;display:block" alt=""></div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">71°</div></div>
-                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">4 PM</div><div style="width:18px;height:18px;margin:0 auto"><img src="https://cdn.jsdelivr.net/npm/@meteocons/svg@latest/fill/partly-cloudy-day.svg" style="width:100%;height:100%;display:block" alt=""></div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">69°</div></div>
-                <div style="text-align:center"><div style="font-size:8px;color:rgba(255,255,255,0.65);margin-bottom:3px">6 PM</div><div style="width:18px;height:18px;margin:0 auto"><img src="https://cdn.jsdelivr.net/npm/@meteocons/svg@latest/fill/sunset.svg" style="width:100%;height:100%;display:block" alt=""></div><div style="font-size:10px;font-weight:700;color:#fff;margin-top:2px">64°</div></div>
+            <div class="phone-screen" id="promoWrap" style="padding:0;background:#000;cursor:pointer;min-height:360px">
+              <video id="promoVid" autoplay muted loop playsinline
+                style="width:100%;height:100%;min-height:360px;object-fit:cover;display:block;border-radius:0">
+                <source src="promo.mp4" type="video/mp4">
+              </video>
+              <!-- Tap-for-sound hint -->
+              <div id="promoHint" style="position:absolute;bottom:14px;right:10px;background:rgba(0,0,0,0.48);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:20px;padding:4px 9px;pointer-events:none;display:flex;align-items:center;gap:3px">
+                <span style="font-size:10px;color:#fff;font-weight:600;font-family:'Outfit',sans-serif;letter-spacing:0.2px">🔇 Tap</span>
               </div>
             </div>
             <div class="phone-home-bar"></div>
@@ -4607,6 +4588,40 @@ async function handleMktEmailSubmit(inputId,iconId,plan){
     if(btn){btn.disabled=false;btn.innerHTML='Start Free Trial <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';}
   }
 }
+
+// ── Promo video: tap to fullscreen + unmute ──────────────────
+(function(){
+  function initPromo(){
+    const wrap=document.getElementById('promoWrap');
+    const vid=document.getElementById('promoVid');
+    const hint=document.getElementById('promoHint');
+    if(!wrap||!vid)return;
+    wrap.addEventListener('click',function(){
+      // Unmute
+      vid.muted=false;
+      if(hint)hint.style.opacity='0';
+      // Fullscreen — iOS uses webkitEnterFullscreen, others use requestFullscreen
+      if(vid.webkitEnterFullscreen){vid.webkitEnterFullscreen();}
+      else if(vid.requestFullscreen){vid.requestFullscreen();}
+      else if(vid.webkitRequestFullscreen){vid.webkitRequestFullscreen();}
+    });
+    // Re-mute and restore hint when exiting fullscreen
+    function onExitFullscreen(){
+      if(!document.fullscreenElement&&!document.webkitFullscreenElement){
+        vid.muted=true;
+        if(hint)hint.style.opacity='1';
+      }
+    }
+    document.addEventListener('fullscreenchange',onExitFullscreen);
+    document.addEventListener('webkitfullscreenchange',onExitFullscreen);
+    vid.addEventListener('webkitendfullscreen',function(){
+      vid.muted=true;
+      if(hint)hint.style.opacity='1';
+    });
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initPromo);}
+  else{initPromo();}
+})();
 
 function toggleBetaForm(id){
   const f=document.getElementById(id);
