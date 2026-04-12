@@ -1,5 +1,6 @@
 // Cirrus Weather — Cloudflare Worker
-// Handles Stripe checkout, webhooks, subscription checks, and beta code redemption.
+// Handles Stripe checkout, webhooks, subscription checks, beta code redemption,
+// and automated push notifications (severe weather alerts + daily briefings).
 //
 // Environment variables (set in Cloudflare dashboard → Worker → Settings → Variables):
 //   STRIPE_SECRET_KEY        sk_live_... (or sk_test_... for testing)
@@ -7,6 +8,9 @@
 //   STRIPE_MONTHLY_PRICE_ID  price_...   (from Stripe → Products → Cirrus Monthly)
 //   STRIPE_ANNUAL_PRICE_ID   price_...   (from Stripe → Products → Cirrus Annual)
 //   BETA_CODES               comma-separated list of valid beta codes
+//   ONESIGNAL_APP_ID         OneSignal App ID
+//   ONESIGNAL_REST_API_KEY   OneSignal REST API Key (from Settings → Keys & IDs)
+//   WEATHER_API_KEY           WeatherAPI.com key (same as frontend)
 //
 // KV namespace binding (set in Cloudflare dashboard → Worker → Settings → Bindings):
 //   CIRRUS_SUBSCRIPTIONS     KV namespace
@@ -52,7 +56,292 @@ export default {
 
     return err('Not found', 404);
   },
+
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(handleScheduled(event, env));
+  },
 };
+
+// ── Scheduled Handler ──────────────────────────────────────────────────────
+async function handleScheduled(event, env) {
+  try {
+    if (event.cron === '*/5 * * * *') {
+      await checkSevereWeather(env);
+    }
+    if (event.cron === '0 * * * *') {
+      await dispatchBriefings(env);
+    }
+  } catch (e) {
+    console.error('Scheduled handler error:', e.message, e.stack);
+  }
+}
+
+// ── Severe Weather Alerts ──────────────────────────────────────────────────
+// NWS alert events worth pushing (warnings and extreme watches only)
+const PUSH_ALERT_EVENTS = new Set([
+  'Tornado Warning', 'Tornado Watch',
+  'Hurricane Warning', 'Hurricane Watch',
+  'Extreme Wind Warning',
+  'Flash Flood Emergency', 'Flash Flood Warning', 'Flash Flood Watch',
+  'Severe Thunderstorm Warning', 'Severe Thunderstorm Watch',
+  'Tropical Storm Warning', 'Tropical Storm Watch',
+  'Blizzard Warning', 'Ice Storm Warning',
+  'Winter Storm Warning', 'Winter Storm Watch',
+  'Red Flag Warning',
+]);
+
+const ALERT_ICONS = {
+  'Tornado Warning': '🌪️', 'Tornado Watch': '🌪️',
+  'Hurricane Warning': '🌀', 'Hurricane Watch': '🌀',
+  'Extreme Wind Warning': '🌬️',
+  'Flash Flood Emergency': '🚨', 'Flash Flood Warning': '🌊', 'Flash Flood Watch': '🌊',
+  'Severe Thunderstorm Warning': '⛈️', 'Severe Thunderstorm Watch': '⛈️',
+  'Tropical Storm Warning': '🌀', 'Tropical Storm Watch': '🌀',
+  'Blizzard Warning': '❄️', 'Ice Storm Warning': '🧣',
+  'Winter Storm Warning': '❄️', 'Winter Storm Watch': '❄️',
+  'Red Flag Warning': '🔥',
+};
+
+async function checkSevereWeather(env) {
+  if (!env.ONESIGNAL_APP_ID || !env.ONESIGNAL_REST_API_KEY) return;
+
+  const resp = await fetch(
+    'https://api.weather.gov/alerts/active?status=actual&message_type=alert',
+    { headers: { 'User-Agent': 'CirrusWeather/1.0 (notifications@cirrusweather.app)' } }
+  );
+  if (!resp.ok) { console.error('NWS API error:', resp.status); return; }
+
+  const data = await resp.json();
+  const features = (data.features || []).filter(f => {
+    const p = f.properties;
+    if (!p) return false;
+    // Only push known severe events or Extreme/Severe severity
+    return PUSH_ALERT_EVENTS.has(p.event) ||
+      p.severity === 'Extreme' || p.severity === 'Severe';
+  });
+
+  let sent = 0;
+  for (const f of features) {
+    if (sent >= 15) break; // Cap subrequests per cron run
+
+    const p = f.properties;
+    const alertId = p.id || p['@id'] || '';
+    if (!alertId) continue;
+
+    // Dedup — skip if already sent
+    const dedupKey = `alert_sent:${alertId}`;
+    const already = await env.CIRRUS_SUBSCRIPTIONS.get(dedupKey);
+    if (already) continue;
+
+    // Get centroid from geometry
+    const center = getAlertCenter(f);
+    if (!center) continue; // No usable geometry — skip
+
+    // Build OneSignal tag filters for ~50mi radius + severe pref
+    const latDelta = 0.7;
+    const lonDelta = 0.7 / Math.cos(center.lat * Math.PI / 180);
+    const filters = [
+      { field: 'tag', key: 'notif_severe', relation: '=', value: '1' },
+      { operator: 'AND' },
+      { field: 'tag', key: 'lat', relation: '>=', value: String((center.lat - latDelta).toFixed(4)) },
+      { operator: 'AND' },
+      { field: 'tag', key: 'lat', relation: '<=', value: String((center.lat + latDelta).toFixed(4)) },
+      { operator: 'AND' },
+      { field: 'tag', key: 'lon', relation: '>=', value: String((center.lon - lonDelta).toFixed(4)) },
+      { operator: 'AND' },
+      { field: 'tag', key: 'lon', relation: '<=', value: String((center.lon + lonDelta).toFixed(4)) },
+    ];
+
+    const icon = ALERT_ICONS[p.event] || '⚠️';
+    const headline = (p.headline || p.event || 'Severe Weather Alert').slice(0, 200);
+
+    await sendOneSignalNotification(env, {
+      app_id: env.ONESIGNAL_APP_ID,
+      filters,
+      headings: { en: `${icon} ${p.event}` },
+      contents: { en: headline },
+      url: 'https://cirrusweather.app',
+      priority: 10,
+      ttl: 7200,
+    });
+
+    // Mark as sent with 24hr TTL
+    await env.CIRRUS_SUBSCRIPTIONS.put(dedupKey, '1', { expirationTtl: 86400 });
+    sent++;
+  }
+}
+
+function getAlertCenter(feature) {
+  const geom = feature.geometry;
+  if (geom && geom.type === 'Polygon' && geom.coordinates && geom.coordinates[0]) {
+    const ring = geom.coordinates[0];
+    let latSum = 0, lonSum = 0;
+    for (const [lon, lat] of ring) { latSum += lat; lonSum += lon; }
+    return { lat: latSum / ring.length, lon: lonSum / ring.length };
+  }
+  if (geom && geom.type === 'MultiPolygon' && geom.coordinates && geom.coordinates[0]) {
+    const ring = geom.coordinates[0][0];
+    let latSum = 0, lonSum = 0;
+    for (const [lon, lat] of ring) { latSum += lat; lonSum += lon; }
+    return { lat: latSum / ring.length, lon: lonSum / ring.length };
+  }
+  return null; // No geometry — can't target
+}
+
+// ── Morning & Evening Briefings ────────────────────────────────────────────
+async function dispatchBriefings(env) {
+  if (!env.ONESIGNAL_APP_ID || !env.ONESIGNAL_REST_API_KEY || !env.WEATHER_API_KEY) return;
+
+  const now = new Date();
+  const utcHour = now.getUTCHours();
+
+  // Common US timezone offsets (covers most Cirrus users initially)
+  // Format: [offsetHours, IANA timezone name]
+  const TZ_MAP = [
+    [-5, 'America/New_York'],    // ET
+    [-6, 'America/Chicago'],     // CT
+    [-7, 'America/Denver'],      // MT
+    [-8, 'America/Los_Angeles'], // PT
+    [-9, 'America/Anchorage'],   // AK
+    [-10, 'Pacific/Honolulu'],   // HI
+    // Add more as user base grows
+  ];
+
+  // Check DST: use a more robust approach — compute actual local hour per timezone
+  for (const [_, tzName] of TZ_MAP) {
+    const localHour = getLocalHour(now, tzName);
+    const dateStr = getLocalDateStr(now, tzName);
+
+    // Morning briefing: check hours 5-8
+    if (localHour >= 5 && localHour <= 8) {
+      const dedupKey = `briefing:morning:${tzName}:${dateStr}`;
+      const already = await env.CIRRUS_SUBSCRIPTIONS.get(dedupKey);
+      if (!already) {
+        await sendBriefing(env, 'morning', tzName, localHour, dateStr);
+        await env.CIRRUS_SUBSCRIPTIONS.put(dedupKey, '1', { expirationTtl: 86400 });
+      }
+    }
+
+    // Evening briefing: check hours 18-22
+    if (localHour >= 18 && localHour <= 22) {
+      const dedupKey = `briefing:evening:${tzName}:${dateStr}`;
+      const already = await env.CIRRUS_SUBSCRIPTIONS.get(dedupKey);
+      if (!already) {
+        await sendBriefing(env, 'evening', tzName, localHour, dateStr);
+        await env.CIRRUS_SUBSCRIPTIONS.put(dedupKey, '1', { expirationTtl: 86400 });
+      }
+    }
+  }
+}
+
+function getLocalHour(date, tz) {
+  return parseInt(date.toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }), 10);
+}
+
+function getLocalDateStr(date, tz) {
+  return date.toLocaleString('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' });
+}
+
+async function sendBriefing(env, type, tzName, localHour, dateStr) {
+  const prefTag = type === 'morning' ? 'notif_morning' : 'notif_evening';
+  const hourTag = type === 'morning' ? 'morning_hour' : 'evening_hour';
+
+  // Get subscribers matching this timezone + preference + hour
+  // OneSignal CSV export or View Devices is heavy — instead, we send with tag filters
+  // and let OneSignal match. For weather data, we fetch for representative city centers.
+  // This is a trade-off: not per-user personalized, but per-timezone-region.
+
+  // Fetch weather for the timezone's representative city
+  const cityCoords = TZ_REPRESENTATIVE_COORDS[tzName];
+  if (!cityCoords) return;
+
+  const weatherUrl = `https://api.weatherapi.com/v1/forecast.json?key=${env.WEATHER_API_KEY}&q=${cityCoords.lat},${cityCoords.lon}&days=2&aqi=no&alerts=no`;
+  const wResp = await fetch(weatherUrl);
+  if (!wResp.ok) { console.error('Weather API error for briefing:', wResp.status); return; }
+  const wData = await wResp.json();
+
+  let heading, body;
+
+  if (type === 'morning') {
+    const today = wData.forecast?.forecastday?.[0]?.day;
+    const current = wData.current;
+    if (!today || !current) return;
+
+    const hi = Math.round(today.maxtemp_f);
+    const lo = Math.round(today.mintemp_f);
+    const cond = today.condition?.text || 'Mixed conditions';
+    const rainChance = today.daily_chance_of_rain || 0;
+
+    heading = `Good morning — ${cond}`;
+    body = `${hi}°/${lo}° today.`;
+    if (rainChance >= 40) body += ` ${rainChance}% chance of rain.`;
+    else if (rainChance >= 20) body += ` Slight chance of rain (${rainChance}%).`;
+    body += ' Tap for your full forecast.';
+  } else {
+    // Evening — tomorrow's forecast
+    const tomorrow = wData.forecast?.forecastday?.[1]?.day;
+    if (!tomorrow) return;
+
+    const hi = Math.round(tomorrow.maxtemp_f);
+    const lo = Math.round(tomorrow.mintemp_f);
+    const cond = tomorrow.condition?.text || 'Mixed conditions';
+    const rainChance = tomorrow.daily_chance_of_rain || 0;
+
+    heading = `Tomorrow — ${cond}`;
+    body = `${hi}°/${lo}°.`;
+    if (rainChance >= 40) body += ` ${rainChance}% chance of rain.`;
+    body += ' Tap to see the full forecast.';
+  }
+
+  const filters = [
+    { field: 'tag', key: prefTag, relation: '=', value: '1' },
+    { operator: 'AND' },
+    { field: 'tag', key: hourTag, relation: '=', value: String(localHour) },
+    { operator: 'AND' },
+    { field: 'tag', key: 'timezone', relation: '=', value: tzName },
+  ];
+
+  await sendOneSignalNotification(env, {
+    app_id: env.ONESIGNAL_APP_ID,
+    filters,
+    headings: { en: heading },
+    contents: { en: body },
+    url: 'https://cirrusweather.app',
+    ttl: 3600,
+  });
+}
+
+// Representative coordinates per timezone (largest city center)
+const TZ_REPRESENTATIVE_COORDS = {
+  'America/New_York':    { lat: 40.71, lon: -74.01 },   // NYC
+  'America/Chicago':     { lat: 41.88, lon: -87.63 },   // Chicago
+  'America/Denver':      { lat: 39.74, lon: -104.99 },  // Denver
+  'America/Los_Angeles': { lat: 34.05, lon: -118.24 },  // LA
+  'America/Anchorage':   { lat: 61.22, lon: -149.90 },  // Anchorage
+  'Pacific/Honolulu':    { lat: 21.31, lon: -157.86 },  // Honolulu
+};
+
+// ── OneSignal REST API ─────────────────────────────────────────────────────
+async function sendOneSignalNotification(env, payload) {
+  try {
+    const resp = await fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${env.ONESIGNAL_REST_API_KEY}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      console.error('OneSignal API error:', JSON.stringify(data));
+    }
+    return data;
+  } catch (e) {
+    console.error('OneSignal send failed:', e.message);
+    return null;
+  }
+}
 
 // ── Create Stripe Checkout Session ─────────────────────────────────────────
 async function handleCreateCheckout(request, env) {

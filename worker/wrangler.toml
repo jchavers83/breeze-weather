@@ -6,6 +6,9 @@ compatibility_date = "2024-01-01"
 binding = "CIRRUS_SUBSCRIPTIONS"
 id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
 
+[triggers]
+crons = ["*/5 * * * *", "0 * * * *"]
+
 # Set these in the Cloudflare dashboard → Worker → Settings → Environment Variables
 # Never put real keys in this file.
 # STRIPE_SECRET_KEY
@@ -13,3 +16,6 @@ id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
 # STRIPE_MONTHLY_PRICE_ID
 # STRIPE_ANNUAL_PRICE_ID
 # BETA_CODES
+# ONESIGNAL_APP_ID          (30178abc-998e-48d7-9594-21f2914087f0)
+# ONESIGNAL_REST_API_KEY    (from OneSignal → Settings → Keys & IDs)
+# WEATHER_API_KEY            (same key used in the frontend)
