@@ -587,7 +587,8 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
   background:linear-gradient(160deg,#2a2a2e 0%,#0a0a0a 100%);
   border-radius:44px;
   border:none;
-  padding:0 8px 16px;
+  padding:4px 8px 16px;
+  overflow:hidden;
   box-shadow:
     0 0 0 2px #3a3a3c,
     0 0 0 5px #1c1c1e,
@@ -596,22 +597,20 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
     0 12px 30px rgba(0,0,0,0.4),
     inset 0 1px 0 rgba(255,255,255,0.12)
 }
-/* Action button (top-left, iPhone 16/17 Pro) + volume below */
-.phone-mockup::before{content:'';position:absolute;left:-10px;top:70px;width:3px;height:80px;
+/* Side buttons — real elements so overflow:hidden on phone-mockup doesn't clip them */
+.phone-btn-left{position:absolute;left:-10px;top:70px;width:3px;height:80px;border-radius:2px 0 0 2px;
   background:linear-gradient(to bottom,
     #4a4a50 0%,#4a4a50 18%,
     transparent 18%,transparent 26%,
     #4a4a50 26%,#4a4a50 62%,
     transparent 62%,transparent 70%,
-    #4a4a50 70%,#4a4a50 100%);
-  border-radius:2px 0 0 2px}
-/* Power / Camera Control button (right) */
-.phone-mockup::after{content:'';position:absolute;right:-10px;top:92px;width:3px;height:52px;background:linear-gradient(to bottom,#4a4a50,#3a3a40);border-radius:0 2px 2px 0}
+    #4a4a50 70%,#4a4a50 100%)}
+.phone-btn-right{position:absolute;right:-10px;top:92px;width:3px;height:52px;background:linear-gradient(to bottom,#4a4a50,#3a3a40);border-radius:0 2px 2px 0}
 /* Dynamic Island pill */
 .phone-notch{width:80px;height:22px;background:#000;border-radius:20px;margin:0 auto 8px;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;gap:5px;box-shadow:0 0 0 1px rgba(255,255,255,0.04)}
 .phone-camera{width:8px;height:8px;border-radius:50%;background:#181828;border:1.5px solid #242438}
 .phone-speaker{width:38px;height:4px;border-radius:2px;background:#181828}
-.phone-screen{border-radius:8px;overflow:hidden;background:linear-gradient(155deg,#38bdf8 0%,#1e72d4 100%);padding:10px 10px 14px;min-height:360px;position:relative}
+.phone-screen{border-radius:2px;overflow:hidden;background:linear-gradient(155deg,#38bdf8 0%,#1e72d4 100%);padding:10px 10px 14px;min-height:360px;position:relative}
 .phone-screen-status{display:flex;justify-content:space-between;align-items:center;padding:0 2px;margin-bottom:8px}
 .phone-status-time{font-size:11px;font-weight:700;color:rgba(255,255,255,0.85)}
 .phone-status-icons{font-size:9px;color:rgba(255,255,255,0.7);font-weight:600;letter-spacing:1px}
@@ -756,7 +755,7 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
   background:linear-gradient(160deg,#c8c8ca 0%,#98989c 100%);
   box-shadow:0 0 0 2px #a0a0a8,0 0 0 5px #78787c,0 0 0 6px rgba(0,0,0,0.2),0 36px 90px rgba(0,0,0,0.8),0 12px 30px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.5)
 }
-.dark .phone-mockup::before,.dark .phone-mockup::after{background:linear-gradient(to bottom,#a0a0a4,#888890)}
+.dark .phone-btn-left,.dark .phone-btn-right{background:linear-gradient(to bottom,#a0a0a4,#888890)}
 /* Pricing cards: keep white but slightly reduce opacity so they feel intentional, not broken */
 .dark .pricing-card{background:rgba(255,255,255,0.10);border-color:rgba(255,255,255,0.18);box-shadow:none}
 .dark .pricing-card.best{background:rgba(26,144,228,0.15);border-color:rgba(74,184,248,0.5);box-shadow:0 0 0 4px rgba(26,144,228,0.08)}
@@ -834,6 +833,8 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 
         <!-- Phone mockup -->
         <div class="phone-mockup-wrap reveal">
+          <div class="phone-btn-left"></div>
+          <div class="phone-btn-right"></div>
           <div class="phone-mockup">
             <div class="phone-screen" id="promoWrap" style="padding:0;background:#000;cursor:pointer;min-height:0;position:relative">
               <!-- Video fills full screen edge-to-edge -->
