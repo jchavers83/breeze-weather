@@ -587,7 +587,7 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
   background:linear-gradient(160deg,#2a2a2e 0%,#0a0a0a 100%);
   border-radius:44px;
   border:none;
-  padding:8px 8px 16px;
+  padding:0 8px 16px;
   box-shadow:
     0 0 0 2px #3a3a3c,
     0 0 0 5px #1c1c1e,
@@ -611,7 +611,7 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .phone-notch{width:80px;height:22px;background:#000;border-radius:20px;margin:0 auto 8px;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;gap:5px;box-shadow:0 0 0 1px rgba(255,255,255,0.04)}
 .phone-camera{width:8px;height:8px;border-radius:50%;background:#181828;border:1.5px solid #242438}
 .phone-speaker{width:38px;height:4px;border-radius:2px;background:#181828}
-.phone-screen{border-radius:26px;overflow:hidden;background:linear-gradient(155deg,#38bdf8 0%,#1e72d4 100%);padding:10px 10px 14px;min-height:360px;position:relative}
+.phone-screen{border-radius:8px;overflow:hidden;background:linear-gradient(155deg,#38bdf8 0%,#1e72d4 100%);padding:10px 10px 14px;min-height:360px;position:relative}
 .phone-screen-status{display:flex;justify-content:space-between;align-items:center;padding:0 2px;margin-bottom:8px}
 .phone-status-time{font-size:11px;font-weight:700;color:rgba(255,255,255,0.85)}
 .phone-status-icons{font-size:9px;color:rgba(255,255,255,0.7);font-weight:600;letter-spacing:1px}
@@ -842,7 +842,7 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
                 <source src="promo.mp4" type="video/mp4">
               </video>
               <!-- Dynamic Island overlaid on top of video, like a real iPhone -->
-              <div class="phone-notch" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:3;margin:0"><div class="phone-speaker"></div><div class="phone-camera"></div></div>
+              <div class="phone-notch" style="position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:3;margin:0"><div class="phone-speaker"></div><div class="phone-camera"></div></div>
               <!-- Tap-for-sound hint -->
               <div id="promoHint" style="position:absolute;bottom:14px;right:10px;background:rgba(0,0,0,0.48);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:20px;padding:4px 9px;pointer-events:none;display:flex;align-items:center;gap:3px">
                 <span style="font-size:10px;color:#fff;font-weight:600;font-family:'Outfit',sans-serif;letter-spacing:0.2px">🔇 Tap</span>
