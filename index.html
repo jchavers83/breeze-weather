@@ -587,7 +587,7 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
   background:linear-gradient(160deg,#2a2a2e 0%,#0a0a0a 100%);
   border-radius:44px;
   border:none;
-  padding:10px 8px 16px;
+  padding:8px 8px 16px;
   box-shadow:
     0 0 0 2px #3a3a3c,
     0 0 0 5px #1c1c1e,
@@ -835,12 +835,14 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
         <!-- Phone mockup -->
         <div class="phone-mockup-wrap reveal">
           <div class="phone-mockup">
-            <div class="phone-notch"><div class="phone-speaker"></div><div class="phone-camera"></div></div>
-            <div class="phone-screen" id="promoWrap" style="padding:0;background:#000;cursor:pointer;min-height:0">
+            <div class="phone-screen" id="promoWrap" style="padding:0;background:#000;cursor:pointer;min-height:0;position:relative">
+              <!-- Video fills full screen edge-to-edge -->
               <video id="promoVid" autoplay muted loop playsinline
                 style="width:100%;height:auto;display:block;border-radius:0">
                 <source src="promo.mp4" type="video/mp4">
               </video>
+              <!-- Dynamic Island overlaid on top of video, like a real iPhone -->
+              <div class="phone-notch" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:3;margin:0"><div class="phone-speaker"></div><div class="phone-camera"></div></div>
               <!-- Tap-for-sound hint -->
               <div id="promoHint" style="position:absolute;bottom:14px;right:10px;background:rgba(0,0,0,0.48);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:20px;padding:4px 9px;pointer-events:none;display:flex;align-items:center;gap:3px">
                 <span style="font-size:10px;color:#fff;font-weight:600;font-family:'Outfit',sans-serif;letter-spacing:0.2px">🔇 Tap</span>
