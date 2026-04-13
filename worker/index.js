@@ -53,6 +53,12 @@ export default {
     if (request.method === 'POST' && url.pathname === '/redeem-beta') {
       return handleRedeemBeta(request, env);
     }
+    if (request.method === 'GET' && url.pathname === '/check-token') {
+      return handleCheckToken(request, env);
+    }
+    if (request.method === 'POST' && url.pathname === '/claim-token') {
+      return handleClaimToken(request, env);
+    }
 
     return err('Not found', 404);
   },
@@ -404,13 +410,16 @@ async function handleWebhook(request, env) {
       // Session completed — subscription is now active (trial or paid)
       const email = sub.customer_email || sub.customer_details?.email;
       if (email && sub.subscription) {
+        const token = generateToken();
         await saveSubscription(env, email, {
           status: 'active',
           subscriptionId: sub.subscription,
           customerId: sub.customer,
           plan: sub.amount_total === 0 ? 'trial' : 'paid',
+          token,
           createdAt: Date.now(),
         });
+        await saveToken(env, token, email);
       }
       break;
     }
@@ -479,15 +488,18 @@ async function handleRedeemBeta(request, env) {
     return err('Code already redeemed', 403);
   }
 
+  const token = generateToken();
   await saveSubscription(env, email.toLowerCase(), {
     status: 'beta',
     plan: 'beta',
     code: code.trim().toUpperCase(),
+    token,
     grantedAt: Date.now(),
   });
+  await saveToken(env, token, email.toLowerCase());
   await env.CIRRUS_SUBSCRIPTIONS.put(usedKey, email.toLowerCase());
 
-  return json({ active: true, plan: 'beta' });
+  return json({ active: true, plan: 'beta', token });
 }
 
 // ── KV Helpers ──────────────────────────────────────────────────────────────
@@ -512,6 +524,59 @@ async function saveSubscription(env, email, data) {
 
 async function getEmailForCustomer(env, customerId) {
   return env.CIRRUS_SUBSCRIPTIONS.get(custKey(customerId));
+}
+
+// ── Auth Token Helpers ──────────────────────────────────────────────────────
+function generateToken() { return crypto.randomUUID(); }
+function tokenKey(token) { return `token:${token}`; }
+
+async function saveToken(env, token, email) {
+  await env.CIRRUS_SUBSCRIPTIONS.put(tokenKey(token), email.toLowerCase().trim());
+}
+
+async function getEmailForToken(env, token) {
+  return env.CIRRUS_SUBSCRIPTIONS.get(tokenKey(token));
+}
+
+// ── Check Token ─────────────────────────────────────────────────────────────
+async function handleCheckToken(request, env) {
+  const url = new URL(request.url);
+  const token = url.searchParams.get('token')?.trim();
+  if (!token) return err('Token required');
+
+  const email = await getEmailForToken(env, token);
+  if (!email) return json({ active: false });
+
+  const sub = await getSubscription(env, email);
+  if (!sub) return json({ active: false });
+
+  const active = sub.status === 'active' || sub.status === 'beta';
+  return json({ active, plan: sub.plan || null, email, status: sub.status });
+}
+
+// ── Claim Token (post-checkout restore + restore access) ────────────────────
+async function handleClaimToken(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+
+  const email = body.email?.toLowerCase().trim();
+  if (!email || !email.includes('@')) return err('Valid email required');
+
+  const sub = await getSubscription(env, email);
+  if (!sub) return json({ active: false });
+
+  const active = sub.status === 'active' || sub.status === 'beta';
+  if (!active) return json({ active: false });
+
+  // Reuse existing token or generate new one
+  let token = sub.token;
+  if (!token) {
+    token = generateToken();
+    await saveSubscription(env, email, { token });
+  }
+  await saveToken(env, token, email); // Ensure reverse mapping exists
+
+  return json({ active: true, token, plan: sub.plan || null, email });
 }
 
 // ── Stripe Webhook Signature Verification ───────────────────────────────────

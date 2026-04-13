@@ -4504,6 +4504,7 @@ function _resetReviewModal(){
 const FREE_LOOKUP_LIMIT=3;
 
 function checkAccess(){
+  if(localStorage.getItem('cirrus_auth_token')) return {allowed:true};
   const access=localStorage.getItem('cirrus_access');
   if(access==='active'||access==='beta') return {allowed:true};
   const used=parseInt(localStorage.getItem('cirrus_free_lookups')||'0',10);
@@ -4547,6 +4548,14 @@ function showPaywall(){
           <button class="mkt-cta-btn" style="width:auto;padding:0 18px;white-space:nowrap" onclick="handleBetaRedeem('paywallEmail','paywallBetaCode')">Redeem</button>
         </div>
       </div>
+      <div class="paywall-beta-link" onclick="toggleBetaForm('paywallRestoreForm')">Already subscribed?</div>
+      <div id="paywallRestoreForm" style="display:none;margin-top:12px">
+        <div style="display:flex;gap:8px">
+          <input id="paywallRestoreEmail" class="mkt-email-input" type="email" placeholder="Enter your email to restore access" autocomplete="email">
+          <button class="mkt-cta-btn" style="width:auto;padding:0 18px;white-space:nowrap" onclick="handleRestoreAccess()">Restore</button>
+        </div>
+        <div id="restoreStatus" style="font-size:12px;margin-top:8px;color:rgba(255,255,255,0.7)"></div>
+      </div>
     </div>`;
   document.body.appendChild(overlay);
   // Trigger fade-in on next frame
@@ -4557,22 +4566,75 @@ function dismissPaywall(){
   document.getElementById('paywallOverlay')?.remove();
 }
 
+async function handleRestoreAccess(){
+  const el=document.getElementById('paywallRestoreEmail');
+  const status=document.getElementById('restoreStatus');
+  if(!el)return;
+  const email=el.value.trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){el.focus();return;}
+  const btn=el.parentElement?.querySelector('.mkt-cta-btn');
+  if(btn){btn.disabled=true;btn.textContent='Checking...';}
+  if(status)status.textContent='';
+  try{
+    const resp=await fetch(`${WORKER_URL}/claim-token`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    const data=await resp.json();
+    if(data.active&&data.token){
+      localStorage.setItem('cirrus_auth_token',data.token);
+      localStorage.setItem('cirrus_email',email);
+      localStorage.setItem('cirrus_access',data.plan||'active');
+      dismissPaywall();
+      // Load weather — use default city or prompt for location
+      const dc=getSetting(SETTINGS_KEYS.defaultCity);
+      if(dc&&dc.lat){state.lat=dc.lat;state.lon=dc.lon;state.name=dc.name;state.region=dc.region;state.countryCode=dc.countryCode||'';autoUnit(state.countryCode);fetchWeather();}
+      else{document.getElementById('btnLocate')?.click();}
+    }else{
+      if(status)status.textContent='No active subscription found for this email.';
+      if(btn){btn.disabled=false;btn.textContent='Restore';}
+    }
+  }catch(e){
+    if(status)status.textContent='Connection error. Please try again.';
+    if(btn){btn.disabled=false;btn.textContent='Restore';}
+  }
+}
+
 async function verifySubscription(){
+  // Primary path: token-based check (no email needed)
+  const token=localStorage.getItem('cirrus_auth_token');
+  if(token){
+    try{
+      const resp=await fetch(`${WORKER_URL}/check-token?token=${encodeURIComponent(token)}`);
+      const data=await resp.json();
+      if(data.active){
+        localStorage.setItem('cirrus_access',data.plan||'active');
+        if(data.email)localStorage.setItem('cirrus_email',data.email);
+        return {active:true,plan:data.plan};
+      }else{
+        localStorage.removeItem('cirrus_auth_token');
+        localStorage.removeItem('cirrus_access');
+        return {active:false};
+      }
+    }catch(e){
+      console.warn('Token check failed:',e.message);
+      return {active:!!localStorage.getItem('cirrus_access')};
+    }
+  }
+  // Fallback: legacy email-based check
   const email=localStorage.getItem('cirrus_email');
   const access=localStorage.getItem('cirrus_access');
-  if(!email||!access) return;
+  if(!email||!access) return {active:false};
   try{
     const resp=await fetch(`${WORKER_URL}/check-subscription?email=${encodeURIComponent(email)}`);
     const data=await resp.json();
     if(data.active){
       localStorage.setItem('cirrus_access',data.plan||'active');
+      return {active:true,plan:data.plan};
     }else{
       localStorage.removeItem('cirrus_access');
-      showPaywall();
+      return {active:false};
     }
   }catch(e){
-    // Network error — don't lock out the user, keep current local state
     console.warn('Subscription check failed:',e.message);
+    return {active:!!access};
   }
 }
 
@@ -4631,6 +4693,7 @@ async function handleBetaRedeem(emailId,codeId){
     if(data.active){
       localStorage.setItem('cirrus_email',email);
       localStorage.setItem('cirrus_access','beta');
+      if(data.token)localStorage.setItem('cirrus_auth_token',data.token);
       showSuccessState();
     }else{
       alert(data.error||'Invalid code');
@@ -4659,17 +4722,35 @@ function showSuccessState(){
 }
 
 // Check URL params on load — handle Stripe redirect back
-(function checkStripeReturn(){
+(async function checkStripeReturn(){
   const params=new URLSearchParams(window.location.search);
   if(params.has('session_id')){
-    // Stripe success redirect
+    history.replaceState({},'','/');
     const email=localStorage.getItem('cirrus_email_pending');
     if(email){
-      localStorage.setItem('cirrus_email',email);
-      localStorage.setItem('cirrus_access','active');
-      localStorage.removeItem('cirrus_email_pending');
+      // Try to claim a token from the Worker (webhook may not have fired yet — retry)
+      let claimed=false;
+      for(let i=0;i<3&&!claimed;i++){
+        if(i>0)await new Promise(r=>setTimeout(r,i*1500));
+        try{
+          const resp=await fetch(`${WORKER_URL}/claim-token`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+          const data=await resp.json();
+          if(data.active&&data.token){
+            localStorage.setItem('cirrus_auth_token',data.token);
+            localStorage.setItem('cirrus_email',email);
+            localStorage.setItem('cirrus_access',data.plan||'active');
+            localStorage.removeItem('cirrus_email_pending');
+            claimed=true;
+          }
+        }catch(e){/* retry */}
+      }
+      // Fallback — set access directly so user isn't locked out
+      if(!claimed){
+        localStorage.setItem('cirrus_email',email);
+        localStorage.setItem('cirrus_access','active');
+        localStorage.removeItem('cirrus_email_pending');
+      }
     }
-    history.replaceState({},'','/');
     showSuccessState();
   }
   if(params.get('cancelled')==='1'){
@@ -4677,8 +4758,38 @@ function showSuccessState(){
   }
 })();
 
-// Verify subscription status with server on load
-verifySubscription();
+// Verify subscription + bypass landing for returning subscribers
+(async function initAuth(){
+  const token=localStorage.getItem('cirrus_auth_token');
+  if(!token){verifySubscription();return;}
+  const result=await verifySubscription();
+  if(!result||!result.active)return; // Lapsed or no sub — show landing as normal
+  // Active subscriber — skip marketing page
+  const dc=getSetting(SETTINGS_KEYS.defaultCity);
+  if(dc&&dc.lat){
+    // Default city saved — go straight to weather
+    state.lat=dc.lat;state.lon=dc.lon;state.name=dc.name;state.region=dc.region;state.countryCode=dc.countryCode||'';
+    autoUnit(state.countryCode);
+    fetchWeather();
+  }else{
+    // No default city — show simplified welcome with location button
+    const hero=document.querySelector('.mkt-hero');
+    if(hero){
+      hero.innerHTML=`
+        <div style="text-align:center;padding:40px 0">
+          <div style="font-size:48px;margin-bottom:16px">\u2600\uFE0F</div>
+          <div class="mkt-wordmark" style="margin-bottom:12px">Welcome back</div>
+          <div class="mkt-tagline-pre" style="margin-bottom:24px">Tap below to get your weather.</div>
+          <button class="mkt-cta-btn" onclick="document.getElementById('btnLocate').click()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
+            Get my weather
+          </button>
+        </div>`;
+      // Hide remaining marketing sections
+      hero.parentElement?.querySelectorAll('.mkt-section,.mkt-bottom-cta,.mkt-footer').forEach(el=>el.style.display='none');
+    }
+  }
+})();
 
 // ── Scroll reveal ─────────────────────────────────────────────────────────────
 (function initReveal(){
