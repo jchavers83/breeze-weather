@@ -737,7 +737,8 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .reveal-d4{transition-delay:0.28s}
 
 /* Paywall overlay */
-.paywall-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,#4A90D9 0%,#357ABD 50%,#2a6aa6 100%);padding:24px;overflow-y:auto}
+.paywall-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,#4A90D9 0%,#357ABD 50%,#2a6aa6 100%);padding:24px;overflow-y:auto;opacity:0;transition:opacity 0.5s ease}
+.paywall-overlay.visible{opacity:1}
 .dark .paywall-overlay{background:linear-gradient(155deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)}
 
 /* ── Dark mode landing page overrides ── */
@@ -1021,7 +1022,7 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
         <button class="mkt-cta-btn secondary reveal" style="max-width:400px;margin:0 auto;flex-direction:column;gap:3px;padding:14px 24px" onclick="document.getElementById('btnLocate').click()">
           <span style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
-            Try it free — 3 lookups, no signup
+            Try it free
           </span>
           <span style="font-size:12px;font-weight:500;opacity:0.75">No account needed</span>
         </button>
@@ -2015,7 +2016,7 @@ async function fetchWeather(){
   if(state.lat===null)return;
   // Subscription gating
   const gate=checkAccess();
-  if(!gate.allowed){showPaywall(gate.reason);return;}
+  if(!gate.allowed){showPaywall();return;}
   if(gate.free)incrementFreeLookup();
   const app=$('#app');
   app.classList.add('loading');
@@ -2046,6 +2047,8 @@ async function fetchWeather(){
       setTimeout(()=>requestAnimationFrame(tick),32);
     }
     scheduleRefresh();
+    // Show paywall after last free lookup — delay so user sees their weather first
+    if(gate.free&&gate.lastFree){setTimeout(()=>showPaywall(),1800);}
     // Update OneSignal tags when weather loads
     if(window.OneSignalDeferred){
       OneSignalDeferred.push(async function(OneSignal){
@@ -4504,8 +4507,8 @@ function checkAccess(){
   const access=localStorage.getItem('cirrus_access');
   if(access==='active'||access==='beta') return {allowed:true};
   const used=parseInt(localStorage.getItem('cirrus_free_lookups')||'0',10);
-  if(used<FREE_LOOKUP_LIMIT) return {allowed:true,free:true,remaining:FREE_LOOKUP_LIMIT-used-1};
-  return {allowed:false,reason:access?'expired':'free_exhausted'};
+  if(used<FREE_LOOKUP_LIMIT) return {allowed:true,free:true,lastFree:used===FREE_LOOKUP_LIMIT-1};
+  return {allowed:false,reason:'upgrade'};
 }
 
 function incrementFreeLookup(){
@@ -4513,14 +4516,11 @@ function incrementFreeLookup(){
   localStorage.setItem('cirrus_free_lookups',String(used+1));
 }
 
-function showPaywall(reason){
+function showPaywall(){
   // Remove existing paywall if any
   document.getElementById('paywallOverlay')?.remove();
-  const isExpired=reason==='expired';
-  const title=isExpired?'Your subscription has expired':'Your free preview has ended';
-  const sub=isExpired
-    ?'Renew your subscription to keep getting clean, ad-free weather.'
-    :'You\u2019ve used your 3 free lookups. Subscribe to get unlimited access \u2014 no ads, no noise.';
+  const title='Ready for unlimited, ad-free weather?';
+  const sub='You\u2019ve seen what Cirrus can do. No ads, no articles, just the weather \u2014 delivered with a little personality.';
   const overlay=document.createElement('div');
   overlay.id='paywallOverlay';
   overlay.className='paywall-overlay';
@@ -4549,6 +4549,8 @@ function showPaywall(reason){
       </div>
     </div>`;
   document.body.appendChild(overlay);
+  // Trigger fade-in on next frame
+  requestAnimationFrame(()=>requestAnimationFrame(()=>overlay.classList.add('visible')));
 }
 
 function dismissPaywall(){
@@ -4566,7 +4568,7 @@ async function verifySubscription(){
       localStorage.setItem('cirrus_access',data.plan||'active');
     }else{
       localStorage.removeItem('cirrus_access');
-      showPaywall('expired');
+      showPaywall();
     }
   }catch(e){
     // Network error — don't lock out the user, keep current local state
