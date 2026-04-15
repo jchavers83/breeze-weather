@@ -770,13 +770,15 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .paywall-logo{width:96px;height:96px;margin:0 auto 18px;border-radius:22px;overflow:hidden;border:2px solid rgba(255,255,255,0.55);box-shadow:0 8px 40px rgba(0,0,0,0.32),0 0 0 4px rgba(255,255,255,0.14)}
 .paywall-logo canvas{width:100%;height:100%;display:block}
 .paywall-wordmark{font-size:34px;font-weight:800;letter-spacing:5px;background:linear-gradient(135deg,#ffffff,#b8d8f8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:20px}
-.paywall-title{font-size:26px;font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:-0.5px;line-height:1.25}
+.paywall-title{font-size:23px;font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:-0.3px;line-height:1.3;text-wrap:balance}
 .paywall-sub{font-size:15px;color:rgba(255,255,255,0.82);margin-bottom:28px;line-height:1.55}
 .paywall-sub .paywall-sub-punch{display:block;font-weight:700;color:#fff;margin-top:6px}
 .paywall-card .mkt-email-form{max-width:100%}
 .paywall-card .mkt-trial-terms{color:rgba(255,255,255,0.55);font-size:12px;margin-top:10px}
 .paywall-beta-link{color:rgba(255,255,255,0.6);font-size:13px;text-decoration:underline;cursor:pointer;margin-top:14px}
 .paywall-beta-link:hover{color:rgba(255,255,255,0.85)}
+.paywall-restore-link{display:inline-block;color:#fff;font-size:15px;font-weight:700;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;cursor:pointer;margin-top:22px;padding:4px 8px}
+.paywall-restore-link:hover{color:#e8f4ff}
 /* PWA install banner */
 .install-banner{position:fixed;bottom:78px;left:12px;right:12px;z-index:99;background:var(--card-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--card-border);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);opacity:0;transform:translateY(20px);transition:opacity 0.4s ease,transform 0.4s ease;pointer-events:none}
 .install-banner.visible{opacity:1;transform:translateY(0);pointer-events:auto}
@@ -4646,7 +4648,7 @@ function incrementFreeLookup(){
 function showPaywall(){
   // Remove existing paywall if any
   document.getElementById('paywallOverlay')?.remove();
-  const title='Ready for unlimited, ad-free weather?';
+  const title='Ready for unlimited,\u00a0ad-free\u00a0weather?';
   const overlay=document.createElement('div');
   overlay.id='paywallOverlay';
   overlay.className='paywall-overlay';
@@ -4677,7 +4679,7 @@ function showPaywall(){
           <button class="mkt-cta-btn" style="width:auto;padding:0 18px;white-space:nowrap" onclick="handleBetaRedeem('paywallEmail','paywallBetaCode')">Redeem</button>
         </div>
       </div>
-      <div class="paywall-beta-link" onclick="toggleBetaForm('paywallRestoreForm')">Already subscribed?</div>
+      <div class="paywall-restore-link" onclick="toggleBetaForm('paywallRestoreForm')">Already subscribed?</div>
       <div id="paywallRestoreForm" style="display:none;margin-top:12px">
         <div style="display:flex;gap:8px">
           <input id="paywallRestoreEmail" class="mkt-email-input" type="email" placeholder="Enter your email to restore access" autocomplete="email">
