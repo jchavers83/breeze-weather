@@ -83,29 +83,28 @@ async function handleScheduled(event, env) {
 }
 
 // ── Severe Weather Alerts ──────────────────────────────────────────────────
-// NWS alert events worth pushing (warnings and extreme watches only)
+// Only push high-impact alerts that require immediate attention.
+// Advisories, statements, and non-imminent watches are intentionally excluded.
 const PUSH_ALERT_EVENTS = new Set([
   'Tornado Warning', 'Tornado Watch',
   'Hurricane Warning', 'Hurricane Watch',
   'Extreme Wind Warning',
-  'Flash Flood Emergency', 'Flash Flood Warning', 'Flash Flood Watch',
-  'Severe Thunderstorm Warning', 'Severe Thunderstorm Watch',
+  'Flash Flood Emergency', 'Flash Flood Warning',
+  'Severe Thunderstorm Warning',
   'Tropical Storm Warning', 'Tropical Storm Watch',
   'Blizzard Warning', 'Ice Storm Warning',
-  'Winter Storm Warning', 'Winter Storm Watch',
-  'Red Flag Warning',
+  'Winter Storm Warning',
 ]);
 
 const ALERT_ICONS = {
   'Tornado Warning': '🌪️', 'Tornado Watch': '🌪️',
   'Hurricane Warning': '🌀', 'Hurricane Watch': '🌀',
   'Extreme Wind Warning': '🌬️',
-  'Flash Flood Emergency': '🚨', 'Flash Flood Warning': '🌊', 'Flash Flood Watch': '🌊',
-  'Severe Thunderstorm Warning': '⛈️', 'Severe Thunderstorm Watch': '⛈️',
+  'Flash Flood Emergency': '🚨', 'Flash Flood Warning': '🌊',
+  'Severe Thunderstorm Warning': '⛈️',
   'Tropical Storm Warning': '🌀', 'Tropical Storm Watch': '🌀',
   'Blizzard Warning': '❄️', 'Ice Storm Warning': '🧣',
-  'Winter Storm Warning': '❄️', 'Winter Storm Watch': '❄️',
-  'Red Flag Warning': '🔥',
+  'Winter Storm Warning': '❄️',
 };
 
 async function checkSevereWeather(env) {
@@ -118,12 +117,12 @@ async function checkSevereWeather(env) {
   if (!resp.ok) { console.error('NWS API error:', resp.status); return; }
 
   const data = await resp.json();
+  // Strict whitelist — only push alerts that explicitly require immediate action.
+  // No severity fallback (a "Severe" advisory is still just an advisory).
   const features = (data.features || []).filter(f => {
     const p = f.properties;
     if (!p) return false;
-    // Only push known severe events or Extreme/Severe severity
-    return PUSH_ALERT_EVENTS.has(p.event) ||
-      p.severity === 'Extreme' || p.severity === 'Severe';
+    return PUSH_ALERT_EVENTS.has(p.event);
   });
 
   let sent = 0;

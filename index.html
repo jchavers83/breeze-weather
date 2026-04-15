@@ -239,9 +239,9 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 
 /* What to wear card */
 .wear-card{padding:16px 20px;margin-bottom:16px}
-.wear-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px}
-.wear-text{font-size:14px;font-weight:500;color:var(--text);line-height:1.45}
-.wear-quip{font-size:12px;color:var(--text-tertiary);margin-top:5px;font-style:italic;line-height:1.4}
+.wear-label{font-size:13px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+.wear-text{font-size:16px;font-weight:500;color:var(--text);line-height:1.45}
+.wear-quip{font-size:14px;color:var(--text-tertiary);margin-top:6px;font-style:italic;line-height:1.4}
 .wear-emojis{font-size:22px;margin-top:10px;letter-spacing:4px}
 
 /* Precipitation timeline */
@@ -1939,6 +1939,9 @@ $('#btnDark').addEventListener('click',()=>{
 // Fetch
 
 // ── Severe weather alerts (NWS API — US only, free, no key) ─────────────────
+// Only high-impact alerts — watches/advisories/statements that don't require
+// immediate action (Red Flag, Heat Advisory, Dense Fog, Special Weather Statement,
+// etc.) are intentionally excluded. Users shouldn't be bothered unless it matters.
 const ALERT_CFG={
   'Tornado Warning':          {icon:'\uD83C\uDF2A\uFE0F',cls:'alert-warning',p:1},
   'Tornado Watch':            {icon:'\uD83C\uDF2A\uFE0F',cls:'alert-watch',p:2},
@@ -1949,21 +1952,10 @@ const ALERT_CFG={
   'Severe Thunderstorm Warning':{icon:'\u26C8\uFE0F',cls:'alert-warning',p:7},
   'Flash Flood Warning':      {icon:'\uD83C\uDF0A',cls:'alert-warning',p:8},
   'Tropical Storm Warning':   {icon:'\uD83C\uDF00',cls:'alert-warning',p:9},
-  'Blizzard Warning':         {icon:'\u2744\uFE0F',cls:'alert-warning',p:10},
-  'Ice Storm Warning':        {icon:'\uD83E\uDDE3',cls:'alert-warning',p:11},
-  'Winter Storm Warning':     {icon:'\u2744\uFE0F',cls:'alert-warning',p:12},
-  'Red Flag Warning':         {icon:'\uD83D\uDD25',cls:'alert-warning',p:13},
-  'Severe Thunderstorm Watch':{icon:'\u26C8\uFE0F',cls:'alert-watch',p:14},
-  'Tropical Storm Watch':     {icon:'\uD83C\uDF00',cls:'alert-watch',p:15},
-  'Hurricane Force Wind Watch':{icon:'\uD83C\uDF00',cls:'alert-watch',p:16},
-  'Flash Flood Watch':        {icon:'\uD83C\uDF0A',cls:'alert-watch',p:17},
-  'Winter Storm Watch':       {icon:'\u2744\uFE0F',cls:'alert-watch',p:18},
-  'Winter Weather Advisory':  {icon:'\uD83C\uDF28\uFE0F',cls:'alert-advisory',p:19},
-  'Wind Advisory':            {icon:'\uD83D\uDCA8',cls:'alert-advisory',p:20},
-  'Heat Advisory':            {icon:'\uD83C\uDF21\uFE0F',cls:'alert-advisory',p:21},
-  'Frost Advisory':           {icon:'\uD83C\uDF21\uFE0F',cls:'alert-advisory',p:22},
-  'Dense Fog Advisory':       {icon:'\uD83C\uDF2B\uFE0F',cls:'alert-advisory',p:23},
-  'Special Weather Statement':{icon:'\u26A0\uFE0F',cls:'alert-advisory',p:24},
+  'Tropical Storm Watch':     {icon:'\uD83C\uDF00',cls:'alert-watch',p:10},
+  'Blizzard Warning':         {icon:'\u2744\uFE0F',cls:'alert-warning',p:11},
+  'Ice Storm Warning':        {icon:'\uD83E\uDDE3',cls:'alert-warning',p:12},
+  'Winter Storm Warning':     {icon:'\u2744\uFE0F',cls:'alert-warning',p:13},
 };
 
 // ── Severe alert summary card override ──────────────────────────────────────
@@ -2134,10 +2126,9 @@ async function fetchAlerts(){
     );
     if(!r.ok){banner.style.display='none';return;}
     const data=await r.json();
-    const features=(data.features||[]).filter(f=>
-      f.properties&&(ALERT_CFG[f.properties.event]||
-        f.properties.severity==='Extreme'||f.properties.severity==='Severe')
-    );
+    // Only show alerts that are explicitly in ALERT_CFG (high-impact whitelist).
+    // No severity fallback — a "Severe" advisory is still an advisory.
+    const features=(data.features||[]).filter(f=>f.properties&&ALERT_CFG[f.properties.event]);
     _renderAlerts(features);
   }catch(e){if(banner)banner.style.display='none';}
 }
