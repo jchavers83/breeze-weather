@@ -767,9 +767,12 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .dark .mkt-footer{border-top-color:rgba(255,255,255,0.1)}
 .dark .mkt-footer-url{color:rgba(255,255,255,0.5)}
 .paywall-card{max-width:420px;width:100%;text-align:center}
-.paywall-icon{font-size:56px;margin-bottom:16px}
-.paywall-title{font-size:26px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-0.5px}
-.paywall-sub{font-size:15px;color:rgba(255,255,255,0.75);margin-bottom:28px;line-height:1.5}
+.paywall-logo{width:96px;height:96px;margin:0 auto 12px;display:block}
+.paywall-logo canvas{width:100%;height:100%;display:block}
+.paywall-wordmark{font-size:34px;font-weight:800;letter-spacing:5px;background:linear-gradient(135deg,#ffffff,#b8d8f8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:20px}
+.paywall-title{font-size:26px;font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:-0.5px;line-height:1.25}
+.paywall-sub{font-size:15px;color:rgba(255,255,255,0.82);margin-bottom:28px;line-height:1.55}
+.paywall-sub .paywall-sub-punch{display:block;font-weight:700;color:#fff;margin-top:6px}
 .paywall-card .mkt-email-form{max-width:100%}
 .paywall-card .mkt-trial-terms{color:rgba(255,255,255,0.55);font-size:12px;margin-top:10px}
 .paywall-beta-link{color:rgba(255,255,255,0.6);font-size:13px;text-decoration:underline;cursor:pointer;margin-top:14px}
@@ -4644,15 +4647,18 @@ function showPaywall(){
   // Remove existing paywall if any
   document.getElementById('paywallOverlay')?.remove();
   const title='Ready for unlimited, ad-free weather?';
-  const sub='You\u2019ve seen what Cirrus can do. No ads, no articles, just the weather \u2014 delivered with a little personality.';
   const overlay=document.createElement('div');
   overlay.id='paywallOverlay';
   overlay.className='paywall-overlay';
   overlay.innerHTML=`
     <div class="paywall-card">
-      <div class="paywall-icon">\u2601\uFE0F</div>
+      <div class="paywall-logo"><canvas id="paywallLogoCanvas" width="192" height="192"></canvas></div>
+      <div class="paywall-wordmark">CIRRUS</div>
       <div class="paywall-title">${title}</div>
-      <div class="paywall-sub">${sub}</div>
+      <div class="paywall-sub">
+        You\u2019ve seen what Cirrus can do. No ads, no articles, no agenda.
+        <span class="paywall-sub-punch">Just the weather \u2014 delivered with a little personality.</span>
+      </div>
       <div class="mkt-email-form">
         <div class="mkt-email-input-wrap">
           <input class="mkt-email-input" type="email" id="paywallEmail" placeholder="Enter your email to get started" autocomplete="email" oninput="handleMktEmail(this,'paywallEmailIcon')">
@@ -4681,6 +4687,10 @@ function showPaywall(){
       </div>
     </div>`;
   document.body.appendChild(overlay);
+  // Draw the Cirrus logo into the paywall canvas from the hidden landingIcon source
+  const src=document.getElementById('landingIcon');
+  const dest=document.getElementById('paywallLogoCanvas');
+  if(src&&dest)dest.getContext('2d').drawImage(src,0,0,192,192);
   // Trigger fade-in on next frame
   requestAnimationFrame(()=>requestAnimationFrame(()=>overlay.classList.add('visible')));
 }
