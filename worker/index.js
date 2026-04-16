@@ -583,41 +583,42 @@ async function handleClaimToken(request, env) {
 // ── Email via Resend ─────────────────────────────────────────────────────────
 
 function buildWelcomeEmail(type) {
-  const feedback = `If you spot a bug or have a feature idea, just hit reply. I read every one and fix things fast — like, same-day fast. That's one of the advantages of building something you actually care about.`;
+  const intro = `I got tired of opening a weather app and getting hit with ads, clickbait articles, and a 47-step forecast I never asked for. I just wanted to know if I needed a jacket or flip flops. That's it.<br><br>
+So I built Cirrus. Clean. Fast. Beautiful. And a little opinionated about the weather. 🌤️`;
+
+  const installTip = `One thing worth doing: install Cirrus to your home screen. In Safari, tap Share → "Add to Home Screen." Opens instantly, feels like a real app, no App Store required.`;
+
+  const feedback = `If you spot a bug or have a feature idea, hit reply. I read every one and fix things fast — like, same-day fast.`;
 
   const content = {
     trial: {
       subject: "Welcome to Cirrus. 🌤️",
       body: `Hey — Josh here.<br><br>
-I got tired of opening a weather app and getting hit with ads, clickbait articles, and a 47-step forecast I never asked for. I just wanted to know if I needed a jacket or flip flops. That's it.<br><br>
-So I built Cirrus. Clean. Fast. Beautiful. And a little opinionated about the weather.<br><br>
+${intro}<br><br>
 You've got 7 days of full access, starting now. <strong>No ads. No articles. No agenda. Just the weather.</strong><br><br>
-💡 Best thing to do right now: install it to your home screen. In Safari, tap Share → "Add to Home Screen." Opens instantly every time, no App Store required.<br><br>
+${installTip}<br><br>
 ${feedback}<br><br>
-What made you give it a shot? I'd love to know.<br><br>
+What made you give it a shot? I'd love to know. ⛅<br><br>
 — Josh<br>
 <span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
     paid: {
-      subject: "Welcome to Cirrus. 🌤️",
+      subject: "Thank you. 🌦️",
       body: `Hey — Josh here.<br><br>
-I got tired of opening a weather app and getting hit with ads, clickbait articles, and a 47-step forecast I never asked for. I just wanted to know if I needed a jacket or flip flops. That's it.<br><br>
-So I built Cirrus. Clean. Fast. Beautiful. And a little opinionated about the weather.<br><br>
-You're officially a subscriber. Thank you — genuinely. <strong>No ads. No articles. No agenda. Just the weather.</strong> That's the promise and I intend to keep it.<br><br>
-💡 If you haven't already: install Cirrus to your home screen. In Safari, tap Share → "Add to Home Screen." It opens instantly, just like a native app — no App Store required.<br><br>
-${feedback}<br><br>
+You tried it. You stuck around. That genuinely means a lot. 🌦️<br><br>
+Thank you for subscribing. <strong>No ads. No articles. No agenda. Just the weather.</strong> That's the promise — and I intend to keep it.<br><br>
+If you ever want something added or spot something off, just reply. I build fast.<br><br>
 — Josh<br>
 <span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
     beta: {
       subject: "Welcome to Cirrus. 🌤️",
       body: `Hey — Josh here.<br><br>
-I got tired of opening a weather app and getting hit with ads, clickbait articles, and a 47-step forecast I never asked for. I just wanted to know if I needed a jacket or flip flops. That's it.<br><br>
-So I built Cirrus. Clean. Fast. Beautiful. And a little opinionated about the weather.<br><br>
+${intro}<br><br>
 Your code worked. You're in. <strong>No ads. No articles. No agenda. Just the weather.</strong><br><br>
-💡 One thing worth doing: install Cirrus to your home screen. In Safari, tap Share → "Add to Home Screen." Opens instantly, feels like a real app, no App Store required.<br><br>
+${installTip}<br><br>
 ${feedback}<br><br>
-What brought you to Cirrus? I'd love to know.<br><br>
+What brought you to Cirrus? I'd love to know. ⛅<br><br>
 — Josh<br>
 <span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
