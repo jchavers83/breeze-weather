@@ -770,7 +770,7 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .paywall-logo{width:96px;height:96px;margin:0 auto 18px;border-radius:22px;overflow:hidden;border:2px solid rgba(255,255,255,0.55);box-shadow:0 8px 40px rgba(0,0,0,0.32),0 0 0 4px rgba(255,255,255,0.14)}
 .paywall-logo canvas{width:100%;height:100%;display:block}
 .paywall-wordmark{font-size:34px;font-weight:800;letter-spacing:5px;background:linear-gradient(135deg,#ffffff,#b8d8f8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:20px}
-.paywall-title{font-size:23px;font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:-0.3px;line-height:1.3;text-wrap:balance}
+.paywall-title{font-size:20px;font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:-0.3px;line-height:1.3;text-wrap:balance}
 .paywall-sub{font-size:15px;color:rgba(255,255,255,0.82);margin-bottom:28px;line-height:1.55}
 .paywall-sub .paywall-sub-punch{display:block;font-weight:700;color:#fff;margin-top:6px}
 .paywall-card .mkt-email-form{max-width:100%}
@@ -4648,7 +4648,7 @@ function incrementFreeLookup(){
 function showPaywall(){
   // Remove existing paywall if any
   document.getElementById('paywallOverlay')?.remove();
-  const title='Unlimited weather.\u00a0Zero\u00a0ads.';
+  const title='Ready for unlimited,\u00a0ad-free\u00a0weather?';
   const overlay=document.createElement('div');
   overlay.id='paywallOverlay';
   overlay.className='paywall-overlay';
@@ -4658,7 +4658,7 @@ function showPaywall(){
       <div class="paywall-wordmark">CIRRUS</div>
       <div class="paywall-title">${title}</div>
       <div class="paywall-sub">
-        No clickbait, no agenda, no noise.
+        You\u2019ve seen what Cirrus can do. No ads, no articles, no agenda.
         <span class="paywall-sub-punch">Just the weather \u2014 delivered with a little personality.</span>
       </div>
       <div class="mkt-email-form">
