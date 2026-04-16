@@ -583,35 +583,38 @@ async function handleClaimToken(request, env) {
 // ── Email via Resend ─────────────────────────────────────────────────────────
 
 function buildWelcomeEmail(type) {
+  const origin = `I built Cirrus because I got tired of opening a weather app and being hit with ads, clickbait articles, and a 47-step forecast I never asked for. I just wanted to know if I needed a jacket. That's it.<br><br>
+So I built the app I actually wanted. Clean. Fast. Beautiful. And a little opinionated about the weather.`;
+
   const content = {
     trial: {
       subject: "Your 7-day trial just started. 🌤️",
       body: `Hey — Josh here. I built Cirrus.<br><br>
-You've got 7 days of full access, starting now.<br><br>
-<strong>No ads. No articles. No agenda. Just the weather.</strong> That's the whole point — and I think once it's on your home screen, you'll get it immediately.<br><br>
-💡 Best thing to do right now: install it. In Safari, tap the Share button → "Add to Home Screen." Opens instantly every time, no App Store required.<br><br>
+${origin}<br><br>
+You've got 7 days of full access, starting now. <strong>No ads. No articles. No agenda. Just the weather.</strong><br><br>
+💡 Best thing to do right now: install it to your home screen. In Safari, tap Share → "Add to Home Screen." Opens instantly every time, no App Store required.<br><br>
 What made you give it a shot? Hit reply — I actually read these.<br><br>
 — Josh<br>
-<span style="color:#8a9aaa">Founder, Cirrus Weather</span>`,
+<span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
     paid: {
       subject: "You're a subscriber. Thank you. 🌤️",
       body: `Hey — Josh here. I built Cirrus.<br><br>
-You're officially in. Thank you — genuinely.<br><br>
-<strong>No ads. No articles. No agenda. Just the weather.</strong> That's the promise. I intend to keep it.<br><br>
+${origin}<br><br>
+You're officially in. Thank you — genuinely. <strong>No ads. No articles. No agenda. Just the weather.</strong> That's the promise and I intend to keep it.<br><br>
 💡 If you haven't already: install Cirrus to your home screen. In Safari, tap Share → "Add to Home Screen." It opens instantly, just like a native app — no App Store required.<br><br>
 — Josh<br>
-<span style="color:#8a9aaa">Founder, Cirrus Weather</span>`,
+<span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
     beta: {
       subject: "You're in. Welcome to Cirrus. 🌤️",
       body: `Hey — Josh here. I built Cirrus.<br><br>
-Your code worked. You're in.<br><br>
-<strong>No ads. No articles. No agenda. Just the weather</strong> — and if I'm being honest, a little personality too.<br><br>
-💡 One thing worth doing: install Cirrus to your home screen. In Safari, tap Share → "Add to Home Screen." Opens instantly every time, feels like a real app, no App Store required.<br><br>
+${origin}<br><br>
+Your code worked. You're in. <strong>No ads. No articles. No agenda. Just the weather</strong> — and a little personality too.<br><br>
+💡 One thing worth doing: install Cirrus to your home screen. In Safari, tap Share → "Add to Home Screen." Opens instantly, feels like a real app, no App Store required.<br><br>
 What brought you to Cirrus? Hit reply — I actually read these.<br><br>
 — Josh<br>
-<span style="color:#8a9aaa">Founder, Cirrus Weather</span>`,
+<span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
   };
 
@@ -666,6 +669,7 @@ async function sendWelcomeEmail(env, email, type) {
       },
       body: JSON.stringify({
         from: 'Josh @ Cirrus <josh@cirrusweather.app>',
+        // "Cirrus" only — single word brand
         reply_to: 'josh@cirrusweather.app',
         to: [email],
         subject,
