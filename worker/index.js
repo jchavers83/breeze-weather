@@ -598,7 +598,7 @@ ${intro}<br><br>
 You&rsquo;ve got 7 days of full access, starting now. <strong>No ads. No articles. No agenda. Just the weather.</strong><br><br>
 ${installTip}<br><br>
 ${feedback}<br><br>
-What made you give it a shot? I&rsquo;d love to know. &#9925;<br><br>
+What made you give it a shot? I&rsquo;d love to know. &#9728;<br><br>
 &mdash; Josh<br>
 <span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
@@ -618,7 +618,7 @@ ${intro}<br><br>
 Your code worked. You&rsquo;re in. <strong>No ads. No articles. No agenda. Just the weather.</strong><br><br>
 ${installTip}<br><br>
 ${feedback}<br><br>
-What brought you to Cirrus? I&rsquo;d love to know. &#9925;<br><br>
+What brought you to Cirrus? I&rsquo;d love to know. &#9728;<br><br>
 &mdash; Josh<br>
 <span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
