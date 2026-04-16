@@ -2181,18 +2181,16 @@ async function fetchWeather(){
     if(window.OneSignalDeferred){
       OneSignalDeferred.push(async function(OneSignal){
         try{
-          OneSignal.User.addTags({
-            city: state.name.toLowerCase(),
-            lat: String(state.lat||''),
-            lon: String(state.lon||''),
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            notif_morning: getSetting(SETTINGS_KEYS.morningBriefing)?'1':'0',
-            notif_evening: getSetting(SETTINGS_KEYS.eveningBriefing)?'1':'0',
-            notif_severe: getSetting(SETTINGS_KEYS.severeAlerts)?'1':'0',
-            notif_precip: getSetting(SETTINGS_KEYS.precipAlerts)?'1':'0',
-            morning_hour: String(getSetting(SETTINGS_KEYS.morningHour)),
-            evening_hour: String(getSetting(SETTINGS_KEYS.eveningHour)),
-          });
+          OneSignal.User.addTag('city',state.name.toLowerCase());
+          OneSignal.User.addTag('lat',String(state.lat||''));
+          OneSignal.User.addTag('lon',String(state.lon||''));
+          OneSignal.User.addTag('timezone',Intl.DateTimeFormat().resolvedOptions().timeZone);
+          OneSignal.User.addTag('notif_morning',getSetting(SETTINGS_KEYS.morningBriefing)?'1':'0');
+          OneSignal.User.addTag('notif_evening',getSetting(SETTINGS_KEYS.eveningBriefing)?'1':'0');
+          OneSignal.User.addTag('notif_severe',getSetting(SETTINGS_KEYS.severeAlerts)?'1':'0');
+          OneSignal.User.addTag('notif_precip',getSetting(SETTINGS_KEYS.precipAlerts)?'1':'0');
+          OneSignal.User.addTag('morning_hour',String(getSetting(SETTINGS_KEYS.morningHour)));
+          OneSignal.User.addTag('evening_hour',String(getSetting(SETTINGS_KEYS.eveningHour)));
         }catch(e){console.warn('OneSignal tag error:',e);}
       });
       // Auto-prompt for push permission on first weather load
