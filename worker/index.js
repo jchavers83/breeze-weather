@@ -652,8 +652,9 @@ What brought you to Cirrus? I&rsquo;d love to know. &#9728;<br><br>
 
         <!-- Footer -->
         <tr><td style="padding:20px 16px 0;text-align:center">
-          <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.85);line-height:1.8">No ads. No articles. No agenda. Just the weather.<br>
-          <a href="https://cirrusweather.app" style="color:#ffffff;font-weight:700;text-decoration:none">cirrusweather.app</a></p>
+          <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.8);line-height:1.8;letter-spacing:1px;text-transform:uppercase">No ads. No articles. No agenda.</p>
+          <p style="margin:4px 0 10px;font-size:13px;font-weight:800;color:#ffffff;letter-spacing:1px;text-transform:uppercase">Just the weather.</p>
+          <a href="https://cirrusweather.app" style="font-size:12px;color:rgba(255,255,255,0.8);text-decoration:none">cirrusweather.app</a>
         </td></tr>
 
       </table>
