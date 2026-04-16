@@ -1757,8 +1757,8 @@ function renderSettings(){
 
   const header=`
     <div style="text-align:center;padding:24px 0 24px">
-      <div class="landing-icon" style="margin-bottom:16px"><canvas id="settingsLogo" width="260" height="260" style="width:130px;height:130px"></canvas></div>
-      <div class="landing-title">CIRRUS</div>
+      <div class="paywall-logo" style="margin:0 auto 16px"><canvas id="settingsLogo" width="192" height="192"></canvas></div>
+      <div class="paywall-wordmark" style="margin-bottom:8px">CIRRUS</div>
       <div class="landing-tagline" style="color:var(--text-secondary)">No ads. No articles. No agenda.<span class="tagline-punch" style="color:var(--text);font-weight:800">Just the weather.</span></div>
     </div>`;
 
@@ -1873,7 +1873,7 @@ function renderSettings(){
   const sc=document.getElementById('settingsLogo');
   if(sc){
     const lc=document.getElementById('landingIcon');
-    if(lc)sc.getContext('2d').drawImage(lc,0,0,260,260);
+    if(lc)sc.getContext('2d').drawImage(lc,0,0,192,192);
   }
 }
 
