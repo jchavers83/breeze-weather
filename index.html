@@ -1886,6 +1886,9 @@ function renderSettings(){
   const about=`
     <div class="settings-about">
       <a href="https://cirrusweather.app">cirrusweather.app</a> &nbsp;&mdash;&nbsp; <span style="opacity:0.6">v1.0</span>
+    </div>
+    <div style="text-align:center;padding:8px 0 16px">
+      <button onclick="localStorage.removeItem('cirrus_install_onboarded');localStorage.removeItem('cirrus_auth_token');localStorage.removeItem('cirrus_email');localStorage.removeItem('cirrus_access');localStorage.removeItem('cirrus_free_lookups');localStorage.removeItem('cirrus_notif_prompted');location.reload();" style="background:none;border:none;color:var(--text-tertiary);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit;opacity:0.6">Reset app state</button>
     </div>`;
 
   el.innerHTML=header+prefsSection+notifSection+notifCta+acctSection+supportSection+about;
