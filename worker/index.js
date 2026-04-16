@@ -10,7 +10,9 @@
 //   BETA_CODES               comma-separated list of valid beta codes
 //   ONESIGNAL_APP_ID         OneSignal App ID
 //   ONESIGNAL_REST_API_KEY   OneSignal REST API Key (from Settings → Keys & IDs)
-//   WEATHER_API_KEY           WeatherAPI.com key (same as frontend)
+//   WEATHER_API_KEY          WeatherAPI.com key (same as frontend)
+//   RESEND_API_KEY           Resend API key (from resend.com → API Keys)
+//   RESEND_AUDIENCE_ID       Resend Audience ID (from resend.com → Audiences)
 //
 // KV namespace binding (set in Cloudflare dashboard → Worker → Settings → Bindings):
 //   CIRRUS_SUBSCRIPTIONS     KV namespace
@@ -409,16 +411,20 @@ async function handleWebhook(request, env) {
       // Session completed — subscription is now active (trial or paid)
       const email = sub.customer_email || sub.customer_details?.email;
       if (email && sub.subscription) {
+        const plan = sub.amount_total === 0 ? 'trial' : 'paid';
         const token = generateToken();
         await saveSubscription(env, email, {
           status: 'active',
           subscriptionId: sub.subscription,
           customerId: sub.customer,
-          plan: sub.amount_total === 0 ? 'trial' : 'paid',
+          plan,
           token,
           createdAt: Date.now(),
         });
         await saveToken(env, token, email);
+        // Welcome email + add to contacts list
+        await sendWelcomeEmail(env, email, plan);
+        await addContact(env, email);
       }
       break;
     }
@@ -480,13 +486,6 @@ async function handleRedeemBeta(request, env) {
     return err('Invalid or expired code', 403);
   }
 
-  // Check if code already used (prevent sharing)
-  const usedKey = `beta_code:${code.trim().toUpperCase()}`;
-  const usedBy = await env.CIRRUS_SUBSCRIPTIONS.get(usedKey);
-  if (usedBy && usedBy !== email.toLowerCase()) {
-    return err('Code already redeemed', 403);
-  }
-
   const token = generateToken();
   await saveSubscription(env, email.toLowerCase(), {
     status: 'beta',
@@ -496,7 +495,10 @@ async function handleRedeemBeta(request, env) {
     grantedAt: Date.now(),
   });
   await saveToken(env, token, email.toLowerCase());
-  await env.CIRRUS_SUBSCRIPTIONS.put(usedKey, email.toLowerCase());
+
+  // Welcome email + add to contacts list
+  await sendWelcomeEmail(env, email.toLowerCase(), 'beta');
+  await addContact(env, email.toLowerCase());
 
   return json({ active: true, plan: 'beta', token });
 }
@@ -576,6 +578,108 @@ async function handleClaimToken(request, env) {
   await saveToken(env, token, email); // Ensure reverse mapping exists
 
   return json({ active: true, token, plan: sub.plan || null, email });
+}
+
+// ── Email via Resend ─────────────────────────────────────────────────────────
+
+function buildWelcomeEmail(type) {
+  const content = {
+    trial: {
+      subject: "Your Cirrus free trial is live 🌤️",
+      headline: "Your free trial is live.",
+      body: "You've got 7 days of full access to Cirrus — ad-free weather with personality, live radar, severe weather alerts, and daily morning briefings. No ads. No clickbait. Just the weather.",
+    },
+    paid: {
+      subject: "Welcome to Cirrus — you're all set 🌤️",
+      headline: "You're officially a subscriber.",
+      body: "Thanks for subscribing to Cirrus. You've got unlimited access to everything — ad-free weather, live radar, severe alerts, and daily briefings delivered with a little personality. We're glad you're here.",
+    },
+    beta: {
+      subject: "Beta access confirmed — welcome to Cirrus 🌤️",
+      headline: "Beta access confirmed.",
+      body: "You're in. Your code worked and you've got full access to Cirrus — no ads, no articles, just clean weather with a bit of personality. Thanks for being an early tester. Your feedback matters.",
+    },
+  };
+
+  const c = content[type] || content.trial;
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#eef6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#eef6fb;padding:40px 20px">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px">
+
+        <!-- Header -->
+        <tr><td style="background:linear-gradient(160deg,#bde8f8 0%,#5ec7f0 45%,#28b87a 100%);padding:36px 32px;text-align:center;border-radius:20px 20px 0 0">
+          <div style="font-size:30px;font-weight:800;letter-spacing:6px;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">CIRRUS</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:5px;letter-spacing:2px">WEATHER</div>
+        </td></tr>
+
+        <!-- Body -->
+        <tr><td style="background:#ffffff;padding:36px 32px">
+          <h1 style="margin:0 0 16px;font-size:24px;font-weight:800;color:#182838;letter-spacing:-0.3px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">${c.headline}</h1>
+          <p style="margin:0 0 20px;font-size:15px;color:#3a4a5a;line-height:1.7">${c.body}</p>
+          <p style="margin:0 0 32px;font-size:15px;color:#3a4a5a;line-height:1.7">💡 <strong>Pro tip:</strong> Install Cirrus to your home screen for the best experience. In Safari, tap the Share button then "Add to Home Screen" — it opens instantly, just like a native app.</p>
+          <table cellpadding="0" cellspacing="0" width="100%"><tr><td align="center">
+            <a href="https://cirrusweather.app" style="display:inline-block;background:linear-gradient(135deg,#1a90e4,#28b87a);color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:15px 40px;border-radius:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">Open Cirrus →</a>
+          </td></tr></table>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="background:#f4f8fa;padding:20px 32px;text-align:center;border-radius:0 0 20px 20px;border-top:1px solid #e8eef2">
+          <p style="margin:0;font-size:12px;color:#8a9aaa;line-height:1.6">No ads. No articles. No agenda. Just the weather.<br>
+          <a href="https://cirrusweather.app" style="color:#1a90e4;text-decoration:none">cirrusweather.app</a></p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  return { subject: c.subject, html };
+}
+
+async function sendWelcomeEmail(env, email, type) {
+  if (!env.RESEND_API_KEY) return; // no-op if not configured
+  const { subject, html } = buildWelcomeEmail(type);
+  try {
+    const resp = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Cirrus Weather <hello@cirrusweather.app>',
+        to: [email],
+        subject,
+        html,
+      }),
+    });
+    if (!resp.ok) console.error('Resend send failed:', await resp.text());
+  } catch (e) {
+    console.error('Resend send error:', e); // non-fatal
+  }
+}
+
+async function addContact(env, email) {
+  if (!env.RESEND_API_KEY || !env.RESEND_AUDIENCE_ID) return; // no-op if not configured
+  try {
+    const resp = await fetch(`https://api.resend.com/audiences/${env.RESEND_AUDIENCE_ID}/contacts`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, unsubscribed: false }),
+    });
+    if (!resp.ok) console.error('Resend contact failed:', await resp.text());
+  } catch (e) {
+    console.error('Resend contact error:', e); // non-fatal
+  }
 }
 
 // ── Stripe Webhook Signature Verification ───────────────────────────────────

@@ -19,3 +19,5 @@ crons = ["*/5 * * * *", "0 * * * *"]
 # ONESIGNAL_APP_ID          (30178abc-998e-48d7-9594-21f2914087f0)
 # ONESIGNAL_REST_API_KEY    (from OneSignal → Settings → Keys & IDs)
 # WEATHER_API_KEY            (same key used in the frontend)
+# RESEND_API_KEY             (from resend.com → API Keys → Create API Key)
+# RESEND_AUDIENCE_ID         (from resend.com → Audiences → create one, copy ID)
