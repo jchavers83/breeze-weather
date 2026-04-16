@@ -583,43 +583,43 @@ async function handleClaimToken(request, env) {
 // ── Email via Resend ─────────────────────────────────────────────────────────
 
 function buildWelcomeEmail(type) {
-  const intro = `I got tired of opening a weather app and getting hit with ads, clickbait articles, and a 47-step forecast I never asked for. I just wanted to know if I needed a jacket or flip flops. That's it.<br><br>
-So I built Cirrus. Clean. Fast. Beautiful. And a little opinionated about the weather. 🌤️`;
+  const intro = `I got tired of opening a weather app and having to scroll past ads, sponsored articles about mattresses I never searched for, and a breaking news alert &mdash; just to find out if I needed a jacket or flip flops. That&rsquo;s it.<br><br>
+So I built Cirrus. Clean. Fast. Beautiful. And a little opinionated about the weather. &#9925;`;
 
-  const installTip = `One thing worth doing: install Cirrus to your home screen. In Safari, tap Share → "Add to Home Screen." Opens instantly, feels like a real app, no App Store required.`;
+  const installTip = `One thing worth doing: install Cirrus to your home screen. In Safari, tap Share &rarr; &ldquo;Add to Home Screen.&rdquo; Opens instantly, feels like a real app, no App Store required.`;
 
-  const feedback = `If you spot a bug or have a feature idea, hit reply. I read every one and fix things fast — like, same-day fast.`;
+  const feedback = `If you spot a bug or have a feature idea, hit reply. I read every one and fix things fast &mdash; like, same-day fast.`;
 
   const content = {
     trial: {
-      subject: "Welcome to Cirrus. 🌤️",
-      body: `Hey — Josh here.<br><br>
+      subject: "Welcome to Cirrus.",
+      body: `Hey &mdash; Josh here.<br><br>
 ${intro}<br><br>
-You've got 7 days of full access, starting now. <strong>No ads. No articles. No agenda. Just the weather.</strong><br><br>
+You&rsquo;ve got 7 days of full access, starting now. <strong>No ads. No articles. No agenda. Just the weather.</strong><br><br>
 ${installTip}<br><br>
 ${feedback}<br><br>
-What made you give it a shot? I'd love to know. ⛅<br><br>
-— Josh<br>
+What made you give it a shot? I&rsquo;d love to know. &#9925;<br><br>
+&mdash; Josh<br>
 <span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
     paid: {
-      subject: "Thank you. 🌦️",
-      body: `Hey — Josh here.<br><br>
-You tried it. You stuck around. That genuinely means a lot. 🌦️<br><br>
-Thank you for subscribing. <strong>No ads. No articles. No agenda. Just the weather.</strong> That's the promise — and I intend to keep it.<br><br>
+      subject: "Thank you for subscribing.",
+      body: `Hey &mdash; Josh here.<br><br>
+You tried it. You stuck around. That genuinely means a lot. &#9925;<br><br>
+Thank you for subscribing. <strong>No ads. No articles. No agenda. Just the weather.</strong> That&rsquo;s the promise &mdash; and I intend to keep it.<br><br>
 If you ever want something added or spot something off, just reply. I build fast.<br><br>
-— Josh<br>
+&mdash; Josh<br>
 <span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
     beta: {
-      subject: "Welcome to Cirrus. 🌤️",
-      body: `Hey — Josh here.<br><br>
+      subject: "Welcome to Cirrus.",
+      body: `Hey &mdash; Josh here.<br><br>
 ${intro}<br><br>
-Your code worked. You're in. <strong>No ads. No articles. No agenda. Just the weather.</strong><br><br>
+Your code worked. You&rsquo;re in. <strong>No ads. No articles. No agenda. Just the weather.</strong><br><br>
 ${installTip}<br><br>
 ${feedback}<br><br>
-What brought you to Cirrus? I'd love to know. ⛅<br><br>
-— Josh<br>
+What brought you to Cirrus? I&rsquo;d love to know. &#9925;<br><br>
+&mdash; Josh<br>
 <span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
   };
@@ -635,23 +635,24 @@ What brought you to Cirrus? I'd love to know. ⛅<br><br>
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px">
 
         <!-- Header -->
-        <tr><td style="background:linear-gradient(160deg,#bde8f8 0%,#5ec7f0 45%,#28b87a 100%);padding:36px 32px;text-align:center;border-radius:20px 20px 0 0">
-          <div style="font-size:30px;font-weight:800;letter-spacing:6px;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">CIRRUS</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:5px;letter-spacing:2px">WEATHER</div>
+        <tr><td style="background:linear-gradient(160deg,#bde8f8 0%,#5ec7f0 45%,#28b87a 100%);padding:36px 32px 28px;text-align:center;border-radius:20px 20px 0 0">
+          <img src="https://cirrusweather.app/cirrus-icon-256.png" width="72" height="72" alt="Cirrus" style="display:block;margin:0 auto 16px;border-radius:16px;border:2px solid rgba(255,255,255,0.35)">
+          <div style="font-size:28px;font-weight:800;letter-spacing:6px;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">CIRRUS</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:7px;letter-spacing:2px;text-transform:uppercase">No ads. No articles. No agenda.</div>
         </td></tr>
 
         <!-- Body -->
         <tr><td style="background:#ffffff;padding:36px 32px">
           <p style="margin:0 0 28px;font-size:15px;color:#3a4a5a;line-height:1.8">${c.body}</p>
           <table cellpadding="0" cellspacing="0" width="100%"><tr><td align="center">
-            <a href="https://cirrusweather.app" style="display:inline-block;background:linear-gradient(135deg,#1a90e4,#28b87a);color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:15px 40px;border-radius:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">Open Cirrus →</a>
+            <a href="https://cirrusweather.app" style="display:inline-block;background:linear-gradient(135deg,#1a90e4,#28b87a);color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:15px 40px;border-radius:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">Open Cirrus &#8594;</a>
           </td></tr></table>
         </td></tr>
 
         <!-- Footer -->
-        <tr><td style="background:#f4f8fa;padding:20px 32px;text-align:center;border-radius:0 0 20px 20px;border-top:1px solid #e8eef2">
-          <p style="margin:0;font-size:12px;color:#8a9aaa;line-height:1.6">No ads. No articles. No agenda. Just the weather.<br>
-          <a href="https://cirrusweather.app" style="color:#1a90e4;text-decoration:none">cirrusweather.app</a></p>
+        <tr><td style="background:linear-gradient(160deg,#bde8f8 0%,#5ec7f0 45%,#28b87a 100%);padding:20px 32px;text-align:center;border-radius:0 0 20px 20px">
+          <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.9);line-height:1.7">No ads. No articles. No agenda. Just the weather.<br>
+          <a href="https://cirrusweather.app" style="color:#ffffff;font-weight:600;text-decoration:none">cirrusweather.app</a></p>
         </td></tr>
 
       </table>
