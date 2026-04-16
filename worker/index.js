@@ -583,36 +583,41 @@ async function handleClaimToken(request, env) {
 // ── Email via Resend ─────────────────────────────────────────────────────────
 
 function buildWelcomeEmail(type) {
-  const origin = `I built Cirrus because I got tired of opening a weather app and being hit with ads, clickbait articles, and a 47-step forecast I never asked for. I just wanted to know if I needed a jacket. That's it.<br><br>
-So I built the app I actually wanted. Clean. Fast. Beautiful. And a little opinionated about the weather.`;
+  const feedback = `If you spot a bug or have a feature idea, just hit reply. I read every one and fix things fast — like, same-day fast. That's one of the advantages of building something you actually care about.`;
 
   const content = {
     trial: {
-      subject: "Your 7-day trial just started. 🌤️",
-      body: `Hey — Josh here. I built Cirrus.<br><br>
-${origin}<br><br>
+      subject: "Welcome to Cirrus. 🌤️",
+      body: `Hey — Josh here.<br><br>
+I got tired of opening a weather app and getting hit with ads, clickbait articles, and a 47-step forecast I never asked for. I just wanted to know if I needed a jacket or flip flops. That's it.<br><br>
+So I built Cirrus. Clean. Fast. Beautiful. And a little opinionated about the weather.<br><br>
 You've got 7 days of full access, starting now. <strong>No ads. No articles. No agenda. Just the weather.</strong><br><br>
 💡 Best thing to do right now: install it to your home screen. In Safari, tap Share → "Add to Home Screen." Opens instantly every time, no App Store required.<br><br>
-What made you give it a shot? Hit reply — I actually read these.<br><br>
+${feedback}<br><br>
+What made you give it a shot? I'd love to know.<br><br>
 — Josh<br>
 <span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
     paid: {
-      subject: "You're a subscriber. Thank you. 🌤️",
-      body: `Hey — Josh here. I built Cirrus.<br><br>
-${origin}<br><br>
-You're officially in. Thank you — genuinely. <strong>No ads. No articles. No agenda. Just the weather.</strong> That's the promise and I intend to keep it.<br><br>
+      subject: "Welcome to Cirrus. 🌤️",
+      body: `Hey — Josh here.<br><br>
+I got tired of opening a weather app and getting hit with ads, clickbait articles, and a 47-step forecast I never asked for. I just wanted to know if I needed a jacket or flip flops. That's it.<br><br>
+So I built Cirrus. Clean. Fast. Beautiful. And a little opinionated about the weather.<br><br>
+You're officially a subscriber. Thank you — genuinely. <strong>No ads. No articles. No agenda. Just the weather.</strong> That's the promise and I intend to keep it.<br><br>
 💡 If you haven't already: install Cirrus to your home screen. In Safari, tap Share → "Add to Home Screen." It opens instantly, just like a native app — no App Store required.<br><br>
+${feedback}<br><br>
 — Josh<br>
 <span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
     beta: {
-      subject: "You're in. Welcome to Cirrus. 🌤️",
-      body: `Hey — Josh here. I built Cirrus.<br><br>
-${origin}<br><br>
-Your code worked. You're in. <strong>No ads. No articles. No agenda. Just the weather</strong> — and a little personality too.<br><br>
+      subject: "Welcome to Cirrus. 🌤️",
+      body: `Hey — Josh here.<br><br>
+I got tired of opening a weather app and getting hit with ads, clickbait articles, and a 47-step forecast I never asked for. I just wanted to know if I needed a jacket or flip flops. That's it.<br><br>
+So I built Cirrus. Clean. Fast. Beautiful. And a little opinionated about the weather.<br><br>
+Your code worked. You're in. <strong>No ads. No articles. No agenda. Just the weather.</strong><br><br>
 💡 One thing worth doing: install Cirrus to your home screen. In Safari, tap Share → "Add to Home Screen." Opens instantly, feels like a real app, no App Store required.<br><br>
-What brought you to Cirrus? Hit reply — I actually read these.<br><br>
+${feedback}<br><br>
+What brought you to Cirrus? I'd love to know.<br><br>
 — Josh<br>
 <span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
