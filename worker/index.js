@@ -583,7 +583,7 @@ async function handleClaimToken(request, env) {
 // ── Email via Resend ─────────────────────────────────────────────────────────
 
 function buildWelcomeEmail(type) {
-  const intro = `I got tired of opening a weather app and having to scroll past ads, sponsored articles about mattresses I never searched for, and a breaking news alert &mdash; just to find out if I needed a jacket or flip flops. That&rsquo;s it.<br><br>
+  const intro = `I got tired of opening a weather app and having to fight through ads, sponsored articles, and videos designed to keep me scrolling &mdash; just to find out if I needed a jacket or flip flops.<br><br>
 So I built Cirrus. Clean. Fast. Beautiful. And a little opinionated about the weather. &#9925;`;
 
   const installTip = `One thing worth doing: install Cirrus to your home screen. In Safari, tap Share &rarr; &ldquo;Add to Home Screen.&rdquo; Opens instantly, feels like a real app, no App Store required.`;
@@ -592,10 +592,12 @@ So I built Cirrus. Clean. Fast. Beautiful. And a little opinionated about the we
 
   const content = {
     trial: {
-      subject: "Welcome to Cirrus.",
+      subject: "Welcome to Cirrus. \u26C5",
       body: `Hey &mdash; Josh here.<br><br>
 ${intro}<br><br>
-You&rsquo;ve got 7 days of full access, starting now. <strong>No ads. No articles. No agenda. Just the weather.</strong><br><br>
+You&rsquo;ve got 7 days of full access, starting now.<br><br>
+<strong>No ads. No articles. No agenda.</strong><br><br>
+<strong>Just the weather.</strong><br><br>
 ${installTip}<br><br>
 ${feedback}<br><br>
 What made you give it a shot? I&rsquo;d love to know. &#9728;<br><br>
@@ -603,19 +605,24 @@ What made you give it a shot? I&rsquo;d love to know. &#9728;<br><br>
 <span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
     paid: {
-      subject: "Thank you for subscribing.",
+      subject: "Thank you for subscribing. \u2600",
       body: `Hey &mdash; Josh here.<br><br>
 You tried it. You stuck around. That genuinely means a lot. &#9925;<br><br>
-Thank you for subscribing. <strong>No ads. No articles. No agenda. Just the weather.</strong> That&rsquo;s the promise &mdash; and I intend to keep it.<br><br>
+Thank you for subscribing.<br><br>
+<strong>No ads. No articles. No agenda.</strong><br><br>
+<strong>Just the weather.</strong><br><br>
+That&rsquo;s the promise &mdash; and I intend to keep it.<br><br>
 If you ever want something added or spot something off, just reply. I build fast.<br><br>
 &mdash; Josh<br>
 <span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
     beta: {
-      subject: "Welcome to Cirrus.",
+      subject: "Welcome to Cirrus. \u26C5",
       body: `Hey &mdash; Josh here.<br><br>
 ${intro}<br><br>
-Your code worked. You&rsquo;re in. <strong>No ads. No articles. No agenda. Just the weather.</strong><br><br>
+Your code worked. You&rsquo;re in.<br><br>
+<strong>No ads. No articles. No agenda.</strong><br><br>
+<strong>Just the weather.</strong><br><br>
 ${installTip}<br><br>
 ${feedback}<br><br>
 What brought you to Cirrus? I&rsquo;d love to know. &#9728;<br><br>
@@ -629,8 +636,8 @@ What brought you to Cirrus? I&rsquo;d love to know. &#9728;<br><br>
   const html = `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background-color:#5ec7f0;background:linear-gradient(170deg,#c8eaf8 0%,#5ec7f0 45%,#28b87a 100%);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">
-  <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#5ec7f0" style="background-color:#5ec7f0;background:linear-gradient(170deg,#c8eaf8 0%,#5ec7f0 45%,#28b87a 100%);padding:48px 20px 40px">
+<body style="margin:0;padding:0;background-color:#4ab8e8;background:linear-gradient(170deg,#7dcbea 0%,#3db5e8 40%,#28b87a 100%);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#4ab8e8" style="background-color:#4ab8e8;background:linear-gradient(170deg,#7dcbea 0%,#3db5e8 40%,#28b87a 100%);padding:48px 20px 40px">
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:500px">
 
@@ -638,7 +645,7 @@ What brought you to Cirrus? I&rsquo;d love to know. &#9728;<br><br>
         <tr><td style="padding:0 0 24px;text-align:center">
           <img src="https://cirrusweather.app/cirrus-icon-256.png" width="80" height="80" alt="Cirrus" style="display:block;margin:0 auto 18px;border-radius:20px;border:2px solid rgba(255,255,255,0.45);box-shadow:0 8px 24px rgba(0,0,0,0.15)">
           <div style="font-size:32px;font-weight:800;letter-spacing:7px;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;margin-bottom:8px">CIRRUS</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.75);letter-spacing:2px;text-transform:uppercase">No ads. No articles. No agenda.</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.95);letter-spacing:2px;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,0.15)">No ads. No articles. No agenda.</div>
           <div style="font-size:13px;font-weight:800;color:#ffffff;letter-spacing:2px;text-transform:uppercase;margin-top:5px">Just the weather.</div>
         </td></tr>
 
