@@ -798,6 +798,26 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .ios-install-modal-title{font-size:18px;font-weight:800;color:var(--text);text-align:center;margin-bottom:4px}
 .ios-install-modal-sub{font-size:13px;color:var(--text-secondary);text-align:center;margin-bottom:20px}
 .ios-install-modal-close{display:block;margin:16px auto 0;padding:10px 24px;border-radius:12px;background:rgba(128,128,128,0.15);border:none;color:var(--text);font-size:14px;font-weight:600;cursor:pointer}
+.install-ob-overlay{position:fixed;inset:0;z-index:19000;background:linear-gradient(160deg,#bde8f8 0%,#5ec7f0 45%,#28b87a 100%);display:flex;flex-direction:column;align-items:center;padding:env(safe-area-inset-top,20px) 20px env(safe-area-inset-bottom,20px);opacity:0;transition:opacity 0.4s;overflow-y:auto}
+.install-ob-overlay.visible{opacity:1}
+.install-ob-skip{position:absolute;top:calc(env(safe-area-inset-top,20px) + 12px);right:20px;font-size:13px;color:rgba(255,255,255,0.7);background:none;border:none;cursor:pointer;padding:8px;font-family:inherit}
+.install-ob-wordmark{font-size:13px;font-weight:800;letter-spacing:4px;color:rgba(255,255,255,0.6);margin-top:calc(env(safe-area-inset-top,20px) + 16px);margin-bottom:20px}
+.install-ob-headline{font-size:24px;font-weight:900;color:#fff;text-align:center;margin-bottom:6px;letter-spacing:-0.3px;line-height:1.2}
+.install-ob-sub{font-size:14px;color:rgba(255,255,255,0.8);text-align:center;margin-bottom:24px;line-height:1.5}
+.install-ob-phone{width:180px;height:362px;position:relative;margin:0 auto 20px;flex-shrink:0}
+.install-ob-phone-screen{position:absolute;top:12px;left:12px;width:156px;height:338px;border-radius:16px;overflow:hidden;background:#1a1a2e}
+.install-ob-phone-frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.install-ob-step-label{font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:2px;text-align:center;margin-bottom:8px;text-transform:uppercase}
+.install-ob-step-title{font-size:19px;font-weight:800;color:#fff;text-align:center;margin-bottom:6px;line-height:1.2}
+.install-ob-step-desc{font-size:14px;color:rgba(255,255,255,0.82);text-align:center;line-height:1.5;margin-bottom:24px;max-width:280px}
+.install-ob-dots{display:flex;gap:8px;justify-content:center;margin-bottom:28px}
+.install-ob-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.3);transition:background 0.3s,transform 0.3s}
+.install-ob-dot.active{background:#fff;transform:scale(1.2)}
+.install-ob-next{background:#fff;color:#1a7abf;border:none;border-radius:16px;padding:16px 40px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:transform 0.15s,box-shadow 0.15s}
+.install-ob-next:active{transform:scale(0.97)}
+.install-ob-platform-pick{display:flex;flex-direction:column;gap:12px;width:100%;max-width:300px;margin:0 auto 20px}
+.install-ob-platform-btn{background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);border-radius:16px;padding:18px 24px;color:#fff;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:12px;transition:background 0.2s,border-color 0.2s}
+.install-ob-platform-btn:hover{background:rgba(255,255,255,0.3);border-color:rgba(255,255,255,0.7)}
 </style>
 </head>
 <body>
@@ -4863,6 +4883,8 @@ function showSuccessState(){
   const src=document.getElementById('landingIcon');
   const dest=document.getElementById('successLogoCanvas');
   if(src&&dest)dest.getContext('2d').drawImage(src,0,0,192,192);
+  // Show install onboarding after brief delay
+  setTimeout(()=>showInstallOnboarding(), 2500);
 }
 
 // Check URL params on load — handle Stripe redirect back
@@ -4929,6 +4951,202 @@ function showSuccessState(){
   document.querySelectorAll('.reveal').forEach(el=>window._revealObs.observe(el));
   renderCuratedReviews();
 })();
+
+function showInstallOnboarding(){
+  // Skip if already installed, dismissed, or desktop
+  if(window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches)return;
+  if(localStorage.getItem('cirrus_install_onboarded'))return;
+  if(!('ontouchstart' in window)&&!navigator.maxTouchPoints)return;
+
+  const isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)&&!window.MSStream;
+  const isAndroid=/Android/i.test(navigator.userAgent);
+  if(!isIOS&&!isAndroid)return;
+
+  // Step screen content
+  const iosScreens=[
+    // Step 1: Share button
+    `<div style="width:100%;height:100%;background:#1c1c1e;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:8px">
+      <div style="flex:1;background:linear-gradient(180deg,#1a3a5c,#0d2137);display:flex;align-items:center;justify-content:center">
+        <div style="text-align:center;color:#fff;opacity:0.4;font-size:11px">cirrusweather.app</div>
+      </div>
+      <div style="background:#1c1c1e;border-top:1px solid #3a3a3c;padding:8px 0;display:flex;justify-content:space-around;align-items:center">
+        <div style="color:rgba(255,255,255,0.3);font-size:18px">◀</div>
+        <div style="color:rgba(255,255,255,0.3);font-size:18px">▶</div>
+        <div style="background:#2c6fad;border-radius:8px;padding:4px 8px;display:flex;flex-direction:column;align-items:center;gap:1px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v13"/><path d="m8 6 4-4 4 4"/><rect x="3" y="14" width="18" height="8" rx="2"/></svg>
+          <div style="color:#fff;font-size:8px;font-weight:700">Share</div>
+        </div>
+        <div style="color:rgba(255,255,255,0.3);font-size:18px">⊡</div>
+        <div style="color:rgba(255,255,255,0.3);font-size:18px">≡</div>
+      </div>
+    </div>`,
+    // Step 2: Add to Home Screen
+    `<div style="width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;flex-direction:column;justify-content:flex-end">
+      <div style="background:#2c2c2e;border-radius:16px 16px 0 0;padding:12px 0 0">
+        <div style="text-align:center;color:rgba(255,255,255,0.4);font-size:11px;margin-bottom:10px">Share</div>
+        <div style="display:flex;gap:12px;padding:0 12px;overflow-x:auto;margin-bottom:12px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:52px">
+            <div style="width:44px;height:44px;background:#3a3a3c;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px">📋</div>
+            <div style="color:#fff;font-size:9px;text-align:center">Copy</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:52px">
+            <div style="width:44px;height:44px;background:#3a3a3c;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px">✉️</div>
+            <div style="color:#fff;font-size:9px;text-align:center">Mail</div>
+          </div>
+        </div>
+        <div style="border-top:1px solid #3a3a3c">
+          <div style="background:#1c6abf;margin:4px 8px;border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px">
+            <div style="width:28px;height:28px;background:rgba(255,255,255,0.2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">➕</div>
+            <div style="color:#fff;font-size:13px;font-weight:600">Add to Home Screen</div>
+          </div>
+          <div style="padding:12px;display:flex;align-items:center;gap:10px">
+            <div style="width:28px;height:28px;background:#3a3a3c;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">🔖</div>
+            <div style="color:#fff;font-size:13px">Add Bookmark</div>
+          </div>
+        </div>
+      </div>
+    </div>`,
+    // Step 3: Add button
+    `<div style="width:100%;height:100%;background:#1c1c1e;display:flex;flex-direction:column">
+      <div style="background:#2c2c2e;padding:12px;border-bottom:1px solid #3a3a3c;display:flex;justify-content:space-between;align-items:center">
+        <div style="color:#4a9eff;font-size:13px">Cancel</div>
+        <div style="color:#fff;font-size:14px;font-weight:700">Add to Home Screen</div>
+        <div style="background:#1c6abf;color:#fff;font-size:13px;font-weight:700;padding:4px 12px;border-radius:8px">Add</div>
+      </div>
+      <div style="padding:20px;display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;background:linear-gradient(135deg,#56b4f7,#28b87a);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px">☀️</div>
+        <div>
+          <div style="color:#fff;font-size:14px;font-weight:600">Cirrus Weather</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:11px">cirrusweather.app</div>
+        </div>
+      </div>
+      <div style="margin:0 12px;padding:14px;background:#2c2c2e;border-radius:10px;display:flex;justify-content:space-between;align-items:center">
+        <div style="color:#fff;font-size:13px">Name</div>
+        <div style="color:rgba(255,255,255,0.5);font-size:13px">Cirrus Weather</div>
+      </div>
+    </div>`
+  ];
+
+  const androidScreens=[
+    // Step 1: Chrome menu
+    `<div style="width:100%;height:100%;background:#202124;display:flex;flex-direction:column">
+      <div style="background:#292a2d;padding:8px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #3c4043">
+        <div style="flex:1;background:#3c4043;border-radius:20px;padding:6px 12px;color:rgba(255,255,255,0.6);font-size:11px">cirrusweather.app</div>
+        <div style="background:#2c6fad;border-radius:6px;padding:4px 6px">
+          <div style="color:#fff;font-size:16px;font-weight:700;letter-spacing:1px">⋮</div>
+        </div>
+      </div>
+      <div style="flex:1;background:linear-gradient(180deg,#1a3a5c,#0d2137);display:flex;align-items:center;justify-content:center">
+        <div style="text-align:center;color:rgba(255,255,255,0.3);font-size:11px">cirrusweather.app</div>
+      </div>
+    </div>`,
+    // Step 2: Menu with Add to Home Screen
+    `<div style="width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;flex-direction:column;align-items:flex-end;padding-top:40px;padding-right:4px">
+      <div style="background:#292a2d;border-radius:8px;width:140px;box-shadow:0 4px 20px rgba(0,0,0,0.5)">
+        <div style="padding:12px 14px;border-bottom:1px solid #3c4043;display:flex;align-items:center;gap:8px">
+          <div style="font-size:14px">⭐</div>
+          <div style="color:#e8eaed;font-size:12px">Bookmarks</div>
+        </div>
+        <div style="background:#1c6abf;padding:12px 14px;display:flex;align-items:center;gap:8px">
+          <div style="font-size:14px">📲</div>
+          <div style="color:#fff;font-size:12px;font-weight:600">Add to Home screen</div>
+        </div>
+        <div style="padding:12px 14px;display:flex;align-items:center;gap:8px">
+          <div style="font-size:14px">🖨️</div>
+          <div style="color:#e8eaed;font-size:12px">Print</div>
+        </div>
+      </div>
+    </div>`,
+    // Step 3: Install dialog
+    `<div style="width:100%;height:100%;background:#202124;display:flex;flex-direction:column;justify-content:flex-end">
+      <div style="background:#292a2d;border-radius:16px 16px 0 0;padding:20px 16px">
+        <div style="color:#e8eaed;font-size:15px;font-weight:700;margin-bottom:4px">Add to Home screen</div>
+        <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-bottom:16px">cirrusweather.app</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+          <div style="width:44px;height:44px;background:linear-gradient(135deg,#56b4f7,#28b87a);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px">☀️</div>
+          <div>
+            <div style="color:#e8eaed;font-size:13px;font-weight:600">Cirrus Weather</div>
+            <div style="color:rgba(255,255,255,0.4);font-size:11px">Weather app</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <div style="padding:8px 16px;color:rgba(255,255,255,0.5);font-size:13px">Cancel</div>
+          <div style="background:#1c6abf;padding:8px 20px;border-radius:6px;color:#fff;font-size:13px;font-weight:700">Install</div>
+        </div>
+      </div>
+    </div>`
+  ];
+
+  const iosSteps=[
+    {title:'Tap the Share button',desc:'At the bottom of Safari, tap the Share icon — it looks like a box with an arrow pointing up.'},
+    {title:'Tap "Add to Home Screen"',desc:'Scroll through the share sheet and tap "Add to Home Screen."'},
+    {title:'Tap "Add"',desc:'Confirm by tapping Add in the top right. Cirrus will appear on your home screen like a native app.'},
+  ];
+  const androidSteps=[
+    {title:'Tap the menu',desc:'Tap the three-dot menu (⋮) in the top right corner of Chrome.'},
+    {title:'Tap "Add to Home screen"',desc:'Find and tap "Add to Home screen" in the dropdown menu.'},
+    {title:'Tap "Install"',desc:'Tap Install to confirm. Cirrus will appear on your home screen just like a native app.'},
+  ];
+
+  const steps=isIOS?iosSteps:androidSteps;
+  const screens=isIOS?iosScreens:androidScreens;
+  let currentStep=0;
+
+  function renderStep(){
+    const s=steps[currentStep];
+    document.getElementById('obStepLabel').textContent=`Step ${currentStep+1} of ${steps.length}`;
+    document.getElementById('obStepTitle').textContent=s.title;
+    document.getElementById('obStepDesc').textContent=s.desc;
+    document.getElementById('obPhoneScreen').innerHTML=screens[currentStep];
+    document.getElementById('obNextBtn').textContent=currentStep===steps.length-1?'Done ✓':'Next →';
+    document.querySelectorAll('.install-ob-dot').forEach((d,i)=>{
+      d.classList.toggle('active',i===currentStep);
+    });
+  }
+
+  function nextStep(){
+    if(currentStep<steps.length-1){
+      currentStep++;
+      renderStep();
+    } else {
+      dismissOnboarding();
+    }
+  }
+
+  function dismissOnboarding(){
+    localStorage.setItem('cirrus_install_onboarded','1');
+    const el=document.getElementById('installOnboardingOverlay');
+    if(el){el.classList.remove('visible');setTimeout(()=>el.remove(),400);}
+  }
+
+  const dots=steps.map((_,i)=>`<div class="install-ob-dot${i===0?' active':''}"></div>`).join('');
+
+  const el=document.createElement('div');
+  el.id='installOnboardingOverlay';
+  el.className='install-ob-overlay';
+  el.innerHTML=`
+    <button class="install-ob-skip" onclick="document.getElementById('installOnboardingOverlay')._dismiss()">Skip for now</button>
+    <div class="install-ob-wordmark">CIRRUS</div>
+    <div class="install-ob-headline">Get the full app experience</div>
+    <div class="install-ob-sub">Works just like a native app.<br>No App Store needed.</div>
+    <div class="install-ob-phone">
+      <div class="install-ob-phone-screen" id="obPhoneScreen"></div>
+      <img src="phone-frame.png" alt="" class="install-ob-phone-frame">
+    </div>
+    <div class="install-ob-step-label" id="obStepLabel"></div>
+    <div class="install-ob-step-title" id="obStepTitle"></div>
+    <div class="install-ob-step-desc" id="obStepDesc"></div>
+    <div class="install-ob-dots">${dots}</div>
+    <button class="install-ob-next" id="obNextBtn" onclick="document.getElementById('installOnboardingOverlay')._next()"></button>
+  `;
+
+  el._next=nextStep;
+  el._dismiss=dismissOnboarding;
+
+  document.body.appendChild(el);
+  renderStep();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('visible')));
+}
 </script>
 </body>
 </html>
