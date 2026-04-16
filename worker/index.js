@@ -639,6 +639,7 @@ What brought you to Cirrus? I&rsquo;d love to know. &#9728;<br><br>
           <img src="https://cirrusweather.app/cirrus-icon-256.png" width="80" height="80" alt="Cirrus" style="display:block;margin:0 auto 18px;border-radius:20px;border:2px solid rgba(255,255,255,0.45);box-shadow:0 8px 24px rgba(0,0,0,0.15)">
           <div style="font-size:32px;font-weight:800;letter-spacing:7px;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;margin-bottom:8px">CIRRUS</div>
           <div style="font-size:11px;color:rgba(255,255,255,0.75);letter-spacing:2px;text-transform:uppercase">No ads. No articles. No agenda.</div>
+          <div style="font-size:13px;font-weight:800;color:#ffffff;letter-spacing:2px;text-transform:uppercase;margin-top:5px">Just the weather.</div>
         </td></tr>
 
         <!-- Body card -->
