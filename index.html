@@ -2194,34 +2194,33 @@ async function fetchWeather(){
         }
       }catch(e){console.warn('OneSignal tag error:',e);}
     },3000);
-      // Auto-prompt for push permission on first weather load
-      if(!localStorage.getItem('cirrus_notif_prompted')){
-        localStorage.setItem('cirrus_notif_prompted','1');
-        setTimeout(()=>{
-          OneSignalDeferred.push(async function(OneSignal){
-            if(!OneSignal.Notifications.permission){
-              await OneSignal.Notifications.requestPermission();
-              if(OneSignal.Notifications.permission){
-                const ps=OneSignal.User&&OneSignal.User.PushSubscription;
-                if(ps)await ps.optIn();
-                if(state.name){
-                  OneSignal.User.addTag('city',state.name.toLowerCase());
-                  OneSignal.User.addTag('timezone',Intl.DateTimeFormat().resolvedOptions().timeZone);
-                  OneSignal.User.addTag('lat',String(state.lat||''));
-                  OneSignal.User.addTag('lon',String(state.lon||''));
-                }
-                OneSignal.User.addTag('notif_morning','1');
-                OneSignal.User.addTag('notif_evening','1');
-                OneSignal.User.addTag('notif_severe','1');
-                OneSignal.User.addTag('notif_precip','1');
-                OneSignal.User.addTag('morning_hour',String(getSetting(SETTINGS_KEYS.morningHour)));
-                OneSignal.User.addTag('evening_hour',String(getSetting(SETTINGS_KEYS.eveningHour)));
-                _refreshAlertsBtn();
+    // Auto-prompt for push permission on first weather load
+    if(!localStorage.getItem('cirrus_notif_prompted')){
+      localStorage.setItem('cirrus_notif_prompted','1');
+      setTimeout(()=>{
+        OneSignalDeferred.push(async function(OneSignal){
+          if(!OneSignal.Notifications.permission){
+            await OneSignal.Notifications.requestPermission();
+            if(OneSignal.Notifications.permission){
+              const ps=OneSignal.User&&OneSignal.User.PushSubscription;
+              if(ps)await ps.optIn();
+              if(state.name){
+                OneSignal.User.addTag('city',state.name.toLowerCase());
+                OneSignal.User.addTag('timezone',Intl.DateTimeFormat().resolvedOptions().timeZone);
+                OneSignal.User.addTag('lat',String(state.lat||''));
+                OneSignal.User.addTag('lon',String(state.lon||''));
               }
+              OneSignal.User.addTag('notif_morning','1');
+              OneSignal.User.addTag('notif_evening','1');
+              OneSignal.User.addTag('notif_severe','1');
+              OneSignal.User.addTag('notif_precip','1');
+              OneSignal.User.addTag('morning_hour',String(getSetting(SETTINGS_KEYS.morningHour)));
+              OneSignal.User.addTag('evening_hour',String(getSetting(SETTINGS_KEYS.eveningHour)));
+              _refreshAlertsBtn();
             }
-          });
-        },2000);
-      }
+          }
+        });
+      },2000);
     }
   }catch(e){console.error(e)}
   app.classList.remove('loading');
