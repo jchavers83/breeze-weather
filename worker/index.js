@@ -585,19 +585,33 @@ async function handleClaimToken(request, env) {
 function buildWelcomeEmail(type) {
   const content = {
     trial: {
-      subject: "Your Cirrus free trial is live 🌤️",
-      headline: "Your free trial is live.",
-      body: "You've got 7 days of full access to Cirrus — ad-free weather with personality, live radar, severe weather alerts, and daily morning briefings. No ads. No clickbait. Just the weather.",
+      subject: "Your 7-day trial just started. 🌤️",
+      body: `Hey — Josh here. I built Cirrus.<br><br>
+You've got 7 days of full access, starting now.<br><br>
+<strong>No ads. No articles. No agenda. Just the weather.</strong> That's the whole point — and I think once it's on your home screen, you'll get it immediately.<br><br>
+💡 Best thing to do right now: install it. In Safari, tap the Share button → "Add to Home Screen." Opens instantly every time, no App Store required.<br><br>
+What made you give it a shot? Hit reply — I actually read these.<br><br>
+— Josh<br>
+<span style="color:#8a9aaa">Founder, Cirrus Weather</span>`,
     },
     paid: {
-      subject: "Welcome to Cirrus — you're all set 🌤️",
-      headline: "You're officially a subscriber.",
-      body: "Thanks for subscribing to Cirrus. You've got unlimited access to everything — ad-free weather, live radar, severe alerts, and daily briefings delivered with a little personality. We're glad you're here.",
+      subject: "You're a subscriber. Thank you. 🌤️",
+      body: `Hey — Josh here. I built Cirrus.<br><br>
+You're officially in. Thank you — genuinely.<br><br>
+<strong>No ads. No articles. No agenda. Just the weather.</strong> That's the promise. I intend to keep it.<br><br>
+💡 If you haven't already: install Cirrus to your home screen. In Safari, tap Share → "Add to Home Screen." It opens instantly, just like a native app — no App Store required.<br><br>
+— Josh<br>
+<span style="color:#8a9aaa">Founder, Cirrus Weather</span>`,
     },
     beta: {
-      subject: "Beta access confirmed — welcome to Cirrus 🌤️",
-      headline: "Beta access confirmed.",
-      body: "You're in. Your code worked and you've got full access to Cirrus — no ads, no articles, just clean weather with a bit of personality. Thanks for being an early tester. Your feedback matters.",
+      subject: "You're in. Welcome to Cirrus. 🌤️",
+      body: `Hey — Josh here. I built Cirrus.<br><br>
+Your code worked. You're in.<br><br>
+<strong>No ads. No articles. No agenda. Just the weather</strong> — and if I'm being honest, a little personality too.<br><br>
+💡 One thing worth doing: install Cirrus to your home screen. In Safari, tap Share → "Add to Home Screen." Opens instantly every time, feels like a real app, no App Store required.<br><br>
+What brought you to Cirrus? Hit reply — I actually read these.<br><br>
+— Josh<br>
+<span style="color:#8a9aaa">Founder, Cirrus Weather</span>`,
     },
   };
 
@@ -619,9 +633,7 @@ function buildWelcomeEmail(type) {
 
         <!-- Body -->
         <tr><td style="background:#ffffff;padding:36px 32px">
-          <h1 style="margin:0 0 16px;font-size:24px;font-weight:800;color:#182838;letter-spacing:-0.3px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">${c.headline}</h1>
-          <p style="margin:0 0 20px;font-size:15px;color:#3a4a5a;line-height:1.7">${c.body}</p>
-          <p style="margin:0 0 32px;font-size:15px;color:#3a4a5a;line-height:1.7">💡 <strong>Pro tip:</strong> Install Cirrus to your home screen for the best experience. In Safari, tap the Share button then "Add to Home Screen" — it opens instantly, just like a native app.</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#3a4a5a;line-height:1.8">${c.body}</p>
           <table cellpadding="0" cellspacing="0" width="100%"><tr><td align="center">
             <a href="https://cirrusweather.app" style="display:inline-block;background:linear-gradient(135deg,#1a90e4,#28b87a);color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:15px 40px;border-radius:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">Open Cirrus →</a>
           </td></tr></table>
@@ -653,7 +665,8 @@ async function sendWelcomeEmail(env, email, type) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Cirrus Weather <hello@cirrusweather.app>',
+        from: 'Josh @ Cirrus <josh@cirrusweather.app>',
+        reply_to: 'josh@cirrusweather.app',
         to: [email],
         subject,
         html,
