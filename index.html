@@ -4916,22 +4916,8 @@ function showSuccessState(){
     autoUnit(state.countryCode);
     fetchWeather();
   }else{
-    // No default city — show simplified welcome with location button
-    const hero=document.querySelector('.mkt-hero');
-    if(hero){
-      hero.innerHTML=`
-        <div style="text-align:center;padding:40px 0">
-          <div style="font-size:48px;margin-bottom:16px">\u2600\uFE0F</div>
-          <div class="mkt-wordmark" style="margin-bottom:12px">Welcome back</div>
-          <div class="mkt-tagline-pre" style="margin-bottom:24px">Tap below to get your weather.</div>
-          <button class="mkt-cta-btn" onclick="document.getElementById('btnLocate').click()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
-            Get my weather
-          </button>
-        </div>`;
-      // Hide remaining marketing sections
-      hero.parentElement?.querySelectorAll('.mkt-section,.mkt-bottom-cta,.mkt-footer').forEach(el=>el.style.display='none');
-    }
+    // No default city — auto-trigger GPS lookup
+    document.getElementById('btnLocate')?.click();
   }
 })();
 
