@@ -1884,6 +1884,21 @@ function renderSettings(){
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-tertiary);flex-shrink:0"><path d="m9 18 6-6-6-6"/></svg>
         </div>`:''}
       </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">Share Cirrus</div>
+      <div class="settings-group">
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:10px;padding:14px 16px">
+          <div class="settings-row-label" style="width:100%">
+            <span>Your referral link</span>
+            <small>Give a friend a free month. You\u2019ll get one too when they subscribe.</small>
+          </div>
+          <div id="referralLinkWrap" style="display:flex;gap:8px;width:100%;align-items:center">
+            <div id="referralLinkBox" style="flex:1;font-size:12px;color:var(--text-secondary);background:var(--card-bg-2,rgba(255,255,255,0.06));border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Loading\u2026</div>
+            <button onclick="copyReferralLink()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit" id="referralCopyBtn">Copy</button>
+          </div>
+        </div>
+      </div>
     </div>`;
 
   const chevron=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-tertiary);flex-shrink:0"><path d="m9 18 6-6-6-6"/></svg>`;
@@ -1914,6 +1929,11 @@ function renderSettings(){
   if(sc){
     const lc=document.getElementById('landingIcon');
     if(lc)sc.getContext('2d').drawImage(lc,0,0,192,192);
+  }
+
+  // Load referral link async after render
+  if(_access==='active'||_access==='trial'||_access==='beta'){
+    loadReferralLink();
   }
 }
 
@@ -2616,6 +2636,44 @@ function handleAlertsBtn(){
       if(ps)await ps.optOut();
     }
     _refreshAlertsBtn();
+  });
+}
+
+let _referralLink='';
+
+async function loadReferralLink(){
+  const box=document.getElementById('referralLinkBox');
+  if(!box)return;
+  const email=localStorage.getItem('cirrus_email');
+  if(!email){box.textContent='Sign in to get your referral link';return;}
+  try{
+    const r=await fetch(`${WORKER_URL}/referral-info?email=${encodeURIComponent(email)}`);
+    const d=await r.json();
+    if(d.link){
+      _referralLink=d.link;
+      box.textContent=d.link;
+    }else{
+      box.textContent='Not available';
+    }
+  }catch(e){
+    box.textContent='Could not load link';
+  }
+}
+
+function copyReferralLink(){
+  const link=_referralLink||document.getElementById('referralLinkBox')?.textContent;
+  if(!link||link.startsWith('Loading')||link.startsWith('Could'))return;
+  navigator.clipboard?.writeText(link).then(()=>{
+    const btn=document.getElementById('referralCopyBtn');
+    if(btn){btn.textContent='Copied!';setTimeout(()=>{btn.textContent='Copy';},2000);}
+  }).catch(()=>{
+    // Fallback for older iOS
+    const ta=document.createElement('textarea');
+    ta.value=link;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn=document.getElementById('referralCopyBtn');
+    if(btn){btn.textContent='Copied!';setTimeout(()=>{btn.textContent='Copy';},2000);}
   });
 }
 
@@ -4730,7 +4788,7 @@ function showPaywall(){
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </button>
       </div>
-      <div class="mkt-trial-terms">7-day free trial &middot; Cancel anytime</div>
+      <div class="mkt-trial-terms" id="paywallTrialTerms">${localStorage.getItem('cirrus_ref')?'30-day free trial &middot; Cancel anytime':'7-day free trial &middot; Cancel anytime'}</div>
       <div class="paywall-beta-link" onclick="toggleBetaForm('paywallBetaForm')">Have a beta code?</div>
       <div id="paywallBetaForm" style="display:none;margin-top:12px">
         <div style="display:flex;gap:8px">
@@ -4836,6 +4894,15 @@ async function verifySubscription(){
 const WORKER_URL='https://cirrus-api.josh-0d8.workers.dev';
 const STRIPE_PUBLISHABLE_KEY='pk_live_51TIeCvJ6cuxHFsnVA1X4AsW1BiJrnCTkwSZ1l3bXvWBWzQ8txD6w5tVXyOiQeYyWioXxA1PjZlXAZyPMBGXFFxfw00rG5GXh1E';
 
+// Capture referral code from URL and persist it
+(function(){
+  const params=new URLSearchParams(window.location.search);
+  const ref=params.get('ref');
+  if(ref&&/^[A-Z0-9]{4,10}$/i.test(ref)){
+    localStorage.setItem('cirrus_ref',ref.toUpperCase());
+  }
+})();
+
 function handleMktEmail(el,iconId){
   const ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim());
   const icon=document.getElementById(iconId);
@@ -4853,7 +4920,7 @@ async function handleMktEmailSubmit(inputId,iconId,plan){
     const resp=await fetch(`${WORKER_URL}/create-checkout-session`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email,plan:plan||'monthly'})
+      body:JSON.stringify({email,plan:plan||'monthly',ref:localStorage.getItem('cirrus_ref')||undefined})
     });
     const data=await resp.json();
     if(data.url){localStorage.setItem('cirrus_email_pending',email);window.location.href=data.url;}

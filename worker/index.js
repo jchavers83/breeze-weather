@@ -58,6 +58,9 @@ export default {
     if (request.method === 'POST' && url.pathname === '/create-portal-session') {
       return handleCreatePortalSession(request, env);
     }
+    if (request.method === 'GET' && url.pathname === '/referral-info') {
+      return handleReferralInfo(request, env);
+    }
     if (request.method === 'GET' && url.pathname === '/check-token') {
       return handleCheckToken(request, env);
     }
@@ -353,12 +356,37 @@ async function sendOneSignalNotification(env, payload) {
   }
 }
 
+// ── Referral Helpers ────────────────────────────────────────────────────────
+function generateRefCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no O/0/I/1 ambiguity
+  let code = '';
+  const arr = new Uint8Array(6);
+  crypto.getRandomValues(arr);
+  for (const b of arr) code += chars[b % chars.length];
+  return code;
+}
+
+function refCodeKey(code) { return `ref_code:${code.toUpperCase()}`; }
+function referrerCodeKey(email) { return `referrer_code:${email.toLowerCase()}`; }
+function pendingRefKey(sessionId) { return `pending_ref:${sessionId}`; }
+
+// Get or create a referral code for an email
+async function getOrCreateRefCode(env, email) {
+  const existingCode = await env.CIRRUS_SUBSCRIPTIONS.get(referrerCodeKey(email));
+  if (existingCode) return existingCode;
+
+  const code = generateRefCode();
+  await env.CIRRUS_SUBSCRIPTIONS.put(referrerCodeKey(email), code);
+  await env.CIRRUS_SUBSCRIPTIONS.put(refCodeKey(code), email);
+  return code;
+}
+
 // ── Create Stripe Checkout Session ─────────────────────────────────────────
 async function handleCreateCheckout(request, env) {
   let body;
   try { body = await request.json(); } catch { return err('Invalid JSON'); }
 
-  const { email, plan } = body; // plan: 'monthly' | 'annual'
+  const { email, plan, ref } = body; // plan: 'monthly' | 'annual', ref: optional referral code
   if (!email || !email.includes('@')) return err('Valid email required');
   if (!['monthly', 'annual'].includes(plan)) return err('Invalid plan');
 
@@ -368,12 +396,24 @@ async function handleCreateCheckout(request, env) {
 
   const origin = request.headers.get('Origin') || 'https://cirrusweather.app';
 
+  // Validate referral code and extend trial if valid
+  let trialDays = 7;
+  let referrerEmail = null;
+  if (ref) {
+    const refEmail = await env.CIRRUS_SUBSCRIPTIONS.get(refCodeKey(ref));
+    if (refEmail && refEmail.toLowerCase() !== email.toLowerCase()) {
+      // Valid code that isn't self-referral
+      trialDays = 30;
+      referrerEmail = refEmail;
+    }
+  }
+
   const params = new URLSearchParams({
     'mode': 'subscription',
     'customer_email': email,
     'line_items[0][price]': priceId,
     'line_items[0][quantity]': '1',
-    'subscription_data[trial_period_days]': '7',
+    'subscription_data[trial_period_days]': String(trialDays),
     'allow_promotion_codes': 'true',
     'success_url': `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
     'cancel_url': `${origin}/?cancelled=1`,
@@ -390,6 +430,15 @@ async function handleCreateCheckout(request, env) {
 
   const session = await resp.json();
   if (!resp.ok) return err(session.error?.message || 'Stripe error', 502);
+
+  // Store pending referral so we can reward the referrer on conversion
+  if (referrerEmail && session.id) {
+    await env.CIRRUS_SUBSCRIPTIONS.put(
+      pendingRefKey(session.id),
+      referrerEmail,
+      { expirationTtl: 60 * 60 * 24 * 40 } // 40 days — covers trial + grace period
+    );
+  }
 
   return json({ url: session.url });
 }
@@ -425,9 +474,52 @@ async function handleWebhook(request, env) {
           createdAt: Date.now(),
         });
         await saveToken(env, token, email);
+        // Generate referral code for new subscriber
+        await getOrCreateRefCode(env, email);
+        // Bridge pending referral from session_id → subscription_id so invoice.paid can find it
+        if (sub.id && sub.subscription) {
+          const referrerEmail = await env.CIRRUS_SUBSCRIPTIONS.get(pendingRefKey(sub.id));
+          if (referrerEmail) {
+            await env.CIRRUS_SUBSCRIPTIONS.put(
+              `sub_ref:${sub.subscription}`,
+              referrerEmail,
+              { expirationTtl: 60 * 60 * 24 * 40 }
+            );
+            await env.CIRRUS_SUBSCRIPTIONS.delete(pendingRefKey(sub.id));
+          }
+        }
         // Welcome email + add to contacts list
         await sendWelcomeEmail(env, email, plan);
         await addContact(env, email);
+      }
+      break;
+    }
+    case 'invoice.paid': {
+      // Invoice paid — if this is a referred user converting from trial, reward referrer
+      const customerId = sub.customer;
+      const billingReason = sub.billing_reason; // 'subscription_cycle' = first real charge after trial
+      if (billingReason === 'subscription_cycle' && customerId) {
+        const email = await getEmailForCustomer(env, customerId);
+        if (email) {
+          // Find which checkout session this originated from (stored in subscription metadata)
+          // We stored pending_ref by session_id at checkout; look it up via subscription
+          const subscriptionId = sub.subscription || sub.lines?.data?.[0]?.subscription;
+          if (subscriptionId) {
+            // Try to find the referrer via pending_ref keys
+            // Stripe doesn't give us session_id here, so we stored it on subscription metadata
+            // Check our KV for a referrer stored under this subscription
+            const referrerEmail = await env.CIRRUS_SUBSCRIPTIONS.get(`sub_ref:${subscriptionId}`);
+            if (referrerEmail) {
+              // Apply $3.99 credit to referrer's next invoice
+              const referrerSub = await getSubscription(env, referrerEmail);
+              if (referrerSub?.customerId) {
+                await applyReferralCredit(env, referrerSub.customerId, email);
+              }
+              // Clean up
+              await env.CIRRUS_SUBSCRIPTIONS.delete(`sub_ref:${subscriptionId}`);
+            }
+          }
+        }
       }
       break;
     }
@@ -581,6 +673,48 @@ async function handleClaimToken(request, env) {
   await saveToken(env, token, email); // Ensure reverse mapping exists
 
   return json({ active: true, token, plan: sub.plan || null, email });
+}
+
+// ── Referral Info Endpoint ──────────────────────────────────────────────────
+async function handleReferralInfo(request, env) {
+  const url = new URL(request.url);
+  const email = url.searchParams.get('email')?.toLowerCase().trim();
+  if (!email || !email.includes('@')) return err('Email required');
+
+  const sub = await getSubscription(env, email);
+  if (!sub || (sub.status !== 'active' && sub.status !== 'beta' && sub.status !== 'trial')) {
+    return err('Active subscription required', 403);
+  }
+
+  const code = await getOrCreateRefCode(env, email);
+  return json({
+    code,
+    link: `https://cirrusweather.app?ref=${code}`,
+  });
+}
+
+// ── Referral Credit ─────────────────────────────────────────────────────────
+async function applyReferralCredit(env, stripeCustomerId, referredEmail) {
+  // $3.99 credit (399 cents) applied to referrer's next invoice
+  try {
+    const params = new URLSearchParams({
+      amount: '-399', // negative = credit
+      currency: 'usd',
+      description: `Referral reward \u2014 ${referredEmail} subscribed`,
+    });
+    const resp = await fetch(`https://api.stripe.com/v1/customers/${stripeCustomerId}/balance_transactions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    });
+    if (!resp.ok) console.error('Referral credit failed:', await resp.text());
+    else console.log(`Referral credit applied to ${stripeCustomerId} for referring ${referredEmail}`);
+  } catch (e) {
+    console.error('Referral credit error:', e.message);
+  }
 }
 
 // ── Stripe Customer Portal ──────────────────────────────────────────────────
