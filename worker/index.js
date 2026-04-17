@@ -768,22 +768,21 @@ So I built Cirrus. Clean. Fast. Beautiful. And a little opinionated about the we
   const content = {
     trial: {
       subject: "Welcome to Cirrus. \u26C5",
-      body: `Hey &mdash; Josh here.<br><br>
+      body: `Hey &mdash; Josh here from Cirrus. Thanks for giving it a try.<br><br>
 ${intro}<br><br>
 You&rsquo;ve got 7 days of full access, starting now.<br><br>
 <strong>No ads. No articles. No agenda.</strong><br><br>
 <strong>Just the weather.</strong><br><br>
 ${installTip}<br><br>
 ${feedback}<br><br>
-What made you give it a shot? I&rsquo;d love to know. &#9728;<br><br>
+What made you give it a try? I&rsquo;d love to know. &#9728;<br><br>
 &mdash; Josh<br>
 <span style="color:#8a9aaa">Founder, Cirrus</span>`,
     },
     paid: {
       subject: "Thank you for subscribing. \u2600",
-      body: `Hey &mdash; Josh here.<br><br>
+      body: `Hey &mdash; Josh here from Cirrus. Thanks for subscribing.<br><br>
 You tried it. You stuck around. That genuinely means a lot. &#9925;<br><br>
-Thank you for subscribing.<br><br>
 <strong>No ads. No articles. No agenda.</strong><br><br>
 <strong>Just the weather.</strong><br><br>
 That&rsquo;s the promise &mdash; and I intend to keep it.<br><br>
@@ -793,7 +792,7 @@ If you ever want something added or spot something off, just reply. I build fast
     },
     beta: {
       subject: "Welcome to Cirrus. \u26C5",
-      body: `Hey &mdash; Josh here.<br><br>
+      body: `Hey &mdash; Josh here from Cirrus. Thanks for being a beta tester.<br><br>
 ${intro}<br><br>
 Your code worked. You&rsquo;re in.<br><br>
 <strong>No ads. No articles. No agenda.</strong><br><br>
