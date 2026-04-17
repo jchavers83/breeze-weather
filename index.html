@@ -1847,26 +1847,42 @@ function renderSettings(){
     <div class="settings-section">
       <div class="settings-section-title">Push Notifications</div>
       <div class="settings-group">
-        <div class="settings-row">
+        <div class="settings-row" style="cursor:pointer" onclick="handleAlertsBtn()">
           <div class="settings-row-label">
-            <span id="alertsBtnSettingsLabel">${_alertsGranted()?'Alerts enabled':'Enable alerts'}</span>
-            <small>${_alertsGranted()?'Tap to manage in device Settings':'Get weather alerts on this device'}</small>
+            <span id="alertsBtnSettingsLabel">${_alertsOptedIn()?'Alerts enabled':'Enable alerts'}</span>
+            <small id="alertsBtnSettingsSub">${_alertsOptedIn()?'Weather alerts on this device':'Get weather alerts on this device'}</small>
           </div>
-          <button class="alerts-btn" id="alertsBtnSettings" onclick="handleAlertsBtn()" style="margin:0;font-size:13px;padding:6px 12px">
-            ${_alertsGranted()?'&#128276; On':'&#128276; Enable'}
-          </button>
+          <label class="toggle" style="pointer-events:none">
+            <input type="checkbox" id="alertsBtnSettings" ${_alertsOptedIn()?'checked':''}>
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
         </div>
       </div>
     </div>`;
 
+  const _access=localStorage.getItem('cirrus_access')||'free';
+  const _subEmail=localStorage.getItem('cirrus_email')||'';
+  const _planLabel=_access==='active'?'Active':_access==='trial'?'Trial':_access==='beta'?'Beta':'Free';
+  const _planSub=_access==='active'?'Full access — thanks for subscribing':_access==='trial'?'7-day free trial in progress':_access==='beta'?'Beta access — thank you for testing':'3 free lookups included';
+  const _planColor=_access==='free'?'var(--text-tertiary)':'var(--accent)';
+  const _showPortal=_access==='active'||_access==='trial';
   const acctSection=`
     <div class="settings-section">
       <div class="settings-section-title">Account</div>
       <div class="settings-group">
+        ${_subEmail?`<div class="settings-row">
+          <div class="settings-row-label"><span>Email</span></div>
+          <span style="font-size:13px;color:var(--text-secondary);max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_subEmail}</span>
+        </div>`:''}
         <div class="settings-row">
-          <div class="settings-row-label"><span>Subscription</span><small>Free — coming soon</small></div>
-          <span style="font-size:13px;font-weight:700;color:var(--accent)">Free</span>
+          <div class="settings-row-label"><span>Subscription</span><small>${_planSub}</small></div>
+          <span style="font-size:13px;font-weight:700;color:${_planColor}">${_planLabel}</span>
         </div>
+        ${_showPortal?`<div class="settings-row" style="cursor:pointer" onclick="openSubscriptionPortal()">
+          <div class="settings-row-label"><span>Manage Subscription</span><small>Cancel, upgrade, or view billing</small></div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-tertiary);flex-shrink:0"><path d="m9 18 6-6-6-6"/></svg>
+        </div>`:''}
       </div>
     </div>`;
 
@@ -1890,9 +1906,6 @@ function renderSettings(){
   const about=`
     <div class="settings-about">
       <a href="https://cirrusweather.app">cirrusweather.app</a> &nbsp;&mdash;&nbsp; <span style="opacity:0.6">v1.0</span>
-    </div>
-    <div style="text-align:center;padding:8px 0 16px">
-      <button onclick="localStorage.removeItem('cirrus_install_onboarded');localStorage.removeItem('cirrus_auth_token');localStorage.removeItem('cirrus_email');localStorage.removeItem('cirrus_access');localStorage.removeItem('cirrus_free_lookups');localStorage.removeItem('cirrus_notif_prompted');location.reload();" style="background:none;border:none;color:var(--text-tertiary);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit;opacity:0.6">Reset app state</button>
     </div>`;
 
   el.innerHTML=header+prefsSection+notifSection+notifCta+acctSection+supportSection+about;
@@ -2547,9 +2560,11 @@ function _refreshAlertsBtn(){
   const opts=document.getElementById('alertsOptions');
   if(opts)opts.classList.toggle('visible',on);
   const sb=document.getElementById('alertsBtnSettings');
-  if(sb){sb.innerHTML=on?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> On':'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Enable';}
+  if(sb){sb.checked=on;}
   const sl=document.getElementById('alertsBtnSettingsLabel');
   if(sl){sl.textContent=on?'Alerts enabled':'Enable alerts';}
+  const ss=document.getElementById('alertsBtnSettingsSub');
+  if(ss){ss.textContent=on?'Weather alerts on this device':'Get weather alerts on this device';}
 }
 
 // Keep old name as alias (used in render)
@@ -2602,6 +2617,23 @@ function handleAlertsBtn(){
     }
     _refreshAlertsBtn();
   });
+}
+
+async function openSubscriptionPortal(){
+  const email=localStorage.getItem('cirrus_email');
+  if(!email){alert('No account found. Please sign in first.');return;}
+  try{
+    const r=await fetch('https://cirrus-api.josh-0d8.workers.dev/create-portal-session',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,return_url:window.location.href})
+    });
+    const d=await r.json();
+    if(d.url){window.open(d.url,'_blank');}
+    else{alert('Could not open subscription management. Please try again.');}
+  }catch(e){
+    alert('Could not open subscription management. Please try again.');
+  }
 }
 
 function uvLabel(uv){

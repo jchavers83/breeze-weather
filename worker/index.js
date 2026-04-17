@@ -55,6 +55,9 @@ export default {
     if (request.method === 'POST' && url.pathname === '/redeem-beta') {
       return handleRedeemBeta(request, env);
     }
+    if (request.method === 'POST' && url.pathname === '/create-portal-session') {
+      return handleCreatePortalSession(request, env);
+    }
     if (request.method === 'GET' && url.pathname === '/check-token') {
       return handleCheckToken(request, env);
     }
@@ -578,6 +581,44 @@ async function handleClaimToken(request, env) {
   await saveToken(env, token, email); // Ensure reverse mapping exists
 
   return json({ active: true, token, plan: sub.plan || null, email });
+}
+
+// ── Stripe Customer Portal ──────────────────────────────────────────────────
+async function handleCreatePortalSession(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+
+  const email = body.email?.toLowerCase().trim();
+  const returnUrl = body.return_url || 'https://cirrusweather.app';
+  if (!email || !email.includes('@')) return err('Valid email required');
+
+  const sub = await getSubscription(env, email);
+  if (!sub || !sub.stripe_customer_id) {
+    return err('No subscription found for this email', 404);
+  }
+
+  // Create a Stripe billing portal session
+  const params = new URLSearchParams({
+    customer: sub.stripe_customer_id,
+    return_url: returnUrl,
+  });
+
+  const stripeRes = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+
+  if (!stripeRes.ok) {
+    const stripeErr = await stripeRes.json();
+    return err(stripeErr?.error?.message || 'Failed to create portal session', 500);
+  }
+
+  const session = await stripeRes.json();
+  return json({ url: session.url });
 }
 
 // ── Email via Resend ─────────────────────────────────────────────────────────
