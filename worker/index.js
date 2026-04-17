@@ -675,34 +675,47 @@ What brought you to Cirrus? I&rsquo;d love to know. &#9728;<br><br>
   const c = content[type] || content.trial;
 
   const html = `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background-color:#4ab8e8;background:linear-gradient(170deg,#7dcbea 0%,#3db5e8 40%,#28b87a 100%);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">
-  <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#4ab8e8" style="background-color:#4ab8e8;background:linear-gradient(170deg,#7dcbea 0%,#3db5e8 40%,#28b87a 100%);padding:48px 20px 40px">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <style>
+    :root { color-scheme: light only; }
+    @media (prefers-color-scheme: dark) {
+      body, .email-bg { background-color:#3db5e8 !important; }
+      .email-card { background:#ffffff !important; }
+      .email-card p { color:#2a3a4a !important; }
+    }
+  </style>
+</head>
+<body class="email-bg" style="margin:0;padding:0;background-color:#4ab8e8 !important;background:linear-gradient(170deg,#7dcbea 0%,#3db5e8 40%,#28b87a 100%) !important;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#4ab8e8" style="background-color:#4ab8e8 !important;background:linear-gradient(170deg,#7dcbea 0%,#3db5e8 40%,#28b87a 100%);padding:48px 20px 40px">
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:500px">
 
         <!-- Header -->
         <tr><td style="padding:0 0 24px;text-align:center">
           <img src="https://cirrusweather.app/cirrus-icon-256.png" width="80" height="80" alt="Cirrus" style="display:block;margin:0 auto 18px;border-radius:20px;border:2px solid rgba(255,255,255,0.45);box-shadow:0 8px 24px rgba(0,0,0,0.15)">
-          <div style="font-size:32px;font-weight:800;letter-spacing:7px;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;margin-bottom:8px">CIRRUS</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.95);letter-spacing:2px;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,0.15)">No ads. No articles. No agenda.</div>
-          <div style="font-size:13px;font-weight:800;color:#ffffff;letter-spacing:2px;text-transform:uppercase;margin-top:5px">Just the weather.</div>
+          <div style="font-size:32px;font-weight:800;letter-spacing:7px;color:#ffffff !important;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;margin-bottom:8px">CIRRUS</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.95) !important;letter-spacing:2px;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,0.15)">No ads. No articles. No agenda.</div>
+          <div style="font-size:13px;font-weight:800;color:#ffffff !important;letter-spacing:2px;text-transform:uppercase;margin-top:5px">Just the weather.</div>
         </td></tr>
 
         <!-- Body card -->
-        <tr><td style="background:#ffffff;padding:36px 32px;border-radius:20px">
-          <p style="margin:0 0 28px;font-size:15px;color:#2a3a4a;line-height:1.85">${c.body}</p>
+        <tr><td class="email-card" style="background:#ffffff !important;padding:36px 32px;border-radius:20px">
+          <p style="margin:0 0 28px;font-size:15px;color:#2a3a4a !important;line-height:1.85">${c.body}</p>
           <table cellpadding="0" cellspacing="0" width="100%"><tr><td align="center">
-            <a href="https://cirrusweather.app" style="display:inline-block;background-color:#1a90e4;background:linear-gradient(135deg,#1a90e4,#28b87a);color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:15px 44px;border-radius:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">Open Cirrus &#8594;</a>
+            <a href="https://cirrusweather.app" style="display:inline-block;background-color:#1a90e4 !important;background:linear-gradient(135deg,#1a90e4,#28b87a) !important;color:#ffffff !important;font-size:16px;font-weight:700;text-decoration:none;padding:15px 44px;border-radius:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif">Open Cirrus &#8594;</a>
           </td></tr></table>
         </td></tr>
 
         <!-- Footer -->
         <tr><td style="padding:20px 16px 0;text-align:center">
-          <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.8);line-height:1.8;letter-spacing:1px;text-transform:uppercase">No ads. No articles. No agenda.</p>
-          <p style="margin:4px 0 10px;font-size:13px;font-weight:800;color:#ffffff;letter-spacing:1px;text-transform:uppercase">Just the weather.</p>
-          <a href="https://cirrusweather.app" style="font-size:12px;color:rgba(255,255,255,0.8);text-decoration:none">cirrusweather.app</a>
+          <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.8) !important;line-height:1.8;letter-spacing:1px;text-transform:uppercase">No ads. No articles. No agenda.</p>
+          <p style="margin:4px 0 10px;font-size:13px;font-weight:800;color:#ffffff !important;letter-spacing:1px;text-transform:uppercase">Just the weather.</p>
+          <a href="https://cirrusweather.app" style="font-size:12px;color:rgba(255,255,255,0.8) !important;text-decoration:none">cirrusweather.app</a>
         </td></tr>
 
       </table>
