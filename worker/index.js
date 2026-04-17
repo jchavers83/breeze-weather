@@ -166,13 +166,19 @@ async function checkSevereWeather(env) {
     ];
 
     const icon = ALERT_ICONS[p.event] || '⚠️';
-    const headline = (p.headline || p.event || 'Severe Weather Alert').slice(0, 200);
+
+    // Format area: take first entry from areaDesc (e.g. "Delaware, IA; Dubuque, IA" → "Delaware, IA")
+    const areaDesc = (p.areaDesc || '').split(';')[0].trim();
+    const location = areaDesc ? ` \u00b7 ${areaDesc}` : '';
+
+    // NWS headline as body — readable, concise, already well-formatted
+    const body = (p.headline || p.description || p.event || 'Severe weather alert in your area.').slice(0, 200);
 
     await sendOneSignalNotification(env, {
       app_id: env.ONESIGNAL_APP_ID,
       filters,
-      headings: { en: `${icon} ${p.event}` },
-      contents: { en: headline },
+      headings: { en: `${icon} ${p.event}${location}` },
+      contents: { en: body },
       url: 'https://cirrusweather.app',
       priority: 10,
       ttl: 7200,
