@@ -274,22 +274,30 @@ async function sendBriefing(env, type, tzName, localHour, dateStr) {
   const cityCoords = TZ_REPRESENTATIVE_COORDS[tzName];
   if (!cityCoords) return;
 
-  const weatherUrl = `https://api.weatherapi.com/v1/forecast.json?key=${env.WEATHER_API_KEY}&q=${cityCoords.lat},${cityCoords.lon}&days=2&aqi=no&alerts=no`;
+  // Pirate Weather: units=us for °F directly in briefings
+  const weatherUrl = `https://api.pirateweather.net/forecast/${env.WEATHER_API_KEY}/${cityCoords.lat},${cityCoords.lon}?units=us&exclude=minutely,hourly,alerts,flags`;
   const wResp = await fetch(weatherUrl);
-  if (!wResp.ok) { console.error('Weather API error for briefing:', wResp.status); return; }
+  if (!wResp.ok) { console.error('Pirate Weather error for briefing:', wResp.status); return; }
   const wData = await wResp.json();
+
+  const pirateCondLabel = {
+    'clear-day': 'Clear', 'clear-night': 'Clear',
+    'partly-cloudy-day': 'Partly Cloudy', 'partly-cloudy-night': 'Partly Cloudy',
+    'cloudy': 'Cloudy', 'fog': 'Foggy', 'wind': 'Windy',
+    'rain': 'Rain', 'sleet': 'Sleet', 'snow': 'Snow',
+    'thunderstorm': 'Thunderstorms', 'hail': 'Hail', 'tornado': 'Tornado',
+  };
 
   let heading, body;
 
   if (type === 'morning') {
-    const today = wData.forecast?.forecastday?.[0]?.day;
-    const current = wData.current;
-    if (!today || !current) return;
+    const today = wData.daily?.data?.[0];
+    if (!today) return;
 
-    const hi = Math.round(today.maxtemp_f);
-    const lo = Math.round(today.mintemp_f);
-    const cond = today.condition?.text || 'Mixed conditions';
-    const rainChance = today.daily_chance_of_rain || 0;
+    const hi = Math.round(today.temperatureHigh ?? today.temperatureMax ?? 70);
+    const lo = Math.round(today.temperatureLow ?? today.temperatureMin ?? 50);
+    const cond = pirateCondLabel[today.icon] || 'Mixed conditions';
+    const rainChance = Math.round((today.precipProbability || 0) * 100);
 
     heading = `Good morning — ${cond}`;
     body = `${hi}°/${lo}° today.`;
@@ -298,13 +306,13 @@ async function sendBriefing(env, type, tzName, localHour, dateStr) {
     body += ' Tap for your full forecast.';
   } else {
     // Evening — tomorrow's forecast
-    const tomorrow = wData.forecast?.forecastday?.[1]?.day;
+    const tomorrow = wData.daily?.data?.[1];
     if (!tomorrow) return;
 
-    const hi = Math.round(tomorrow.maxtemp_f);
-    const lo = Math.round(tomorrow.mintemp_f);
-    const cond = tomorrow.condition?.text || 'Mixed conditions';
-    const rainChance = tomorrow.daily_chance_of_rain || 0;
+    const hi = Math.round(tomorrow.temperatureHigh ?? tomorrow.temperatureMax ?? 70);
+    const lo = Math.round(tomorrow.temperatureLow ?? tomorrow.temperatureMin ?? 50);
+    const cond = pirateCondLabel[tomorrow.icon] || 'Mixed conditions';
+    const rainChance = Math.round((tomorrow.precipProbability || 0) * 100);
 
     heading = `Tomorrow — ${cond}`;
     body = `${hi}°/${lo}°.`;

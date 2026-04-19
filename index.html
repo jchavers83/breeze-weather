@@ -1324,97 +1324,81 @@ const WMO_CODES={
   99:{desc:'Thunderstorm + Hail',day:'thunderstorms-day-rain',night:'thunderstorms-night-rain',emoji:'⛈️'},
 };
 
-const WAPI_KEY='8b90a885f818451385530906260804';
+const PIRATE_KEY='TPn0ChGw6ybxoykntQRLHfKZG56f3VUm';
+const WAQI_KEY='865d43bed13e1afcf5981fa8bbad581ff22746d7';
 
-function wapiCodeToWMO(code){
-  if(code===1000)return 0;
-  if(code===1003)return 2;
-  if(code===1006)return 3;
-  if(code===1009)return 3;
-  if(code===1030)return 45;
-  if(code===1063||code===1180||code===1183)return 61;
-  if(code===1066||code===1210||code===1213)return 71;
-  if(code===1069||code===1249)return 77;
-  if(code===1072||code===1168||code===1171)return 56;
-  if(code===1087)return 95;
-  if(code===1114||code===1216||code===1219)return 73;
-  if(code===1117||code===1222||code===1225)return 75;
-  if(code===1135||code===1147)return 45;
-  if(code===1150||code===1153)return 51;
-  if(code===1168)return 56;
-  if(code===1186||code===1189)return 63;
-  if(code===1192||code===1195)return 65;
-  if(code===1198||code===1201)return 66;
-  if(code===1204||code===1207)return 77;
-  if(code===1240)return 80;
-  if(code===1243||code===1246)return 82;
-  if(code===1252)return 77;
-  if(code===1255||code===1258)return 85;
-  if(code===1261||code===1264)return 77;
-  if(code===1273||code===1276)return 95;
-  if(code===1279||code===1282)return 95;
-  return 0;
+function pirateIconToWMO(icon,precip){
+  const mm=precip||0;
+  switch(icon){
+    case 'clear-day': case 'clear-night': return 0;
+    case 'partly-cloudy-day': case 'partly-cloudy-night': return 2;
+    case 'cloudy': return 3;
+    case 'wind': return 2;
+    case 'fog': return 45;
+    case 'rain': return mm>7.6?65:mm>2.5?63:61;
+    case 'sleet': return 66;
+    case 'snow': return mm>4?75:mm>1?73:71;
+    case 'thunderstorm': return 95;
+    case 'hail': return 99;
+    case 'tornado': return 95;
+    default: return 0;
+  }
 }
 
-function _wapiAstro(date,timeStr){
-  if(!timeStr)return '';
-  const [time,ampm]=timeStr.split(' ');
-  let [h,m]=time.split(':').map(Number);
-  if(ampm==='PM'&&h!==12)h+=12;
-  if(ampm==='AM'&&h===12)h=0;
-  return `${date}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
-}
+function normalizePirateWeather(d){
+  const cur=d.currently||{};
+  const daily=(d.daily&&d.daily.data)||[];
+  const hourly=(d.hourly&&d.hourly.data)||[];
 
-function normalizeWeatherAPI(d){
-  const _utcNow=Math.floor(Date.now()/1000);
-  // Derive UTC offset from the localtime STRING (e.g. "2026-04-08 17:00") vs real UTC.
-  // WeatherAPI's localtime_epoch is a real UTC epoch, so subtracting it from Date.now gives ~0.
-  // Instead: parse localtime as if UTC, then diff with actual UTC to get the true city offset.
-  const _localStr=(d.location?.localtime||'').replace(' ','T');
-  const _localAsUtcSec=_localStr?Math.floor(new Date(_localStr+':00Z').getTime()/1000):_utcNow;
-  const utc_offset_seconds=Math.round((_localAsUtcSec-_utcNow)/900)*900;
+  function msToKph(ms){return(ms||0)*3.6;}
+  function unixToISO(ts){return ts?new Date(ts*1000).toISOString().slice(0,19):'';}
+  function unixToDate(ts){return ts?new Date(ts*1000).toISOString().slice(0,10):'';}
 
-  const fp=d.forecast.forecastday;
-  const hp=fp.flatMap(day=>day.hour);
+  // Determine is_day from sunrise/sunset timestamps
+  const _now=cur.time||Math.floor(Date.now()/1000);
+  const _sr=daily[0]?.sunriseTime;
+  const _ss=daily[0]?.sunsetTime;
+  const is_day=(_sr&&_ss)?(_now>=_sr&&_now<_ss?1:0):(!cur.icon?.includes('night')?1:0);
 
-  return {
-    utc_offset_seconds,
+  return{
+    utc_offset_seconds:(d.offset||0)*3600,
     current:{
-      temperature_2m:d.current.temp_c,
-      relative_humidity_2m:d.current.humidity,
-      apparent_temperature:d.current.feelslike_c,
-      weather_code:wapiCodeToWMO(d.current.condition.code),
-      wind_speed_10m:d.current.wind_kph||0,
-      wind_direction_10m:d.current.wind_degree||0,
-      wind_gusts_10m:d.current.wind_gust_kph||0,
-      is_day:d.current.is_day,
-      visibility:(d.current.vis_km||10)*1000,
-      cloud_cover:d.current.cloud,
-      dew_point_2m:d.current.dewpoint_c,
-      uv_index:d.current.uv,
-      precipitation:0
+      temperature_2m:cur.temperature??20,
+      relative_humidity_2m:Math.round((cur.humidity||0.5)*100),
+      apparent_temperature:cur.apparentTemperature??cur.temperature??20,
+      weather_code:pirateIconToWMO(cur.icon,cur.precipIntensity),
+      wind_speed_10m:msToKph(cur.windSpeed),
+      wind_direction_10m:cur.windBearing||0,
+      wind_gusts_10m:msToKph(cur.windGust||cur.windSpeed),
+      is_day,
+      visibility:(cur.visibility||16)*1000,
+      cloud_cover:Math.round((cur.cloudCover||0)*100),
+      dew_point_2m:cur.dewPoint??10,
+      uv_index:cur.uvIndex||0,
+      precipitation:cur.precipIntensity||0,
+      surface_pressure:cur.pressure||1013
     },
     daily:{
-      time:fp.map(p=>p.date),
-      temperature_2m_max:fp.map(p=>p.day.maxtemp_c),
-      temperature_2m_min:fp.map(p=>p.day.mintemp_c),
-      weather_code:fp.map(p=>wapiCodeToWMO(p.day.condition.code)),
-      sunrise:fp.map(p=>_wapiAstro(p.date,p.astro.sunrise)),
-      sunset:fp.map(p=>_wapiAstro(p.date,p.astro.sunset)),
-      precipitation_probability_max:fp.map(p=>p.day.daily_chance_of_rain||0),
-      precipitation_sum:fp.map(p=>p.day.totalprecip_mm||0),
-      uv_index_max:fp.map(p=>p.day.uv||0)
+      time:daily.map(x=>unixToDate(x.time)),
+      temperature_2m_max:daily.map(x=>x.temperatureHigh??x.temperatureMax??20),
+      temperature_2m_min:daily.map(x=>x.temperatureLow??x.temperatureMin??10),
+      weather_code:daily.map(x=>pirateIconToWMO(x.icon,x.precipIntensity)),
+      sunrise:daily.map(x=>unixToISO(x.sunriseTime)),
+      sunset:daily.map(x=>unixToISO(x.sunsetTime)),
+      precipitation_probability_max:daily.map(x=>Math.round((x.precipProbability||0)*100)),
+      precipitation_sum:daily.map(x=>(x.precipIntensity||0)*24),
+      uv_index_max:daily.map(x=>x.uvIndex||0)
     },
     hourly:{
-      time:hp.map(h=>h.time.replace(' ','T')),
-      temperature_2m:hp.map(h=>h.temp_c),
-      weather_code:hp.map(h=>wapiCodeToWMO(h.condition.code)),
-      precipitation_probability:hp.map(h=>h.chance_of_rain||0),
-      precipitation:hp.map(h=>h.precip_mm||0),
-      wind_speed_10m:hp.map(h=>h.wind_kph||0),
-      wind_direction_10m:hp.map(h=>h.wind_degree||0),
-      cloud_cover:hp.map(h=>h.cloud||0),
-      relative_humidity_2m:hp.map(h=>h.humidity||50)
+      time:hourly.map(h=>unixToISO(h.time)),
+      temperature_2m:hourly.map(h=>h.temperature??20),
+      weather_code:hourly.map(h=>pirateIconToWMO(h.icon,h.precipIntensity)),
+      precipitation_probability:hourly.map(h=>Math.round((h.precipProbability||0)*100)),
+      precipitation:hourly.map(h=>h.precipIntensity||0),
+      wind_speed_10m:hourly.map(h=>msToKph(h.windSpeed)),
+      wind_direction_10m:hourly.map(h=>h.windBearing||0),
+      cloud_cover:hourly.map(h=>Math.round((h.cloudCover||0)*100)),
+      relative_humidity_2m:hourly.map(h=>Math.round((h.humidity||0.5)*100))
     }
   };
 }
@@ -2206,16 +2190,20 @@ async function fetchWeather(){
   const app=$('#app');
   app.classList.add('loading');
   try{
-    const _url=`https://api.weatherapi.com/v1/forecast.json?key=${WAPI_KEY}&q=${state.lat},${state.lon}&days=5&aqi=yes&alerts=no`;
-    const _r=await fetch(_url);
+    const _url=`https://api.pirateweather.net/forecast/${PIRATE_KEY}/${state.lat},${state.lon}?units=si&exclude=alerts,flags`;
+    const [_r,_aqiR]=await Promise.all([
+      fetch(_url),
+      fetch(`https://api.waqi.info/feed/geo:${state.lat};${state.lon}/?token=${WAQI_KEY}`)
+    ]);
     const _d=await _r.json();
-    if(_d.error)throw new Error(_d.error.message||'Weather data unavailable');
-    state.data=normalizeWeatherAPI(_d);
-    if(_d.current?.air_quality){
-      const aqi=_d.current.air_quality['us-epa-index'];
-      const epaToAqi=[0,25,75,125,175,250,350];
-      state.airQuality={us_aqi:epaToAqi[Math.min(6,Math.max(0,aqi))]||0};
-    }
+    if(!_d.currently)throw new Error('Weather data unavailable');
+    state.data=normalizePirateWeather(_d);
+    try{
+      const _aqiD=await _aqiR.json();
+      if(_aqiD.status==='ok'&&_aqiD.data?.aqi){
+        state.airQuality={us_aqi:Number(_aqiD.data.aqi)};
+      }else{state.airQuality=null;}
+    }catch(e){state.airQuality=null;}
     state.openDay=0;
     render();
     updateGradient();
