@@ -2225,23 +2225,26 @@ async function fetchWeather(){
     // PWA install prompt — show after 2nd weather lookup (free or subscribed)
     const _lookups=parseInt(localStorage.getItem('cirrus_free_lookups')||'0',10);
     if(!window._installBannerShown&&(_lookups>=2||!gate.free)){setTimeout(()=>{showInstallBanner();window._installBannerShown=true;},1000);}
-    // Update OneSignal tags when weather loads — call SDK directly after short delay
-    setTimeout(()=>{
-      try{
-        if(window.OneSignal&&window.OneSignal.User){
-          window.OneSignal.User.addTag('city',state.name.toLowerCase());
-          window.OneSignal.User.addTag('lat',String(state.lat||''));
-          window.OneSignal.User.addTag('lon',String(state.lon||''));
-          window.OneSignal.User.addTag('timezone',Intl.DateTimeFormat().resolvedOptions().timeZone);
-          window.OneSignal.User.addTag('notif_morning',getSetting(SETTINGS_KEYS.morningBriefing)?'1':'0');
-          window.OneSignal.User.addTag('notif_evening',getSetting(SETTINGS_KEYS.eveningBriefing)?'1':'0');
-          window.OneSignal.User.addTag('notif_severe',getSetting(SETTINGS_KEYS.severeAlerts)?'1':'0');
-          window.OneSignal.User.addTag('notif_precip',getSetting(SETTINGS_KEYS.precipAlerts)?'1':'0');
-          window.OneSignal.User.addTag('morning_hour',String(getSetting(SETTINGS_KEYS.morningHour)));
-          window.OneSignal.User.addTag('evening_hour',String(getSetting(SETTINGS_KEYS.eveningHour)));
-        }
-      }catch(e){console.warn('OneSignal tag error:',e);}
-    },3000);
+    // Update OneSignal tags when weather loads — use Deferred to guarantee post-init execution
+    if(window.OneSignalDeferred){
+      OneSignalDeferred.push(async function(OS){
+        try{
+          if(!OS.User)return;
+          await OS.User.addTags({
+            city: state.name.toLowerCase(),
+            lat: String(state.lat||''),
+            lon: String(state.lon||''),
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            notif_morning: getSetting(SETTINGS_KEYS.morningBriefing)?'1':'0',
+            notif_evening: getSetting(SETTINGS_KEYS.eveningBriefing)?'1':'0',
+            notif_severe: getSetting(SETTINGS_KEYS.severeAlerts)?'1':'0',
+            notif_precip: getSetting(SETTINGS_KEYS.precipAlerts)?'1':'0',
+            morning_hour: String(getSetting(SETTINGS_KEYS.morningHour)),
+            evening_hour: String(getSetting(SETTINGS_KEYS.eveningHour))
+          });
+        }catch(e){console.warn('OneSignal tag error:',e);}
+      });
+    }
     // Auto-prompt for push permission on first weather load
     if(!localStorage.getItem('cirrus_notif_prompted')){
       localStorage.setItem('cirrus_notif_prompted','1');
