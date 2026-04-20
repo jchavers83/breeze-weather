@@ -2232,7 +2232,7 @@ async function fetchWeather(){
       const hasOld=OS&&typeof OS.sendTags==='function';
       if(hasNew||hasOld){
         const tags={
-          city:state.name.toLowerCase(),lat:String(state.lat||''),lon:String(state.lon||''),
+          city:(state.name&&state.name!=='Current Location'?state.name:(state.region?state.region.split(',')[0].trim():'unknown')).toLowerCase(),lat:String(state.lat||''),lon:String(state.lon||''),
           timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,
           notif_morning:getSetting(SETTINGS_KEYS.morningBriefing)?'1':'0',
           notif_evening:getSetting(SETTINGS_KEYS.eveningBriefing)?'1':'0',
