@@ -2230,7 +2230,7 @@ async function fetchWeather(){
       OneSignalDeferred.push(async function(OS){
         try{
           if(!OS.User)return;
-          await OS.User.addTags({
+          const tags={
             city: state.name.toLowerCase(),
             lat: String(state.lat||''),
             lon: String(state.lon||''),
@@ -2241,8 +2241,11 @@ async function fetchWeather(){
             notif_precip: getSetting(SETTINGS_KEYS.precipAlerts)?'1':'0',
             morning_hour: String(getSetting(SETTINGS_KEYS.morningHour)),
             evening_hour: String(getSetting(SETTINGS_KEYS.eveningHour))
-          });
-        }catch(e){console.warn('OneSignal tag error:',e);}
+          };
+          console.log('[Cirrus] Writing OneSignal tags:',tags);
+          for(const[k,v]of Object.entries(tags))await OS.User.addTag(k,v);
+          console.log('[Cirrus] OneSignal tags written successfully');
+        }catch(e){console.warn('[Cirrus] OneSignal tag error:',e);}
       });
     }
     // Auto-prompt for push permission on first weather load
