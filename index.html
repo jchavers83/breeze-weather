@@ -2228,23 +2228,40 @@ async function fetchWeather(){
     // Update OneSignal tags — poll until User context is ready (iOS PWA can be slow to init)
     (function writeOSTags(attempt){
       const OS=window.OneSignal;
-      if(OS&&OS.User&&typeof OS.User.addTag==='function'){
+      const hasNew=OS&&OS.User&&typeof OS.User.addTag==='function';
+      const hasOld=OS&&typeof OS.sendTags==='function';
+      if(hasNew||hasOld){
+        const tags={
+          city:state.name.toLowerCase(),lat:String(state.lat||''),lon:String(state.lon||''),
+          timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,
+          notif_morning:getSetting(SETTINGS_KEYS.morningBriefing)?'1':'0',
+          notif_evening:getSetting(SETTINGS_KEYS.eveningBriefing)?'1':'0',
+          notif_severe:getSetting(SETTINGS_KEYS.severeAlerts)?'1':'0',
+          notif_precip:getSetting(SETTINGS_KEYS.precipAlerts)?'1':'0',
+          morning_hour:String(getSetting(SETTINGS_KEYS.morningHour)),
+          evening_hour:String(getSetting(SETTINGS_KEYS.eveningHour))
+        };
         try{
-          OS.User.addTag('city',state.name.toLowerCase());
-          OS.User.addTag('lat',String(state.lat||''));
-          OS.User.addTag('lon',String(state.lon||''));
-          OS.User.addTag('timezone',Intl.DateTimeFormat().resolvedOptions().timeZone);
-          OS.User.addTag('notif_morning',getSetting(SETTINGS_KEYS.morningBriefing)?'1':'0');
-          OS.User.addTag('notif_evening',getSetting(SETTINGS_KEYS.eveningBriefing)?'1':'0');
-          OS.User.addTag('notif_severe',getSetting(SETTINGS_KEYS.severeAlerts)?'1':'0');
-          OS.User.addTag('notif_precip',getSetting(SETTINGS_KEYS.precipAlerts)?'1':'0');
-          OS.User.addTag('morning_hour',String(getSetting(SETTINGS_KEYS.morningHour)));
-          OS.User.addTag('evening_hour',String(getSetting(SETTINGS_KEYS.eveningHour)));
-        }catch(e){console.warn('[Cirrus] OS tag write error:',e);}
+          if(hasOld)OS.sendTags(tags).then(()=>_osDebugToast('Tags sent ✓ city='+tags.city)).catch(e=>_osDebugToast('sendTags err: '+e.message));
+          else{for(const[k,v]of Object.entries(tags))OS.User.addTag(k,v);_osDebugToast('addTag called ✓ city='+tags.city);}
+        }catch(e){_osDebugToast('Tag error: '+e.message);}
       }else if(attempt<20){
-        setTimeout(()=>writeOSTags(attempt+1),500); // retry every 500ms, up to 10s
+        if(attempt===0)_osDebugToast('OS not ready, polling…');
+        setTimeout(()=>writeOSTags(attempt+1),500);
+      }else{
+        _osDebugToast('OS unavailable after 10s. window.OneSignal='+(typeof window.OneSignal));
       }
     })(0);
+    function _osDebugToast(msg){
+      let t=document.getElementById('_osDbg');
+      if(!t){t=document.createElement('div');t.id='_osDbg';
+        Object.assign(t.style,{position:'fixed',bottom:'80px',left:'50%',transform:'translateX(-50%)',
+          background:'rgba(0,0,0,0.85)',color:'#fff',fontSize:'12px',padding:'8px 14px',
+          borderRadius:'20px',zIndex:'9999',maxWidth:'90vw',textAlign:'center',whiteSpace:'pre-wrap'});
+        document.body.appendChild(t);}
+      t.textContent=msg;
+      clearTimeout(t._hide);t._hide=setTimeout(()=>t.remove(),8000);
+    }
     // Auto-prompt for push permission on first weather load
     if(!localStorage.getItem('cirrus_notif_prompted')){
       localStorage.setItem('cirrus_notif_prompted','1');
