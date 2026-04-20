@@ -2225,29 +2225,26 @@ async function fetchWeather(){
     // PWA install prompt — show after 2nd weather lookup (free or subscribed)
     const _lookups=parseInt(localStorage.getItem('cirrus_free_lookups')||'0',10);
     if(!window._installBannerShown&&(_lookups>=2||!gate.free)){setTimeout(()=>{showInstallBanner();window._installBannerShown=true;},1000);}
-    // Update OneSignal tags when weather loads — use Deferred to guarantee post-init execution
-    if(window.OneSignalDeferred){
-      OneSignalDeferred.push(async function(OS){
+    // Update OneSignal tags — poll until User context is ready (iOS PWA can be slow to init)
+    (function writeOSTags(attempt){
+      const OS=window.OneSignal;
+      if(OS&&OS.User&&typeof OS.User.addTag==='function'){
         try{
-          if(!OS.User)return;
-          const tags={
-            city: state.name.toLowerCase(),
-            lat: String(state.lat||''),
-            lon: String(state.lon||''),
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            notif_morning: getSetting(SETTINGS_KEYS.morningBriefing)?'1':'0',
-            notif_evening: getSetting(SETTINGS_KEYS.eveningBriefing)?'1':'0',
-            notif_severe: getSetting(SETTINGS_KEYS.severeAlerts)?'1':'0',
-            notif_precip: getSetting(SETTINGS_KEYS.precipAlerts)?'1':'0',
-            morning_hour: String(getSetting(SETTINGS_KEYS.morningHour)),
-            evening_hour: String(getSetting(SETTINGS_KEYS.eveningHour))
-          };
-          console.log('[Cirrus] Writing OneSignal tags:',tags);
-          for(const[k,v]of Object.entries(tags))await OS.User.addTag(k,v);
-          console.log('[Cirrus] OneSignal tags written successfully');
-        }catch(e){console.warn('[Cirrus] OneSignal tag error:',e);}
-      });
-    }
+          OS.User.addTag('city',state.name.toLowerCase());
+          OS.User.addTag('lat',String(state.lat||''));
+          OS.User.addTag('lon',String(state.lon||''));
+          OS.User.addTag('timezone',Intl.DateTimeFormat().resolvedOptions().timeZone);
+          OS.User.addTag('notif_morning',getSetting(SETTINGS_KEYS.morningBriefing)?'1':'0');
+          OS.User.addTag('notif_evening',getSetting(SETTINGS_KEYS.eveningBriefing)?'1':'0');
+          OS.User.addTag('notif_severe',getSetting(SETTINGS_KEYS.severeAlerts)?'1':'0');
+          OS.User.addTag('notif_precip',getSetting(SETTINGS_KEYS.precipAlerts)?'1':'0');
+          OS.User.addTag('morning_hour',String(getSetting(SETTINGS_KEYS.morningHour)));
+          OS.User.addTag('evening_hour',String(getSetting(SETTINGS_KEYS.eveningHour)));
+        }catch(e){console.warn('[Cirrus] OS tag write error:',e);}
+      }else if(attempt<20){
+        setTimeout(()=>writeOSTags(attempt+1),500); // retry every 500ms, up to 10s
+      }
+    })(0);
     // Auto-prompt for push permission on first weather load
     if(!localStorage.getItem('cirrus_notif_prompted')){
       localStorage.setItem('cirrus_notif_prompted','1');
