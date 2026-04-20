@@ -257,9 +257,9 @@ async function dispatchBriefings(env) {
     const localHour = getLocalHour(now, tzName);
     const dateStr = getLocalDateStr(now, tzName);
 
-    // Morning briefing: check hours 5-8
-    if (localHour >= 5 && localHour <= 8) {
-      const dedupKey = `briefing:morning:${tzName}:${dateStr}`;
+    // Morning briefing: check hours 5-10 — dedup per hour so each preferred time fires independently
+    if (localHour >= 5 && localHour <= 10) {
+      const dedupKey = `briefing:morning:${tzName}:${localHour}:${dateStr}`;
       const already = await env.CIRRUS_SUBSCRIPTIONS.get(dedupKey);
       if (!already) {
         await sendBriefing(env, 'morning', tzName, localHour, dateStr);
@@ -267,9 +267,9 @@ async function dispatchBriefings(env) {
       }
     }
 
-    // Evening briefing: check hours 18-22
-    if (localHour >= 18 && localHour <= 22) {
-      const dedupKey = `briefing:evening:${tzName}:${dateStr}`;
+    // Evening briefing: check hours 17-22 — dedup per hour
+    if (localHour >= 17 && localHour <= 22) {
+      const dedupKey = `briefing:evening:${tzName}:${localHour}:${dateStr}`;
       const already = await env.CIRRUS_SUBSCRIPTIONS.get(dedupKey);
       if (!already) {
         await sendBriefing(env, 'evening', tzName, localHour, dateStr);
