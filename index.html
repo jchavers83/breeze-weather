@@ -2225,14 +2225,14 @@ async function fetchWeather(){
     // PWA install prompt — show after 2nd weather lookup (free or subscribed)
     const _lookups=parseInt(localStorage.getItem('cirrus_free_lookups')||'0',10);
     if(!window._installBannerShown&&(_lookups>=2||!gate.free)){setTimeout(()=>{showInstallBanner();window._installBannerShown=true;},1000);}
-    // Update OneSignal tags — poll until User context is ready (iOS PWA can be slow to init)
-    (function writeOSTags(attempt){
+    // Update OneSignal tags via Worker (server-side) — bypasses iOS SDK sync issues
+    (function pushTagsViaWorker(attempt){
       const OS=window.OneSignal;
-      const hasNew=OS&&OS.User&&typeof OS.User.addTag==='function';
-      const hasOld=OS&&typeof OS.sendTags==='function';
-      if(hasNew||hasOld){
+      const osId=OS&&OS.User&&OS.User.onesignalId;
+      if(osId){
         const tags={
-          city:(state.name&&state.name!=='Current Location'?state.name:(state.region?state.region.split(',')[0].trim():'unknown')).toLowerCase(),lat:String(state.lat||''),lon:String(state.lon||''),
+          city:(state.name&&state.name!=='Current Location'?state.name:(state.region?state.region.split(',')[0].trim():'unknown')).toLowerCase(),
+          lat:String(state.lat||''),lon:String(state.lon||''),
           timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,
           notif_morning:getSetting(SETTINGS_KEYS.morningBriefing)?'1':'0',
           notif_evening:getSetting(SETTINGS_KEYS.eveningBriefing)?'1':'0',
@@ -2241,27 +2241,12 @@ async function fetchWeather(){
           morning_hour:String(getSetting(SETTINGS_KEYS.morningHour)),
           evening_hour:String(getSetting(SETTINGS_KEYS.eveningHour))
         };
-        try{
-          if(hasOld)OS.sendTags(tags).then(()=>_osDebugToast('Tags sent ✓ city='+tags.city)).catch(e=>_osDebugToast('sendTags err: '+e.message));
-          else{for(const[k,v]of Object.entries(tags))OS.User.addTag(k,v);_osDebugToast('addTag called ✓ city='+tags.city);}
-        }catch(e){_osDebugToast('Tag error: '+e.message);}
+        fetch(`${WORKER_URL}/set-tags`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({onesignalId:osId,tags})})
+          .catch(e=>console.warn('[Cirrus] set-tags error:',e));
       }else if(attempt<20){
-        if(attempt===0)_osDebugToast('OS not ready, polling…');
-        setTimeout(()=>writeOSTags(attempt+1),500);
-      }else{
-        _osDebugToast('OS unavailable after 10s. window.OneSignal='+(typeof window.OneSignal));
+        setTimeout(()=>pushTagsViaWorker(attempt+1),500);
       }
     })(0);
-    function _osDebugToast(msg){
-      let t=document.getElementById('_osDbg');
-      if(!t){t=document.createElement('div');t.id='_osDbg';
-        Object.assign(t.style,{position:'fixed',bottom:'80px',left:'50%',transform:'translateX(-50%)',
-          background:'rgba(0,0,0,0.85)',color:'#fff',fontSize:'12px',padding:'8px 14px',
-          borderRadius:'20px',zIndex:'9999',maxWidth:'90vw',textAlign:'center',whiteSpace:'pre-wrap'});
-        document.body.appendChild(t);}
-      t.textContent=msg;
-      clearTimeout(t._hide);t._hide=setTimeout(()=>t.remove(),8000);
-    }
     // Auto-prompt for push permission on first weather load
     if(!localStorage.getItem('cirrus_notif_prompted')){
       localStorage.setItem('cirrus_notif_prompted','1');

@@ -67,6 +67,9 @@ export default {
     if (request.method === 'POST' && url.pathname === '/claim-token') {
       return handleClaimToken(request, env);
     }
+    if (request.method === 'POST' && url.pathname === '/set-tags') {
+      return handleSetTags(request, env);
+    }
 
     return err('Not found', 404);
   },
@@ -75,6 +78,29 @@ export default {
     ctx.waitUntil(handleScheduled(event, env));
   },
 };
+
+// ── Set OneSignal Tags (server-side, bypasses iOS SDK sync issues) ─────────
+async function handleSetTags(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+  const { onesignalId, tags } = body || {};
+  if (!onesignalId || typeof tags !== 'object') return err('Missing onesignalId or tags');
+  if (!env.ONESIGNAL_APP_ID || !env.ONESIGNAL_REST_API_KEY) return err('OneSignal not configured', 500);
+  try {
+    const resp = await fetch(
+      `https://api.onesignal.com/apps/${env.ONESIGNAL_APP_ID}/users/by/onesignal_id/${encodeURIComponent(onesignalId)}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Key ${env.ONESIGNAL_REST_API_KEY}` },
+        body: JSON.stringify({ properties: { tags } }),
+      }
+    );
+    if (!resp.ok) { const t = await resp.text(); return err(`OneSignal error: ${t}`, 502); }
+    return json({ ok: true });
+  } catch (e) {
+    return err('Network error: ' + e.message, 502);
+  }
+}
 
 // ── Scheduled Handler ──────────────────────────────────────────────────────
 async function handleScheduled(event, env) {
