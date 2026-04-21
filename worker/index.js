@@ -216,8 +216,31 @@ async function checkSevereWeather(env) {
     const areaDesc = (p.areaDesc || '').split(';')[0].trim();
     const location = areaDesc ? ` \u00b7 ${areaDesc}` : '';
 
-    // NWS headline as body — readable, concise, already well-formatted
-    const body = (p.headline || p.description || p.event || 'Severe weather alert in your area.').slice(0, 200);
+    // Parse expiration time from NWS expires field
+    let expiresStr = '';
+    if (p.expires) {
+      try {
+        const exp = new Date(p.expires);
+        expiresStr = exp.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+      } catch(e) {}
+    }
+
+    // Urgency line based on event type
+    const urgencyMap = {
+      'Tornado Warning': 'Take shelter immediately.',
+      'Tornado Watch': 'Conditions favorable for tornadoes. Stay alert.',
+      'Hurricane Warning': 'Dangerous hurricane conditions expected. Evacuate if ordered.',
+      'Hurricane Watch': 'Hurricane conditions possible. Prepare now.',
+      'Flash Flood Emergency': 'Life-threatening flooding. Move to higher ground now.',
+      'Flash Flood Warning': 'Flash flooding occurring or imminent. Avoid flood areas.',
+      'Severe Thunderstorm Warning': 'Large hail and damaging winds expected.',
+      'Extreme Wind Warning': 'Dangerous wind gusts expected. Stay indoors.',
+      'Blizzard Warning': 'Blizzard conditions expected. Avoid travel.',
+      'Ice Storm Warning': 'Significant ice accumulation expected. Avoid travel.',
+      'Winter Storm Warning': 'Heavy snow and dangerous conditions expected.',
+    };
+    const urgency = urgencyMap[p.event] || 'Take precautions immediately.';
+    const body = `${urgency}${expiresStr ? ` Active until ${expiresStr}.` : ''}`;
 
     await sendOneSignalNotification(env, {
       app_id: env.ONESIGNAL_APP_ID,
