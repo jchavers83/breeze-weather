@@ -1796,11 +1796,21 @@ function renderSettings(){
       </div>
     </div>`;
 
+  const _alertLabel=state.name&&state.name!=='Current Location'?`Alerts for ${state.name}`:'Alerts for Current Location';
   const notifSection=`
     <div class="settings-section">
       <div class="settings-section-title">Notifications</div>
-      <div class="settings-group" style="padding:0;overflow:hidden;border-radius:16px">
-        <div class="alert-opt${getSetting(SETTINGS_KEYS.morningBriefing)?' on':''}" style="border-radius:0;border-bottom:1px solid rgba(120,120,128,0.12);padding:13px 14px" onclick="toggleNotifPref('${SETTINGS_KEYS.morningBriefing}')">
+      <div class="alerts-row ${_alertsOptedIn()?'active':''}" style="margin-top:0;cursor:default">
+        <canvas id="settingsAlertsCanvas" width="80" height="80" class="alerts-app-icon"></canvas>
+        <div class="alerts-text-wrap">
+          <div class="alerts-app-name">Cirrus</div>
+          <div class="alerts-label">${_alertLabel}</div>
+          <div class="alerts-sublabel">${_alertsSublabel()}</div>
+        </div>
+        <div class="alerts-toggle" onclick="handleAlertsBtn()" style="cursor:pointer"></div>
+      </div>
+      <div class="alerts-options visible" style="margin-top:8px;display:block">
+        <div class="alert-opt${getSetting(SETTINGS_KEYS.morningBriefing)?' on':''}" onclick="toggleNotifPref('${SETTINGS_KEYS.morningBriefing}')">
           <div class="alert-opt-icon" style="background:linear-gradient(135deg,#f59e0b,#f97316)">${wIcon('clear-day')}</div>
           <div class="alert-opt-text">
             <div class="alert-opt-label">Morning forecast</div>
@@ -1808,7 +1818,7 @@ function renderSettings(){
           </div>
           <div class="alert-opt-mini-toggle"></div>
         </div>
-        <div class="alert-opt${getSetting(SETTINGS_KEYS.eveningBriefing)?' on':''}" style="border-radius:0;border-bottom:1px solid rgba(120,120,128,0.12);padding:13px 14px" onclick="toggleNotifPref('${SETTINGS_KEYS.eveningBriefing}')">
+        <div class="alert-opt${getSetting(SETTINGS_KEYS.eveningBriefing)?' on':''}" onclick="toggleNotifPref('${SETTINGS_KEYS.eveningBriefing}')">
           <div class="alert-opt-icon" style="background:linear-gradient(135deg,#4f46e5,#7c3aed)">${wIcon('clear-night')}</div>
           <div class="alert-opt-text">
             <div class="alert-opt-label">Evening look-ahead</div>
@@ -1816,7 +1826,7 @@ function renderSettings(){
           </div>
           <div class="alert-opt-mini-toggle"></div>
         </div>
-        <div class="alert-opt${getSetting(SETTINGS_KEYS.severeAlerts)?' on':''}" style="border-radius:0;padding:13px 14px" onclick="toggleNotifPref('${SETTINGS_KEYS.severeAlerts}')">
+        <div class="alert-opt${getSetting(SETTINGS_KEYS.severeAlerts)?' on':''}" onclick="toggleNotifPref('${SETTINGS_KEYS.severeAlerts}')">
           <div class="alert-opt-icon" style="background:linear-gradient(135deg,#ef4444,#f97316)">${wIcon('thunderstorms')}</div>
           <div class="alert-opt-text">
             <div class="alert-opt-label">Severe weather</div>
@@ -1825,7 +1835,6 @@ function renderSettings(){
           <div class="alert-opt-mini-toggle"></div>
         </div>
       </div>
-      ${!_alertsOptedIn()?`<div style="margin-top:10px;padding:12px 16px;background:rgba(255,255,255,0.08);border-radius:12px;font-size:13px;color:rgba(255,255,255,0.65);text-align:center;cursor:pointer" onclick="handleAlertsBtn()">Tap to enable push notifications on this device</div>`:''}
     </div>`;
 
   const notifCta='';
@@ -1898,6 +1907,11 @@ function renderSettings(){
   if(sc){
     const lc=document.getElementById('landingIcon');
     if(lc)sc.getContext('2d').drawImage(lc,0,0,192,192);
+  }
+  const sac=document.getElementById('settingsAlertsCanvas');
+  if(sac){
+    const lc=document.getElementById('landingIcon');
+    if(lc)sac.getContext('2d').drawImage(lc,0,0,80,80);
   }
 
   // Load referral link async after render
