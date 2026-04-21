@@ -96,6 +96,25 @@ async function handleSetTags(request, env) {
       }
     );
     if (!resp.ok) { const t = await resp.text(); return err(`OneSignal error: ${t}`, 502); }
+    // Store user prefs in KV for per-user personalized briefings
+    const userPrefs = {
+      lat: tags.lat || '',
+      lon: tags.lon || '',
+      timezone: tags.timezone || 'America/New_York',
+      morning_hour: tags.morning_hour || '6',
+      evening_hour: tags.evening_hour || '21',
+      notif_morning: tags.notif_morning || '0',
+      notif_evening: tags.notif_evening || '0',
+      notif_severe: tags.notif_severe || '0',
+      updated: Date.now(),
+    };
+    if (userPrefs.lat && env.CIRRUS_SUBSCRIPTIONS) {
+      await env.CIRRUS_SUBSCRIPTIONS.put(
+        `user_prefs:${onesignalId}`,
+        JSON.stringify(userPrefs),
+        { expirationTtl: 7776000 } // 90 days
+      );
+    }
     return json({ ok: true });
   } catch (e) {
     return err('Network error: ' + e.message, 502);
@@ -238,80 +257,64 @@ async function dispatchBriefings(env) {
   if (!env.ONESIGNAL_APP_ID || !env.ONESIGNAL_REST_API_KEY || !env.WEATHER_API_KEY) return;
 
   const now = new Date();
-  const utcHour = now.getUTCHours();
 
-  // Common US timezone offsets (covers most Cirrus users initially)
-  // Format: [offsetHours, IANA timezone name]
-  const TZ_MAP = [
-    [-5, 'America/New_York'],    // ET
-    [-6, 'America/Chicago'],     // CT
-    [-7, 'America/Denver'],      // MT
-    [-8, 'America/Los_Angeles'], // PT
-    [-9, 'America/Anchorage'],   // AK
-    [-10, 'Pacific/Honolulu'],   // HI
-    // Add more as user base grows
-  ];
+  // List all users who have registered their location prefs
+  let list;
+  try { list = await env.CIRRUS_SUBSCRIPTIONS.list({ prefix: 'user_prefs:' }); }
+  catch (e) { console.error('KV list error:', e.message); return; }
 
-  // Check DST: use a more robust approach — compute actual local hour per timezone
-  for (const [_, tzName] of TZ_MAP) {
-    const localHour = getLocalHour(now, tzName);
-    const dateStr = getLocalDateStr(now, tzName);
+  const keys = list.keys.slice(0, 100); // cap per-run
+  console.log(`dispatchBriefings: processing ${keys.length} users`);
 
-    // Morning briefing: check hours 5-10 — dedup per hour so each preferred time fires independently
-    if (localHour >= 5 && localHour <= 10) {
-      const dedupKey = `briefing:morning:${tzName}:${localHour}:${dateStr}`;
-      const already = await env.CIRRUS_SUBSCRIPTIONS.get(dedupKey);
-      if (!already) {
-        await sendBriefing(env, 'morning', tzName, localHour, dateStr);
-        await env.CIRRUS_SUBSCRIPTIONS.put(dedupKey, '1', { expirationTtl: 86400 });
+  for (const keyObj of keys) {
+    try {
+      const raw = await env.CIRRUS_SUBSCRIPTIONS.get(keyObj.name);
+      if (!raw) continue;
+      const prefs = JSON.parse(raw);
+      const onesignalId = keyObj.name.slice('user_prefs:'.length);
+
+      if (!prefs.lat || !prefs.lon || !prefs.timezone) continue;
+
+      const localHour = getLocalHour(now, prefs.timezone);
+      const dateStr = getLocalDateStr(now, prefs.timezone);
+
+      // Morning briefing
+      if (prefs.notif_morning === '1' && localHour === parseInt(prefs.morning_hour || 6)) {
+        const dedupKey = `briefing:${onesignalId}:morning:${dateStr}`;
+        const already = await env.CIRRUS_SUBSCRIPTIONS.get(dedupKey);
+        if (!already) {
+          await sendPersonalBriefing(env, 'morning', onesignalId, prefs);
+          await env.CIRRUS_SUBSCRIPTIONS.put(dedupKey, '1', { expirationTtl: 86400 });
+        }
       }
-    }
 
-    // Evening briefing: check hours 17-22 — dedup per hour
-    if (localHour >= 17 && localHour <= 22) {
-      const dedupKey = `briefing:evening:${tzName}:${localHour}:${dateStr}`;
-      const already = await env.CIRRUS_SUBSCRIPTIONS.get(dedupKey);
-      if (!already) {
-        await sendBriefing(env, 'evening', tzName, localHour, dateStr);
-        await env.CIRRUS_SUBSCRIPTIONS.put(dedupKey, '1', { expirationTtl: 86400 });
+      // Evening briefing
+      if (prefs.notif_evening === '1' && localHour === parseInt(prefs.evening_hour || 21)) {
+        const dedupKey = `briefing:${onesignalId}:evening:${dateStr}`;
+        const already = await env.CIRRUS_SUBSCRIPTIONS.get(dedupKey);
+        if (!already) {
+          await sendPersonalBriefing(env, 'evening', onesignalId, prefs);
+          await env.CIRRUS_SUBSCRIPTIONS.put(dedupKey, '1', { expirationTtl: 86400 });
+        }
       }
+    } catch (e) {
+      console.error('Briefing user error:', keyObj.name, e.message);
     }
   }
 }
 
-function getLocalHour(date, tz) {
-  return parseInt(date.toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }), 10);
-}
-
-function getLocalDateStr(date, tz) {
-  return date.toLocaleString('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' });
-}
-
-async function sendBriefing(env, type, tzName, localHour, dateStr) {
-  const prefTag = type === 'morning' ? 'notif_morning' : 'notif_evening';
-  const hourTag = type === 'morning' ? 'morning_hour' : 'evening_hour';
-
-  // Get subscribers matching this timezone + preference + hour
-  // OneSignal CSV export or View Devices is heavy — instead, we send with tag filters
-  // and let OneSignal match. For weather data, we fetch for representative city centers.
-  // This is a trade-off: not per-user personalized, but per-timezone-region.
-
-  // Fetch weather for the timezone's representative city
-  const cityCoords = TZ_REPRESENTATIVE_COORDS[tzName];
-  if (!cityCoords) return;
-
-  // Pirate Weather: units=us for °F directly in briefings
-  const weatherUrl = `https://api.pirateweather.net/forecast/${env.WEATHER_API_KEY}/${cityCoords.lat},${cityCoords.lon}?units=us&exclude=minutely,hourly,alerts,flags`;
+async function sendPersonalBriefing(env, type, onesignalId, prefs) {
+  const weatherUrl = `https://api.pirateweather.net/forecast/${env.WEATHER_API_KEY}/${prefs.lat},${prefs.lon}?units=us&exclude=minutely,hourly,alerts,flags`;
   const wResp = await fetch(weatherUrl);
-  if (!wResp.ok) { console.error('Pirate Weather error for briefing:', wResp.status); return; }
+  if (!wResp.ok) { console.error('Weather fetch error:', wResp.status); return; }
   const wData = await wResp.json();
 
   const pirateCondLabel = {
-    'clear-day': 'Clear', 'clear-night': 'Clear',
-    'partly-cloudy-day': 'Partly Cloudy', 'partly-cloudy-night': 'Partly Cloudy',
-    'cloudy': 'Cloudy', 'fog': 'Foggy', 'wind': 'Windy',
-    'rain': 'Rain', 'sleet': 'Sleet', 'snow': 'Snow',
-    'thunderstorm': 'Thunderstorms', 'hail': 'Hail', 'tornado': 'Tornado',
+    'clear-day':'Clear','clear-night':'Clear',
+    'partly-cloudy-day':'Partly Cloudy','partly-cloudy-night':'Partly Cloudy',
+    'cloudy':'Cloudy','fog':'Foggy','wind':'Windy',
+    'rain':'Rain','sleet':'Sleet','snow':'Snow',
+    'thunderstorm':'Thunderstorms','hail':'Hail','tornado':'Tornado',
   };
 
   let heading, body;
@@ -319,60 +322,38 @@ async function sendBriefing(env, type, tzName, localHour, dateStr) {
   if (type === 'morning') {
     const today = wData.daily?.data?.[0];
     if (!today) return;
-
     const hi = Math.round(today.temperatureHigh ?? today.temperatureMax ?? 70);
     const lo = Math.round(today.temperatureLow ?? today.temperatureMin ?? 50);
     const cond = pirateCondLabel[today.icon] || 'Mixed conditions';
     const rainChance = Math.round((today.precipProbability || 0) * 100);
-
     heading = `Good morning — ${cond}`;
     body = `${hi}°/${lo}° today.`;
     if (rainChance >= 40) body += ` ${rainChance}% chance of rain.`;
     else if (rainChance >= 20) body += ` Slight chance of rain (${rainChance}%).`;
     body += ' Tap for your full forecast.';
   } else {
-    // Evening — tomorrow's forecast
     const tomorrow = wData.daily?.data?.[1];
     if (!tomorrow) return;
-
     const hi = Math.round(tomorrow.temperatureHigh ?? tomorrow.temperatureMax ?? 70);
     const lo = Math.round(tomorrow.temperatureLow ?? tomorrow.temperatureMin ?? 50);
     const cond = pirateCondLabel[tomorrow.icon] || 'Mixed conditions';
     const rainChance = Math.round((tomorrow.precipProbability || 0) * 100);
-
     heading = `Tomorrow — ${cond}`;
     body = `${hi}°/${lo}°.`;
     if (rainChance >= 40) body += ` ${rainChance}% chance of rain.`;
     body += ' Tap to see the full forecast.';
   }
 
-  const filters = [
-    { field: 'tag', key: prefTag, relation: '=', value: '1' },
-    { operator: 'AND' },
-    { field: 'tag', key: hourTag, relation: '=', value: String(localHour) },
-    { operator: 'AND' },
-    { field: 'tag', key: 'timezone', relation: '=', value: tzName },
-  ];
-
   await sendOneSignalNotification(env, {
     app_id: env.ONESIGNAL_APP_ID,
-    filters,
+    include_aliases: { onesignal_id: [onesignalId] },
+    target_channel: 'push',
     headings: { en: heading },
     contents: { en: body },
     url: 'https://cirrusweather.app',
     ttl: 3600,
   });
 }
-
-// Representative coordinates per timezone (largest city center)
-const TZ_REPRESENTATIVE_COORDS = {
-  'America/New_York':    { lat: 40.71, lon: -74.01 },   // NYC
-  'America/Chicago':     { lat: 41.88, lon: -87.63 },   // Chicago
-  'America/Denver':      { lat: 39.74, lon: -104.99 },  // Denver
-  'America/Los_Angeles': { lat: 34.05, lon: -118.24 },  // LA
-  'America/Anchorage':   { lat: 61.22, lon: -149.90 },  // Anchorage
-  'Pacific/Honolulu':    { lat: 21.31, lon: -157.86 },  // Honolulu
-};
 
 // ── OneSignal REST API ─────────────────────────────────────────────────────
 async function sendOneSignalNotification(env, payload) {
