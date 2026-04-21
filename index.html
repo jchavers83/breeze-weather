@@ -553,8 +553,8 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .alerts-sublabel{font-size:11px;color:var(--text-secondary);margin-top:1px}
 .alerts-toggle{width:42px;height:24px;border-radius:12px;background:rgba(255,255,255,0.28);border:1.5px solid rgba(255,255,255,0.32);position:relative;flex-shrink:0;transition:background 0.25s,border-color 0.25s}
 .alerts-toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.25);transition:transform 0.25s cubic-bezier(.4,0,.2,1)}
-.alerts-row.active .alerts-toggle{background:#1a90e4;border-color:#1a90e4}
-.alerts-row.active .alerts-toggle::after{transform:translateX(18px)}
+.alerts-row.active .alerts-toggle,.alerts-toggle.active{background:#1a90e4;border-color:#1a90e4}
+.alerts-row.active .alerts-toggle::after,.alerts-toggle.active::after{transform:translateX(18px)}
 /* Alert preference options panel — own glass card, separate from the notification row */
 .alerts-options{margin-top:8px;border-radius:var(--card-radius);background:var(--card-bg);backdrop-filter:blur(var(--card-blur));-webkit-backdrop-filter:blur(var(--card-blur));border:1px solid var(--card-border);box-shadow:0 2px 16px rgba(0,0,0,0.08);overflow:hidden;display:none;padding:4px 0}
 .alerts-options.visible{display:block}
@@ -1800,16 +1800,16 @@ function renderSettings(){
   const notifSection=`
     <div class="settings-section">
       <div class="settings-section-title">Notifications</div>
-      <div class="alerts-row ${_alertsOptedIn()?'active':''}" style="margin-top:0;cursor:default">
-        <canvas id="settingsAlertsCanvas" width="80" height="80" class="alerts-app-icon"></canvas>
-        <div class="alerts-text-wrap">
-          <div class="alerts-app-name">Cirrus</div>
-          <div class="alerts-label">${_alertLabel}</div>
-          <div class="alerts-sublabel">${_alertsSublabel()}</div>
+      <div class="settings-group" style="padding:0;overflow:hidden">
+        <div class="alert-opt" style="padding:12px 16px;border-bottom:1px solid var(--card-border);cursor:default">
+          <canvas id="settingsAlertsCanvas" width="80" height="80" class="alerts-app-icon"></canvas>
+          <div class="alerts-text-wrap">
+            <div class="alerts-app-name">Cirrus</div>
+            <div class="alerts-label">${_alertLabel}</div>
+            <div class="alerts-sublabel">${_alertsSublabel()}</div>
+          </div>
+          <div class="alerts-toggle ${_alertsOptedIn()?'active':''}" onclick="handleAlertsBtn()" style="cursor:pointer;flex-shrink:0"></div>
         </div>
-        <div class="alerts-toggle" onclick="handleAlertsBtn()" style="cursor:pointer"></div>
-      </div>
-      <div class="alerts-options visible" style="margin-top:8px;display:block">
         <div class="alert-opt${getSetting(SETTINGS_KEYS.morningBriefing)?' on':''}" onclick="toggleNotifPref('${SETTINGS_KEYS.morningBriefing}')">
           <div class="alert-opt-icon" style="background:linear-gradient(135deg,#f59e0b,#f97316)">${wIcon('clear-day')}</div>
           <div class="alert-opt-text">
