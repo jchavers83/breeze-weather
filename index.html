@@ -826,21 +826,30 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 /* ── Ask Cirrus chat view ──────────────────────────────────────────────── */
 #askView{display:none;position:fixed;inset:0;z-index:50;flex-direction:column;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 62px)}
 #askView.active{display:flex}
-.ask-header{padding:calc(env(safe-area-inset-top,16px) + 12px) 20px 14px;background:var(--card-bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-bottom:1px solid var(--card-border);flex-shrink:0}
-.ask-header-inner{display:flex;align-items:center;gap:12px}
-.ask-header-avatar{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#38bdf8,#1a6ed8);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 2px 10px rgba(26,110,216,0.35)}
-.ask-header-title{font-size:17px;font-weight:800;color:var(--text)}
+.ask-header{padding:calc(env(safe-area-inset-top,16px) + 10px) 18px 12px;background:var(--card-bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-bottom:1px solid var(--card-border);flex-shrink:0;display:flex;align-items:center;gap:12px}
+.ask-header-icon{width:36px;height:36px;border-radius:10px;overflow:hidden;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.4);box-shadow:0 2px 10px rgba(0,0,0,0.18)}
+.ask-header-icon img{width:100%;height:100%;display:block}
+.ask-header-title{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-0.2px}
 .ask-header-sub{font-size:12px;color:var(--text-secondary);margin-top:1px}
-.ask-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
-.ask-starters{display:flex;flex-direction:column;gap:8px;padding-top:4px}
-.ask-starters-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:4px;padding:0 2px}
-.ask-starter-chip{padding:13px 16px;border-radius:14px;background:var(--card-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--card-border);color:var(--text);font-size:14px;font-weight:500;text-align:left;cursor:pointer;transition:all 0.15s;font-family:inherit;display:flex;align-items:center;gap:12px;width:100%}
-.ask-starter-chip:active{transform:scale(0.97)}
-.ask-starter-emoji{font-size:20px;flex-shrink:0;line-height:1}
-.ask-msg{display:flex;align-items:flex-start;gap:9px;animation:cardIn 0.3s ease forwards}
+.ask-messages{flex:1;overflow-y:auto;padding:0 14px 12px;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
+/* Intro / suggestion state */
+.ask-intro{display:flex;flex-direction:column;align-items:center;padding:28px 0 16px;text-align:center}
+.ask-intro-icon{width:72px;height:72px;border-radius:18px;overflow:hidden;margin-bottom:14px;border:2px solid rgba(255,255,255,0.5);box-shadow:0 6px 28px rgba(0,0,0,0.22),0 0 0 3px rgba(255,255,255,0.1)}
+.ask-intro-icon img{width:100%;height:100%;display:block}
+.ask-intro-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.4px;margin-bottom:5px}
+.ask-intro-sub{font-size:14px;color:var(--text-secondary);line-height:1.5;max-width:270px;font-weight:500;margin-bottom:4px}
+.ask-chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px 0 4px;width:100%}
+.ask-chip{padding:14px 12px 13px;border-radius:16px;background:var(--card-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--card-border);text-align:left;cursor:pointer;transition:all 0.15s;font-family:inherit;display:flex;flex-direction:column;gap:6px;width:100%}
+.ask-chip:active{transform:scale(0.94);opacity:0.8}
+.ask-chip-emoji{font-size:22px;line-height:1}
+.ask-chip-text{font-size:13px;font-weight:600;color:var(--text);line-height:1.3}
+/* Messages */
+.ask-msgs-list{display:flex;flex-direction:column;gap:10px;padding-top:14px}
+.ask-msg{display:flex;align-items:flex-start;gap:8px;animation:cardIn 0.3s ease forwards}
 .ask-msg.user{flex-direction:row-reverse}
-.ask-msg-avatar{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#38bdf8,#1a6ed8);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;margin-top:1px;box-shadow:0 1px 6px rgba(26,110,216,0.3)}
-.ask-bubble{max-width:88%;padding:11px 15px;font-size:15px;line-height:1.55;font-weight:500;word-break:break-word}
+.ask-msg-icon{width:28px;height:28px;border-radius:8px;overflow:hidden;flex-shrink:0;margin-top:2px;border:1px solid rgba(255,255,255,0.3);box-shadow:0 1px 6px rgba(0,0,0,0.18)}
+.ask-msg-icon img{width:100%;height:100%;display:block}
+.ask-bubble{max-width:86%;padding:11px 14px;font-size:15px;line-height:1.55;font-weight:500;word-break:break-word}
 .ask-bubble.cirrus{background:var(--card-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--card-border);color:var(--text);border-radius:4px 16px 16px 16px}
 .ask-bubble.user{background:var(--accent);color:#fff;border-radius:16px 4px 16px 16px}
 .ask-typing-wrap{display:flex;gap:5px;padding:3px 0;align-items:center}
@@ -848,17 +857,24 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .ask-typing-dot:nth-child(2){animation-delay:0.18s}
 .ask-typing-dot:nth-child(3){animation-delay:0.36s}
 @keyframes askDot{0%,60%,100%{transform:translateY(0);opacity:0.35}30%{transform:translateY(-5px);opacity:1}}
+/* Input bar */
 .ask-input-bar{padding:10px 12px;background:var(--card-bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-top:1px solid var(--card-border);display:flex;gap:8px;align-items:center;flex-shrink:0}
 .ask-input{flex:1;padding:11px 16px;border:1.5px solid var(--card-border);border-radius:22px;background:rgba(128,128,128,0.08);color:var(--text);font-size:15px;font-family:inherit;outline:none;transition:border-color 0.2s;-webkit-appearance:none}
 .ask-input:focus{border-color:var(--accent)}
 .ask-input:disabled{opacity:0.5}
 .ask-send{width:44px;height:44px;border-radius:22px;background:var(--accent);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.15s;box-shadow:0 2px 10px rgba(26,144,228,0.35)}
 .ask-send:active{transform:scale(0.9)}
-.ask-send:disabled{opacity:0.4;cursor:default}
-.ask-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;padding:40px 24px;color:var(--text-tertiary)}
+.ask-send:disabled{opacity:0.4;cursor:default;box-shadow:none}
+/* No weather state */
+.ask-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;padding:40px 24px}
 .ask-empty-icon{font-size:48px;margin-bottom:14px;opacity:0.55}
 .ask-empty-title{font-size:16px;font-weight:700;color:var(--text-secondary);margin-bottom:6px}
-.ask-empty-sub{font-size:13px;line-height:1.55;max-width:260px}
+.ask-empty-sub{font-size:13px;line-height:1.55;color:var(--text-tertiary);max-width:260px}
+/* Wear card Ask shortcut */
+.wear-ask-btn{display:inline-flex;align-items:center;gap:7px;margin-top:12px;padding:9px 14px;border-radius:20px;background:rgba(26,144,228,0.09);border:1px solid rgba(26,144,228,0.2);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.wear-ask-btn:active{transform:scale(0.96);background:rgba(26,144,228,0.15)}
+.wear-ask-icon{width:18px;height:18px;border-radius:5px;overflow:hidden;flex-shrink:0}
+.wear-ask-icon img{width:100%;height:100%;display:block}
 </style>
 </head>
 <body>
@@ -1180,10 +1196,6 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4m8-4v4"/></svg>
     <span>Forecast</span>
   </button>
-  <button class="nav-tab" data-tab="details">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    <span>Details</span>
-  </button>
   <button class="nav-tab" data-tab="radar">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M6.34 6.34a8 8 0 1 0 11.32 0"/><path d="M9.17 9.17a4 4 0 1 0 5.66 0"/></svg>
     <span>Radar</span>
@@ -1191,6 +1203,10 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
   <button class="nav-tab" data-tab="ask">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
     <span>Ask</span>
+  </button>
+  <button class="nav-tab" data-tab="details">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Details</span>
   </button>
   <button class="nav-tab" data-tab="settings">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -3140,7 +3156,8 @@ function buildWearCard(c,daily,hourly,now){
   if(extras.length===1)extrasLine=` Don't forget ${extras[0]}. ${extraEmojis[0]}`;
   else if(extras.length===2)extrasLine=` Grab ${extras[0]} and ${extras[1]}. ${extraEmojis.join('')}`;
   else if(extras.length>2)extrasLine=` Also grab ${extras.slice(0,-1).join(', ')}, and ${extras[extras.length-1]}. ${extraEmojis.join('')}`;
-  return`<div class="wear-card glass"><div class="wear-label">What to Wear</div><div class="wear-text">${clothing}.</div><div class="wear-quip">${quip}${extrasLine}</div></div>`;
+  const wearIconUrl=document.getElementById('appIcon')?.href||'';
+  return`<div class="wear-card glass"><div class="wear-label">What to Wear</div><div class="wear-text">${clothing}.</div><div class="wear-quip">${quip}${extrasLine}</div><button class="wear-ask-btn" onclick="jumpToAsk()"><span class="wear-ask-icon"><img src="${wearIconUrl}" alt=""></span>Ask Cirrus about today</button></div>`;
 }
 
 function buildPrecipTimeline(hourly,now,isNight,isDark){
@@ -4959,37 +4976,41 @@ function renderAskView(){
   if(!el)return;
   const hasWeather=!!state.data;
   const cityName=state.name||'your area';
-  const starters=[
+  const iconUrl=document.getElementById('appIcon')?.href||'';
+  const chips=[
     {e:'👔',t:"What should I wear today?"},
-    {e:'🏃',t:"Is it good for a run outside?"},
-    {e:'🌧️',t:"Will it rain later today?"},
+    {e:'🏃',t:"Good for a run outside?"},
+    {e:'🌧️',t:"Will it rain later?"},
     {e:'🚗',t:"Good day to wash my car?"},
-    {e:'☀️',t:"What's the UV situation today?"},
-    {e:'⚡',t:"Any storms expected this week?"},
-    {e:'🌡️',t:"Why does it feel hotter than the temperature?"},
-    {e:'😴',t:"Best time to be outside today?"},
+    {e:'☀️',t:"What's the UV like today?"},
+    {e:'⚡',t:"Any storms this week?"},
+    {e:'🌡️',t:"Why does it feel so hot?"},
+    {e:'🌅',t:"Best time to be outside?"},
   ];
+  const introHtml=hasWeather?`
+    <div class="ask-intro" id="askIntro">
+      <div class="ask-intro-icon"><img src="${iconUrl}" alt="Cirrus"></div>
+      <div class="ask-intro-title">Ask Cirrus</div>
+      <div class="ask-intro-sub">Your weather advisor for ${cityName}. Ask anything about today's conditions.</div>
+      <div class="ask-chips">
+        ${chips.map(c=>`<button class="ask-chip" onclick="handleAskChip(this,'${c.t.replace(/'/g,"\\'")}')"><span class="ask-chip-emoji">${c.e}</span><span class="ask-chip-text">${c.t}</span></button>`).join('')}
+      </div>
+    </div>`:`
+    <div class="ask-empty">
+      <div class="ask-empty-icon">☁️</div>
+      <div class="ask-empty-title">No weather loaded</div>
+      <div class="ask-empty-sub">Search for a city or tap the location button, then come back here to ask anything.</div>
+    </div>`;
   el.innerHTML=`
     <div class="ask-header">
-      <div class="ask-header-inner">
-        <div class="ask-header-avatar">✦</div>
-        <div>
-          <div class="ask-header-title">Ask Cirrus</div>
-          <div class="ask-header-sub">${hasWeather?`Weather advisor for ${cityName}`:'Search a location to get started'}</div>
-        </div>
+      <div class="ask-header-icon"><img src="${iconUrl}" alt="Cirrus"></div>
+      <div>
+        <div class="ask-header-title">Ask Cirrus</div>
+        <div class="ask-header-sub">${hasWeather?`Weather advisor for ${cityName}`:'Search a location to get started'}</div>
       </div>
     </div>
     <div class="ask-messages" id="askMsgList">
-      ${!hasWeather?`<div class="ask-empty">
-        <div class="ask-empty-icon">☁️</div>
-        <div class="ask-empty-title">No weather loaded</div>
-        <div class="ask-empty-sub">Search for a city or tap the location button first, then come back here to ask anything.</div>
-      </div>`:''}
-      ${_askMessages.length===0&&hasWeather?`<div class="ask-starters" id="askStarters">
-        <div class="ask-starters-label">Try asking</div>
-        ${starters.map(s=>`<button class="ask-starter-chip" onclick="handleAskStarter(this,'${s.t.replace(/'/g,"\\'")}')">\
-<span class="ask-starter-emoji">${s.e}</span>${s.t}</button>`).join('')}
-      </div>`:''}
+      ${_askMessages.length===0?introHtml:''}
     </div>
     <div class="ask-input-bar">
       <input id="askInput" class="ask-input" type="text" placeholder="${hasWeather?'Ask anything about today\u2019s weather\u2026':'Search a city first\u2026'}" autocomplete="off" autocorrect="off" autocapitalize="sentences" ${hasWeather?'':'disabled'} onkeydown="if(event.key==='Enter'){event.preventDefault();handleAskSend();}">
@@ -5003,13 +5024,14 @@ function renderAskView(){
 function _renderAskMessages(){
   const list=document.getElementById('askMsgList');
   if(!list)return;
-  list.innerHTML=_askMessages.map(m=>{
+  const iconUrl=document.getElementById('appIcon')?.href||'';
+  list.innerHTML=`<div class="ask-msgs-list">${_askMessages.map(m=>{
     if(m.role==='user'){
       return`<div class="ask-msg user"><div class="ask-bubble user">${_askEsc(m.text)}</div></div>`;
     }else{
-      return`<div class="ask-msg"><div class="ask-msg-avatar">✦</div><div class="ask-bubble cirrus">${_askEsc(m.text)}</div></div>`;
+      return`<div class="ask-msg"><div class="ask-msg-icon"><img src="${iconUrl}" alt="Cirrus"></div><div class="ask-bubble cirrus">${_askEsc(m.text)}</div></div>`;
     }
-  }).join('');
+  }).join('')}</div>`;
   list.scrollTop=list.scrollHeight;
 }
 
@@ -5019,14 +5041,16 @@ async function sendAskQuestion(question){
   if(!question||!question.trim())return;
   _askMessages.push({role:'user',text:question.trim()});
   _renderAskMessages();
-  // Typing indicator
   const list=document.getElementById('askMsgList');
+  const iconUrl=document.getElementById('appIcon')?.href||'';
   const tid='ask-t-'+Date.now();
   if(list){
     const t=document.createElement('div');
     t.id=tid;t.className='ask-msg';
-    t.innerHTML=`<div class="ask-msg-avatar">✦</div><div class="ask-bubble cirrus"><div class="ask-typing-wrap"><div class="ask-typing-dot"></div><div class="ask-typing-dot"></div><div class="ask-typing-dot"></div></div></div>`;
-    list.appendChild(t);list.scrollTop=list.scrollHeight;
+    t.innerHTML=`<div class="ask-msg-icon"><img src="${iconUrl}" alt="Cirrus"></div><div class="ask-bubble cirrus"><div class="ask-typing-wrap"><div class="ask-typing-dot"></div><div class="ask-typing-dot"></div><div class="ask-typing-dot"></div></div></div>`;
+    const msgsList=list.querySelector('.ask-msgs-list');
+    if(msgsList){msgsList.appendChild(t);}else{list.appendChild(t);}
+    list.scrollTop=list.scrollHeight;
   }
   const inp=document.getElementById('askInput');
   const btn=document.getElementById('askSendBtn');
@@ -5054,8 +5078,8 @@ async function sendAskQuestion(question){
   }
 }
 
-function handleAskStarter(btn,question){
-  document.getElementById('askStarters')?.remove();
+function handleAskChip(btn,question){
+  document.getElementById('askIntro')?.remove();
   sendAskQuestion(question);
 }
 
@@ -5064,6 +5088,17 @@ function handleAskSend(){
   if(!inp||!inp.value.trim())return;
   const q=inp.value.trim();
   sendAskQuestion(q);
+}
+
+function jumpToAsk(){
+  $$('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('[data-tab="ask"]')?.classList.add('active');
+  $('#radarView')?.classList.remove('active');
+  $('#settingsView')?.classList.remove('active');
+  if($('#app'))$('#app').style.display='none';
+  $('#askView').classList.add('active');
+  window.scrollTo(0,0);
+  renderAskView();
 }
 
 // ── Stripe / Worker integration ───────────────────────────────────────────────
