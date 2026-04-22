@@ -13,6 +13,7 @@
 //   WEATHER_API_KEY          WeatherAPI.com key (same as frontend)
 //   RESEND_API_KEY           Resend API key (from resend.com → API Keys)
 //   RESEND_AUDIENCE_ID       Resend Audience ID (from resend.com → Audiences)
+//   ANTHROPIC_API_KEY        sk-ant-... (from console.anthropic.com → API Keys)
 //
 // KV namespace binding (set in Cloudflare dashboard → Worker → Settings → Bindings):
 //   CIRRUS_SUBSCRIPTIONS     KV namespace
@@ -70,6 +71,9 @@ export default {
     if (request.method === 'POST' && url.pathname === '/set-tags') {
       return handleSetTags(request, env);
     }
+    if (request.method === 'POST' && url.pathname === '/ask') {
+      return handleAsk(request, env);
+    }
 
     return err('Not found', 404);
   },
@@ -119,6 +123,74 @@ async function handleSetTags(request, env) {
   } catch (e) {
     return err('Network error: ' + e.message, 502);
   }
+}
+
+// ── Ask Cirrus — LLM Weather Advisor ──────────────────────────────────────
+async function handleAsk(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid JSON'); }
+  const { messages, context } = body || {};
+  if (!messages || !messages.length) return err('Messages required');
+  if (!env.ANTHROPIC_API_KEY) return err('AI not configured — add ANTHROPIC_API_KEY to Worker env', 500);
+
+  const systemPrompt = buildWeatherSystemPrompt(context);
+
+  // Convert to Anthropic message format (must alternate user/assistant)
+  const anthropicMessages = messages.map(m => ({
+    role: m.role === 'cirrus' ? 'assistant' : 'user',
+    content: m.text,
+  }));
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 400,
+        system: systemPrompt,
+        messages: anthropicMessages,
+      }),
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      console.error('Anthropic error:', resp.status, errText);
+      return err('AI temporarily unavailable', 502);
+    }
+
+    const data = await resp.json();
+    const answer = data.content?.[0]?.text || "I couldn't get an answer right now. Try again?";
+    return json({ answer });
+  } catch (e) {
+    console.error('Ask error:', e.message);
+    return err('AI request failed', 502);
+  }
+}
+
+function buildWeatherSystemPrompt(ctx) {
+  const base = `You are Cirrus, a smart, friendly weather advisor built into the Cirrus Weather app. Give practical, specific advice based on real weather data. Be conversational and a little clever — not robotic or overly cautious. Keep answers to 1-4 sentences. Be specific: name actual clothing items, give exact time windows, cite real temperatures. Use the data — don't give generic advice when you have real numbers.`;
+
+  if (!ctx) return base;
+
+  const location = ctx.region ? `${ctx.city}, ${ctx.region}` : ctx.city;
+  const lines = [
+    base, '',
+    `Current conditions — ${location} (${ctx.localDate || ''}, ${ctx.localTime || ''}):`,
+    `• ${ctx.temp}°F (feels like ${ctx.feels}°F)`,
+    `• ${ctx.conditions}, ${ctx.humidity}% humidity`,
+    `• Wind: ${ctx.wind} mph ${ctx.windDir}`,
+    `• UV index: ${ctx.uv}`,
+    `• Today: High ${ctx.high}°F / Low ${ctx.low}°F, ${ctx.rainChance}% chance of rain`,
+  ];
+  if (ctx.airQuality) lines.push(`• Air quality: ${ctx.airQuality}`);
+  if (ctx.alerts?.length) lines.push(`• ⚠️ Active weather alerts: ${ctx.alerts.join(', ')}`);
+  lines.push('', `7-day outlook: ${ctx.forecast}`);
+  return lines.join('\n');
 }
 
 // ── Scheduled Handler ──────────────────────────────────────────────────────

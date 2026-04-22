@@ -822,6 +822,43 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .install-ob-next{background:#fff;color:#1a7abf;border:none;border-radius:14px;padding:13px 28px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:transform 0.15s;flex:1}
 .install-ob-next:active{transform:scale(0.97)}
 .install-ob-next:active{transform:scale(0.97)}
+
+/* ── Ask Cirrus chat view ──────────────────────────────────────────────── */
+#askView{display:none;position:fixed;inset:0;z-index:50;flex-direction:column;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 62px)}
+#askView.active{display:flex}
+.ask-header{padding:calc(env(safe-area-inset-top,16px) + 12px) 20px 14px;background:var(--card-bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-bottom:1px solid var(--card-border);flex-shrink:0}
+.ask-header-inner{display:flex;align-items:center;gap:12px}
+.ask-header-avatar{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#38bdf8,#1a6ed8);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 2px 10px rgba(26,110,216,0.35)}
+.ask-header-title{font-size:17px;font-weight:800;color:var(--text)}
+.ask-header-sub{font-size:12px;color:var(--text-secondary);margin-top:1px}
+.ask-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.ask-starters{display:flex;flex-direction:column;gap:8px;padding-top:4px}
+.ask-starters-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:4px;padding:0 2px}
+.ask-starter-chip{padding:13px 16px;border-radius:14px;background:var(--card-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--card-border);color:var(--text);font-size:14px;font-weight:500;text-align:left;cursor:pointer;transition:all 0.15s;font-family:inherit;display:flex;align-items:center;gap:12px;width:100%}
+.ask-starter-chip:active{transform:scale(0.97)}
+.ask-starter-emoji{font-size:20px;flex-shrink:0;line-height:1}
+.ask-msg{display:flex;align-items:flex-start;gap:9px;animation:cardIn 0.3s ease forwards}
+.ask-msg.user{flex-direction:row-reverse}
+.ask-msg-avatar{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#38bdf8,#1a6ed8);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;margin-top:1px;box-shadow:0 1px 6px rgba(26,110,216,0.3)}
+.ask-bubble{max-width:88%;padding:11px 15px;font-size:15px;line-height:1.55;font-weight:500;word-break:break-word}
+.ask-bubble.cirrus{background:var(--card-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--card-border);color:var(--text);border-radius:4px 16px 16px 16px}
+.ask-bubble.user{background:var(--accent);color:#fff;border-radius:16px 4px 16px 16px}
+.ask-typing-wrap{display:flex;gap:5px;padding:3px 0;align-items:center}
+.ask-typing-dot{width:7px;height:7px;border-radius:50%;background:var(--text-tertiary);animation:askDot 1.3s ease infinite}
+.ask-typing-dot:nth-child(2){animation-delay:0.18s}
+.ask-typing-dot:nth-child(3){animation-delay:0.36s}
+@keyframes askDot{0%,60%,100%{transform:translateY(0);opacity:0.35}30%{transform:translateY(-5px);opacity:1}}
+.ask-input-bar{padding:10px 12px;background:var(--card-bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-top:1px solid var(--card-border);display:flex;gap:8px;align-items:center;flex-shrink:0}
+.ask-input{flex:1;padding:11px 16px;border:1.5px solid var(--card-border);border-radius:22px;background:rgba(128,128,128,0.08);color:var(--text);font-size:15px;font-family:inherit;outline:none;transition:border-color 0.2s;-webkit-appearance:none}
+.ask-input:focus{border-color:var(--accent)}
+.ask-input:disabled{opacity:0.5}
+.ask-send{width:44px;height:44px;border-radius:22px;background:var(--accent);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.15s;box-shadow:0 2px 10px rgba(26,144,228,0.35)}
+.ask-send:active{transform:scale(0.9)}
+.ask-send:disabled{opacity:0.4;cursor:default}
+.ask-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;padding:40px 24px;color:var(--text-tertiary)}
+.ask-empty-icon{font-size:48px;margin-bottom:14px;opacity:0.55}
+.ask-empty-title{font-size:16px;font-weight:700;color:var(--text-secondary);margin-bottom:6px}
+.ask-empty-sub{font-size:13px;line-height:1.55;max-width:260px}
 </style>
 </head>
 <body>
@@ -1108,6 +1145,7 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 <div id="forecastView" class="tab-view"></div>
 <div id="detailsView" class="tab-view"></div>
 <div id="settingsView"></div>
+<div id="askView"></div>
 
 <!-- Review submission modal -->
 <div class="review-modal-overlay" id="reviewModalOverlay" onclick="handleReviewModalBackdrop(event)">
@@ -1149,6 +1187,10 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
   <button class="nav-tab" data-tab="radar">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M6.34 6.34a8 8 0 1 0 11.32 0"/><path d="M9.17 9.17a4 4 0 1 0 5.66 0"/></svg>
     <span>Radar</span>
+  </button>
+  <button class="nav-tab" data-tab="ask">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+    <span>Ask</span>
   </button>
   <button class="nav-tab" data-tab="settings">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -1641,17 +1683,28 @@ $$('.nav-tab').forEach(btn=>{
       $('.header').style.display='none';
       $('#savedBar').style.display='none';
       $('#settingsView').classList.remove('active');
+      $('#askView').classList.remove('active');
       $('#radarView').classList.add('active');
       initRadar();
     }else if(tab==='settings'){
       $('#radarView').classList.remove('active');
+      $('#askView').classList.remove('active');
       _xwClearOverlay();
       $('#app').style.display='none';
       $('#settingsView').classList.add('active');
       window.scrollTo(0,0);
       renderSettings();
+    }else if(tab==='ask'){
+      $('#radarView').classList.remove('active');
+      _xwClearOverlay();
+      $('#settingsView').classList.remove('active');
+      $('#app').style.display='none';
+      $('#askView').classList.add('active');
+      window.scrollTo(0,0);
+      renderAskView();
     }else{
       $('#radarView').classList.remove('active');
+      $('#askView').classList.remove('active');
       _xwClearOverlay();
       $('#settingsView').classList.remove('active');
       $('#app').style.display='';
@@ -4855,6 +4908,162 @@ async function verifySubscription(){
     console.warn('Subscription check failed:',e.message);
     return {active:!!access};
   }
+}
+
+// ── Ask Cirrus ────────────────────────────────────────────────────────────────
+let _askMessages=[];
+
+function buildAskContext(){
+  if(!state.data)return null;
+  const d=state.data,curr=d.current,today=d.daily?.data?.[0];
+  const tempF=Math.round(toF(curr.temperature_2m));
+  const feelsF=Math.round(toF(curr.apparent_temperature));
+  const hiF=today?Math.round(toF(today.temperatureHigh??today.temperatureMax??curr.temperature_2m)):tempF;
+  const loF=today?Math.round(toF(today.temperatureLow??today.temperatureMin??curr.temperature_2m)):tempF;
+  const rainChance=today?Math.round((today.precipProbability??0)*100):0;
+  const wCode=curr.weather_code??0;
+  const wInfo=getWeatherInfo(wCode,curr.is_day===0);
+  const windKph=curr.wind_speed_10m??0;
+  const windMph=Math.round(windKph*0.621371);
+  const dirs=['N','NE','E','SE','S','SW','W','NW'];
+  const windDir=dirs[Math.round((curr.wind_direction_10m??0)/45)%8];
+  const WDAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const forecastStr=(d.daily?.data??[]).slice(0,7).map((day,i)=>{
+    const label=i===0?'Today':i===1?'Tomorrow':WDAYS[new Date(day.time*1000).getDay()];
+    const hi=Math.round(toF(day.temperatureHigh??day.temperatureMax??20));
+    const lo=Math.round(toF(day.temperatureLow??day.temperatureMin??10));
+    const dInfo=getWeatherInfo(pirateIconToWMO(day.icon,0),false);
+    return`${label}: ${hi}°/${lo}° ${dInfo.desc}`;
+  }).join('; ');
+  const alertNames=(state.activeAlerts??[]).map(a=>a.properties?.event).filter(Boolean);
+  const cityNow=getCityNow();
+  return{
+    city:state.name||'your location',
+    region:state.region||'',
+    temp:tempF,feels:feelsF,
+    conditions:wInfo.desc,
+    humidity:curr.relative_humidity_2m??0,
+    wind:windMph,windDir,
+    uv:Math.round(curr.uv_index??0),
+    high:hiF,low:loF,rainChance,
+    alerts:alertNames,
+    forecast:forecastStr,
+    localTime:cityNow.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),
+    localDate:cityNow.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}),
+    airQuality:state.airQuality?`AQI ${state.airQuality.us_aqi}`:null,
+  };
+}
+
+function renderAskView(){
+  const el=document.getElementById('askView');
+  if(!el)return;
+  const hasWeather=!!state.data;
+  const cityName=state.name||'your area';
+  const starters=[
+    {e:'👔',t:"What should I wear today?"},
+    {e:'🏃',t:"Is it good for a run outside?"},
+    {e:'🌧️',t:"Will it rain later today?"},
+    {e:'🚗',t:"Good day to wash my car?"},
+    {e:'☀️',t:"What's the UV situation today?"},
+    {e:'⚡',t:"Any storms expected this week?"},
+    {e:'🌡️',t:"Why does it feel hotter than the temperature?"},
+    {e:'😴',t:"Best time to be outside today?"},
+  ];
+  el.innerHTML=`
+    <div class="ask-header">
+      <div class="ask-header-inner">
+        <div class="ask-header-avatar">✦</div>
+        <div>
+          <div class="ask-header-title">Ask Cirrus</div>
+          <div class="ask-header-sub">${hasWeather?`Weather advisor for ${cityName}`:'Search a location to get started'}</div>
+        </div>
+      </div>
+    </div>
+    <div class="ask-messages" id="askMsgList">
+      ${!hasWeather?`<div class="ask-empty">
+        <div class="ask-empty-icon">☁️</div>
+        <div class="ask-empty-title">No weather loaded</div>
+        <div class="ask-empty-sub">Search for a city or tap the location button first, then come back here to ask anything.</div>
+      </div>`:''}
+      ${_askMessages.length===0&&hasWeather?`<div class="ask-starters" id="askStarters">
+        <div class="ask-starters-label">Try asking</div>
+        ${starters.map(s=>`<button class="ask-starter-chip" onclick="handleAskStarter(this,'${s.t.replace(/'/g,"\\'")}')">\
+<span class="ask-starter-emoji">${s.e}</span>${s.t}</button>`).join('')}
+      </div>`:''}
+    </div>
+    <div class="ask-input-bar">
+      <input id="askInput" class="ask-input" type="text" placeholder="${hasWeather?'Ask anything about today\u2019s weather\u2026':'Search a city first\u2026'}" autocomplete="off" autocorrect="off" autocapitalize="sentences" ${hasWeather?'':'disabled'} onkeydown="if(event.key==='Enter'){event.preventDefault();handleAskSend();}">
+      <button id="askSendBtn" class="ask-send" onclick="handleAskSend()" ${hasWeather?'':'disabled'}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>`;
+  if(_askMessages.length>0)_renderAskMessages();
+}
+
+function _renderAskMessages(){
+  const list=document.getElementById('askMsgList');
+  if(!list)return;
+  list.innerHTML=_askMessages.map(m=>{
+    if(m.role==='user'){
+      return`<div class="ask-msg user"><div class="ask-bubble user">${_askEsc(m.text)}</div></div>`;
+    }else{
+      return`<div class="ask-msg"><div class="ask-msg-avatar">✦</div><div class="ask-bubble cirrus">${_askEsc(m.text)}</div></div>`;
+    }
+  }).join('');
+  list.scrollTop=list.scrollHeight;
+}
+
+function _askEsc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+
+async function sendAskQuestion(question){
+  if(!question||!question.trim())return;
+  _askMessages.push({role:'user',text:question.trim()});
+  _renderAskMessages();
+  // Typing indicator
+  const list=document.getElementById('askMsgList');
+  const tid='ask-t-'+Date.now();
+  if(list){
+    const t=document.createElement('div');
+    t.id=tid;t.className='ask-msg';
+    t.innerHTML=`<div class="ask-msg-avatar">✦</div><div class="ask-bubble cirrus"><div class="ask-typing-wrap"><div class="ask-typing-dot"></div><div class="ask-typing-dot"></div><div class="ask-typing-dot"></div></div></div>`;
+    list.appendChild(t);list.scrollTop=list.scrollHeight;
+  }
+  const inp=document.getElementById('askInput');
+  const btn=document.getElementById('askSendBtn');
+  if(inp){inp.disabled=true;inp.value='';}
+  if(btn)btn.disabled=true;
+  try{
+    const ctx=buildAskContext();
+    const resp=await fetch(`${WORKER_URL}/ask`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:_askMessages,context:ctx}),
+    });
+    const data=await resp.json();
+    document.getElementById(tid)?.remove();
+    const answer=data.answer||"Sorry, I couldn't get an answer. Try again?";
+    _askMessages.push({role:'cirrus',text:answer});
+    _renderAskMessages();
+  }catch(e){
+    document.getElementById(tid)?.remove();
+    _askMessages.push({role:'cirrus',text:"I had trouble connecting. Please try again."});
+    _renderAskMessages();
+  }finally{
+    if(inp){inp.disabled=false;setTimeout(()=>inp.focus(),50);}
+    if(btn)btn.disabled=false;
+  }
+}
+
+function handleAskStarter(btn,question){
+  document.getElementById('askStarters')?.remove();
+  sendAskQuestion(question);
+}
+
+function handleAskSend(){
+  const inp=document.getElementById('askInput');
+  if(!inp||!inp.value.trim())return;
+  const q=inp.value.trim();
+  sendAskQuestion(q);
 }
 
 // ── Stripe / Worker integration ───────────────────────────────────────────────
