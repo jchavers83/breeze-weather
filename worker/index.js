@@ -268,14 +268,20 @@ async function checkSevereWeather(env) {
     if (!center) continue; // No usable geometry — skip
 
     // Build OneSignal tag filters for ~50mi radius + severe pref
+    // lat/lon existence checks prevent users with unset location tags from
+    // matching every geo-targeted alert.
     const latDelta = 0.7;
     const lonDelta = 0.7 / Math.cos(center.lat * Math.PI / 180);
     const filters = [
       { field: 'tag', key: 'notif_severe', relation: '=', value: '1' },
       { operator: 'AND' },
+      { field: 'tag', key: 'lat', relation: 'exists' },
+      { operator: 'AND' },
       { field: 'tag', key: 'lat', relation: '>=', value: String((center.lat - latDelta).toFixed(4)) },
       { operator: 'AND' },
       { field: 'tag', key: 'lat', relation: '<=', value: String((center.lat + latDelta).toFixed(4)) },
+      { operator: 'AND' },
+      { field: 'tag', key: 'lon', relation: 'exists' },
       { operator: 'AND' },
       { field: 'tag', key: 'lon', relation: '>=', value: String((center.lon - lonDelta).toFixed(4)) },
       { operator: 'AND' },
