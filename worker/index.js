@@ -347,6 +347,20 @@ function getAlertCenter(feature) {
   return null; // No geometry — can't target
 }
 
+// ── Timezone Helpers ───────────────────────────────────────────────────────
+function getLocalHour(date, timezone) {
+  try {
+    const str = date.toLocaleString('en-US', { timeZone: timezone, hour: 'numeric', hour12: false });
+    return parseInt(str, 10) % 24;
+  } catch (e) { return date.getUTCHours(); }
+}
+
+function getLocalDateStr(date, timezone) {
+  try {
+    return date.toLocaleDateString('en-CA', { timeZone: timezone }); // YYYY-MM-DD
+  } catch (e) { return date.toISOString().slice(0, 10); }
+}
+
 // ── Morning & Evening Briefings ────────────────────────────────────────────
 async function dispatchBriefings(env) {
   if (!env.ONESIGNAL_APP_ID || !env.ONESIGNAL_REST_API_KEY || !env.WEATHER_API_KEY) return;

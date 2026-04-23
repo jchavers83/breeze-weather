@@ -1418,8 +1418,11 @@ function normalizePirateWeather(d){
   const hourly=(d.hourly&&d.hourly.data)||[];
 
   function msToKph(ms){return(ms||0)*3.6;}
-  function unixToISO(ts){return ts?new Date(ts*1000).toISOString().slice(0,19):'';}
-  function unixToDate(ts){return ts?new Date(ts*1000).toISOString().slice(0,10):'';}
+  // unixToLocalISO: converts a Unix timestamp to a city-LOCAL ISO string (no Z).
+  // Matches the format Open-Meteo returns so formatTime/formatHour/isNight all work correctly.
+  const _offsetMs=(d.offset||0)*3600*1000;
+  function unixToLocalISO(ts){return ts?new Date(ts*1000+_offsetMs).toISOString().slice(0,19):'';}
+  function unixToDate(ts){return ts?new Date(ts*1000+_offsetMs).toISOString().slice(0,10):'';}
 
   // Determine is_day from sunrise/sunset timestamps
   const _now=cur.time||Math.floor(Date.now()/1000);
@@ -1450,14 +1453,14 @@ function normalizePirateWeather(d){
       temperature_2m_max:daily.map(x=>x.temperatureHigh??x.temperatureMax??20),
       temperature_2m_min:daily.map(x=>x.temperatureLow??x.temperatureMin??10),
       weather_code:daily.map(x=>pirateIconToWMO(x.icon,x.precipIntensity)),
-      sunrise:daily.map(x=>unixToISO(x.sunriseTime)),
-      sunset:daily.map(x=>unixToISO(x.sunsetTime)),
+      sunrise:daily.map(x=>unixToLocalISO(x.sunriseTime)),
+      sunset:daily.map(x=>unixToLocalISO(x.sunsetTime)),
       precipitation_probability_max:daily.map(x=>Math.round((x.precipProbability||0)*100)),
       precipitation_sum:daily.map(x=>(x.precipIntensity||0)*24),
       uv_index_max:daily.map(x=>x.uvIndex||0)
     },
     hourly:{
-      time:hourly.map(h=>unixToISO(h.time)),
+      time:hourly.map(h=>unixToLocalISO(h.time)),
       temperature_2m:hourly.map(h=>h.temperature??20),
       weather_code:hourly.map(h=>pirateIconToWMO(h.icon,h.precipIntensity)),
       precipitation_probability:hourly.map(h=>Math.round((h.precipProbability||0)*100)),
