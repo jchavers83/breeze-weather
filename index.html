@@ -849,19 +849,26 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .ask-messages::-webkit-scrollbar{display:none}
 /* Bare header — home screen, back arrow only */
 .ask-header-bare{padding:calc(env(safe-area-inset-top,16px) + 10px) 16px 0;flex-shrink:0;display:flex;align-items:center}
+/* Bare header back btn needs a visible circle since there's no header bg */
+.ask-header-bare .ask-back-btn{background:rgba(0,0,0,0.12);border-color:rgba(0,0,0,0.08)}
+.dark .ask-header-bare .ask-back-btn{background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.18)}
+.ask-header-bare .ask-back-btn:active{background:rgba(0,0,0,0.22)}
 /* Intro / home screen */
-.ask-intro{display:flex;flex-direction:column;align-items:center;padding:10px 0 8px;text-align:center}
+.ask-intro{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px;text-align:center}
 .ask-intro-brand{font-size:54px;font-weight:900;letter-spacing:-2px;margin-bottom:12px;background:linear-gradient(130deg,var(--text) 0%,var(--accent) 120%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.ask-intro-icon{width:86px;height:86px;border-radius:22px;overflow:hidden;margin-bottom:14px;border:2px solid rgba(255,255,255,0.55);box-shadow:0 10px 44px rgba(74,184,248,0.32),0 0 0 5px rgba(255,255,255,0.07),0 3px 14px rgba(0,0,0,0.22)}
+.ask-intro-icon{width:86px;height:86px;border-radius:22px;overflow:hidden;margin-bottom:12px;border:2px solid rgba(255,255,255,0.55);box-shadow:0 10px 44px rgba(74,184,248,0.32),0 0 0 5px rgba(255,255,255,0.07),0 3px 14px rgba(0,0,0,0.22)}
 .ask-intro-icon img{width:100%;height:100%;display:block}
 .ask-intro-temp{font-size:28px;font-weight:700;letter-spacing:-0.5px;line-height:1;margin-bottom:8px;color:var(--text-secondary)}
-.ask-intro-sub{font-size:15px;color:var(--text-secondary);line-height:1.45;max-width:240px;font-weight:600;letter-spacing:-0.1px;margin-bottom:2px}
+.ask-intro-sub{font-size:15px;color:var(--text-secondary);line-height:1.45;max-width:210px;font-weight:600;letter-spacing:-0.1px;margin-bottom:0}
 /* Chips grid */
-.ask-chips{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:16px 0 4px;width:100%}
-.ask-chip{padding:15px 14px 14px;border-radius:20px;background:var(--card-bg);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);border:1px solid var(--card-border);text-align:left;cursor:pointer;transition:transform 0.15s,opacity 0.15s;font-family:inherit;display:flex;flex-direction:column;gap:9px;width:100%;box-shadow:0 2px 14px rgba(0,0,0,0.07),inset 0 1px 0 rgba(255,255,255,0.45);position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
-.ask-chip::before{content:'';position:absolute;inset:0;background:linear-gradient(148deg,rgba(255,255,255,0.11) 0%,transparent 55%);pointer-events:none}
+.ask-chips{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:14px 0 0;width:100%}
+/* Light mode chips: stronger white bg so they pop against the teal */
+.ask-chip{padding:15px 14px 14px;border-radius:20px;background:rgba(255,255,255,0.72);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);border:1px solid rgba(255,255,255,0.9);text-align:left;cursor:pointer;transition:transform 0.15s,opacity 0.15s;font-family:inherit;display:flex;flex-direction:column;gap:9px;width:100%;box-shadow:0 2px 16px rgba(0,0,0,0.09),inset 0 1px 0 rgba(255,255,255,0.8);position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
+.dark .ask-chip{background:rgba(255,255,255,0.10);border-color:rgba(255,255,255,0.16);box-shadow:0 2px 14px rgba(0,0,0,0.14),inset 0 1px 0 rgba(255,255,255,0.12)}
+.ask-chip::before{content:'';position:absolute;inset:0;background:linear-gradient(148deg,rgba(255,255,255,0.18) 0%,transparent 55%);pointer-events:none}
 .ask-chip:active{transform:scale(0.92);opacity:0.8}
-.ask-chip-emoji{width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;font-size:22px;line-height:1;flex-shrink:0}
+.ask-chip-emoji{width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,0.55);border:1px solid rgba(255,255,255,0.7);display:flex;align-items:center;justify-content:center;font-size:22px;line-height:1;flex-shrink:0}
+.dark .ask-chip-emoji{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.18)}
 .ask-chip-text{font-size:13px;font-weight:700;color:var(--text);line-height:1.35;letter-spacing:-0.1px}
 /* Messages */
 .ask-msgs-list{display:flex;flex-direction:column;gap:12px;padding-top:16px}
