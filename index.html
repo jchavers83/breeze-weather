@@ -853,15 +853,16 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .ask-header-bare .ask-back-btn{background:rgba(0,0,0,0.12);border-color:rgba(0,0,0,0.08)}
 .dark .ask-header-bare .ask-back-btn{background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.18)}
 .ask-header-bare .ask-back-btn:active{background:rgba(0,0,0,0.22)}
-/* Intro / home screen */
-.ask-intro{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px;text-align:center}
-.ask-intro-brand{font-size:42px;font-weight:900;letter-spacing:-1.5px;margin-bottom:12px;background:linear-gradient(130deg,var(--text) 0%,var(--accent) 120%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.ask-intro-icon{width:86px;height:86px;border-radius:22px;overflow:hidden;margin-bottom:12px;border:2px solid rgba(255,255,255,0.55);box-shadow:0 10px 44px rgba(74,184,248,0.32),0 0 0 5px rgba(255,255,255,0.07),0 3px 14px rgba(0,0,0,0.22)}
+/* Intro / home screen — fills scroll area, distributes space evenly across all phone sizes */
+.ask-intro{display:flex;flex-direction:column;align-items:center;flex:1;justify-content:space-evenly;padding:4px 0;text-align:center}
+.ask-intro-brand{font-size:42px;font-weight:900;letter-spacing:-1.5px;background:linear-gradient(130deg,var(--text) 0%,var(--accent) 120%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ask-intro-icon-wrap{animation:askFloat 5.4s 0.55s ease-in-out infinite}
+.ask-intro-icon{width:86px;height:86px;border-radius:22px;overflow:hidden;border:2px solid rgba(255,255,255,0.55);box-shadow:0 10px 44px rgba(74,184,248,0.32),0 0 0 5px rgba(255,255,255,0.07),0 3px 14px rgba(0,0,0,0.22)}
 .ask-intro-icon img{width:100%;height:100%;display:block}
-.ask-intro-temp{font-size:28px;font-weight:700;letter-spacing:-0.5px;line-height:1;margin-bottom:8px;color:var(--text-secondary)}
-.ask-intro-sub{font-size:15px;color:var(--text-secondary);line-height:1.5;max-width:320px;font-weight:600;letter-spacing:-0.1px;margin-bottom:0}
+.ask-intro-temp{font-size:28px;font-weight:700;letter-spacing:-0.5px;line-height:1;color:var(--text-secondary)}
+.ask-intro-sub{font-size:15px;color:var(--text-secondary);line-height:1.5;max-width:320px;font-weight:600;letter-spacing:-0.1px}
 /* Chips grid */
-.ask-chips{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:14px 0 0;width:100%}
+.ask-chips{display:grid;grid-template-columns:1fr 1fr;gap:9px;width:100%}
 /* Light mode chips: stronger white bg so they pop against the teal */
 .ask-chip{padding:15px 14px 14px;border-radius:20px;background:rgba(255,255,255,0.72);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);border:1px solid rgba(255,255,255,0.9);text-align:left;cursor:pointer;transition:transform 0.15s,opacity 0.15s;font-family:inherit;display:flex;flex-direction:column;gap:9px;width:100%;box-shadow:0 2px 16px rgba(0,0,0,0.09),inset 0 1px 0 rgba(255,255,255,0.8);position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
 .dark .ask-chip{background:rgba(255,255,255,0.10);border-color:rgba(255,255,255,0.16);box-shadow:0 2px 14px rgba(0,0,0,0.14),inset 0 1px 0 rgba(255,255,255,0.12)}
@@ -875,9 +876,9 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .ask-msg{display:flex;align-items:flex-start;gap:8px;animation:askMsgIn 0.26s cubic-bezier(.4,0,.2,1) forwards;opacity:0}
 @keyframes askMsgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes askFadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-@keyframes askFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes askFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 .ask-intro-brand{opacity:0;animation:askFadeUp 0.5s cubic-bezier(.4,0,.2,1) forwards}
-.ask-intro-icon-wrap{animation:askFloat 3.6s 0.55s ease-in-out infinite}
+.ask-intro-icon-wrap{animation:askFloat 5.4s 0.55s ease-in-out infinite}
 .ask-intro-icon{opacity:0;animation:askFadeUp 0.5s 0.1s cubic-bezier(.4,0,.2,1) forwards}
 .ask-intro-temp{opacity:0;animation:askFadeUp 0.5s 0.2s cubic-bezier(.4,0,.2,1) forwards}
 .ask-intro-sub{opacity:0;animation:askFadeUp 0.5s 0.28s cubic-bezier(.4,0,.2,1) forwards}
