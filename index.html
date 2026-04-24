@@ -4095,9 +4095,10 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       ]));
     }else if(bigFeeelsCold&&feelsGap<=-8&&!contrastOpener){
       parts.push(pick([
-        `Wind chill brings it to ${feelsLikeDisp}\u00b0. The thermometer is being overly optimistic.`,
+        `Wind chill drops it to ${feelsLikeDisp}\u00b0. Dress for the feel, not the gauge.`,
         `${actualDisp}\u00b0 on the gauge, ${feelsLikeDisp}\u00b0 on your face. Dress for the wind, not the reading.`,
         `Exposed skin will know the wind chill immediately. The real number is ${feelsLikeDisp}\u00b0.`,
+        `The wind is doing math the thermometer won't. ${feelsLikeDisp}\u00b0 is what it actually feels like.`,
       ]));
     // Multi-day streaks
     }else if(hotWeek){
@@ -4304,7 +4305,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Quiet night. The good kind of nothing.`,
         `Get some rest. Tomorrow has weather too.`,
         `The night is doing its thing. You should sleep through it.`,
-        `Quiet out there. The morning will come regardless.`,
+        `Quiet tonight. The morning will come regardless.`,
         `Quiet out there. Good conditions for sleep.`,
         `Night's covered. Get some rest.`,
         `Good sleeping conditions. Don't waste them.`,
@@ -4426,7 +4427,7 @@ function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,is
     if(rainCount>3)quips.push('\uD83C\uDF27\uFE0F Pouring out there. Outstanding conditions for doing absolutely nothing.');
     if(maxT<38)quips.push('\uD83E\uDDE3 Genuinely cold out there. The couch is not just an option\u2014it\'s the right call.');
     if(maxT<32)quips.push('\uD83E\uDD76 Below freezing tonight. The blanket is the only correct decision you have left to make.');
-    quips.push('\uD83C\uDF19 Not a bad night out there. You\'ve earned the rest.');
+    quips.push('\uD83C\uDF19 Not a bad night. You\'ve earned the rest.');
     quips.push('\uD83C\uDF19 The night is doing its thing. You should probably be asleep.');
   }
 
