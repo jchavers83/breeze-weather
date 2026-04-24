@@ -4362,10 +4362,35 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
   const _body=parts.slice(0,4).map(s=>s.replace(/^(?:[\u2600-\u27BF]|[\uD800-\uDBFF][\uDC00-\uDFFF])[\uFE0F\u20E3]?\s*/,'')).join(' ');
   // Contrast opener prepends only when there's no lede (avoids triple-stacking)
   const _hook=(!_lede&&contrastOpener)?contrastOpener+' ':''
-  // Dedup safety net: if the first two words of the lede appear verbatim in the body, drop the lede
+  // Lede safety net: if the first two words of the lede appear verbatim in the body, drop the lede
   const _ledeStart=_lede?_lede.split(' ').slice(0,2).join(' ').toLowerCase():'';
   const _ledeSafe=_lede&&_ledeStart&&_body.toLowerCase().includes(_ledeStart)?null:_lede;
-  return _ledeSafe?_ledeSafe+' '+_body:_hook+_body;
+  const _raw=_ledeSafe?_ledeSafe+' '+_body:_hook+_body;
+  // Phrase dedup: split assembled text into sentences, track all notable 2-word
+  // pairs (at least one word 5+ chars). Drop any sentence that repeats a pair
+  // already seen — catches "out there / out there", "wind down / wind down",
+  // "clear skies / clear skies" etc. regardless of which parts produced them.
+  return(function dedupe(text){
+    const sents=text.match(/[^.!?]+[.!?]+/g);
+    if(!sents||sents.length<=1)return text;
+    function pairs(s){
+      const ws=s.toLowerCase().replace(/[^a-z\s]/g,' ').split(/\s+/).filter(w=>w.length>=3);
+      const out=new Set();
+      for(let i=0;i<ws.length-1;i++){
+        if(ws[i].length>=5||ws[i+1].length>=5)out.add(ws[i]+'|'+ws[i+1]);
+      }
+      return out;
+    }
+    const seen=new Set();
+    const kept=[];
+    for(const s of sents){
+      const ps=pairs(s);
+      if([...ps].some(p=>seen.has(p)))continue;
+      kept.push(s.trim());
+      ps.forEach(p=>seen.add(p));
+    }
+    return kept.join(' ');
+  })(_raw);
 }
 
 function getMoonPhase(date){
