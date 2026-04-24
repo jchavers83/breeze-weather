@@ -7,6 +7,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#4A90D9">
 <meta name="apple-mobile-web-app-title" content="Cirrus">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Cirrus — No ads. No articles. No agenda. Just the weather.</title>
 <meta property="og:title" content="Cirrus">
 <meta property="og:description" content="No ads. No articles. No agenda. Just the weather.">
@@ -1365,6 +1368,22 @@ function dismissIOSInstallModal(){
   if(m){m.classList.remove('visible');setTimeout(()=>m.remove(),350);}
   localStorage.setItem('cirrus_install_dismissed','1');
 }
+
+// ===================== VERSION / CACHE BUSTER =====================
+// Bump this string with every deploy — forces stale PWA caches to reload
+(function checkAppVersion(){
+  const VERSION='2026.04.24.1';
+  const stored=localStorage.getItem('cirrus_app_version');
+  if(stored&&stored!==VERSION){
+    localStorage.setItem('cirrus_app_version',VERSION);
+    // Wipe any service worker caches then reload cleanly
+    if('caches' in window){
+      caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).then(()=>location.reload(true));
+    }else{location.reload(true);}
+    return;
+  }
+  localStorage.setItem('cirrus_app_version',VERSION);
+})();
 
 // ===================== ONESIGNAL PUSH NOTIFICATIONS =====================
 window.OneSignalDeferred = window.OneSignalDeferred || [];
