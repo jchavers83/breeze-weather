@@ -5362,22 +5362,189 @@ function buildAskContext(){
   };
 }
 
+function buildAskChips(){
+  // No weather loaded — show pure educational chips
+  if(!state.data){return[
+    {e:'🌪️',t:"How do tornadoes form?"},
+    {e:'⚡',t:"What causes lightning?"},
+    {e:'🌊',t:"How do hurricanes form?"},
+    {e:'❄️',t:"How does snow form?"},
+    {e:'🌫️',t:"What causes fog?"},
+    {e:'📡',t:"How do weather forecasts work?"},
+    {e:'🌡️',t:"What is the dew point?"},
+    {e:'🌈',t:"What causes rainbows?"},
+  ];}
+  const d=state.data,curr=d.current;
+  const tempF=Math.round(toF(curr.temperature_2m));
+  const windMph=Math.round((curr.wind_speed_10m??0)*0.621371);
+  const rainChance=d.daily?.precipitation_probability_max?.[0]??0;
+  const wc=curr.weather_code??0;
+  const uv=curr.uv_index??0;
+  const month=new Date().getMonth(); // 0=Jan
+  const hour=new Date().getHours();
+  const city=(state.name||'').toLowerCase();
+  const region=(state.region||'').toLowerCase();
+
+  // Condition flags
+  const isRaining=wc>=51;
+  const rainLikely=rainChance>=40;
+  const rainPossible=rainChance>=20&&rainChance<40;
+  const isCold=tempF<40;
+  const isCool=tempF>=40&&tempF<55;
+  const isHot=tempF>=88;
+  const isWarm=tempF>=78&&tempF<88;
+  const isWindy=windMph>20;
+  const isVeryWindy=windMph>35;
+  const isStormy=wc>=60;
+  const highUV=uv>=6;
+  const isMorning=hour>=5&&hour<11;
+  const isEvening=hour>=17&&hour<22;
+  const isWinter=month===11||month<=1;
+  const isSpring=month>=2&&month<=4;
+  const isSummer=month>=5&&month<=8;
+  const isFall=month>=9&&month<=10;
+  const isHurricaneSeason=month>=5&&month<=10;
+
+  // Location flags
+  const isCA=region.includes('california')||['los angeles','san francisco','san diego','sacramento','oakland','anaheim','fresno'].some(c=>city.includes(c));
+  const isFL=region.includes('florida')||['miami','orlando','tampa','jacksonville','fort lauderdale','tallahassee'].some(c=>city.includes(c));
+  const isTornadoAlley=['oklahoma','kansas','nebraska','iowa','south dakota'].some(s=>region.includes(s));
+  const isTexas=region.includes('texas');
+  const isCoastal=['beach','bay','coast','harbor','shore'].some(s=>city.includes(s))||isFL;
+  const isMountain=['colorado','montana','wyoming','idaho','utah','vermont','new hampshire','alaska'].some(s=>region.includes(s));
+  const isGulf=isFL||isTexas||region.includes('louisiana')||region.includes('mississippi')||region.includes('alabama');
+
+  // Build two pools: practical (P) and educational (E), each with priority score
+  const P=[],E=[];
+
+  // ── Practical ──────────────────────────────────────────────────────────
+  P.push({e:'👔',t:"What should I wear today?",p:10});
+
+  if(isRaining){
+    P.push({e:'☂️',t:"Should I grab an umbrella?",p:14});
+    P.push({e:'🌧️',t:"When will the rain let up?",p:12});
+  }else if(rainLikely){
+    P.push({e:'☂️',t:"Will I need an umbrella today?",p:13});
+    P.push({e:'⛈️',t:"How serious is that storm chance?",p:10});
+  }else if(rainPossible){
+    P.push({e:'🌧️',t:"Should I worry about rain today?",p:9});
+  }
+
+  if(isStormy){
+    P.push({e:'⛈️',t:"Is it safe to be outside right now?",p:14});
+  }
+
+  if(isCold){
+    P.push({e:'🧥',t:"Do I need a heavy coat today?",p:13});
+    if(isWinter) P.push({e:'❄️',t:"Any snow in the forecast?",p:10});
+    P.push({e:'🧊',t:"Any ice or frost to worry about?",p:9});
+  }else if(isCool){
+    P.push({e:'🧣',t:"Do I need an extra layer?",p:10});
+  }
+
+  if(isHot){
+    P.push({e:'🥵',t:"How do I stay comfortable in this heat?",p:13});
+    if(highUV) P.push({e:'🕶️',t:"Do I need sunscreen right now?",p:12});
+    P.push({e:'💧',t:"How much water should I drink in this heat?",p:9});
+  }else if(isWarm){
+    P.push({e:'🏃',t:"Good conditions for a run?",p:9});
+    if(highUV) P.push({e:'☀️',t:"Should I put on sunscreen?",p:10});
+  }
+
+  if(isVeryWindy){
+    P.push({e:'💨',t:"Is it too windy to be outside?",p:12});
+  }else if(isWindy){
+    P.push({e:'💨',t:"How bad is the wind today?",p:8});
+  }
+
+  if(isMorning) P.push({e:'☕',t:"How's it looking for my morning commute?",p:9});
+  if(isEvening) P.push({e:'🌙',t:"What's tonight looking like?",p:9});
+
+  if(isSpring) P.push({e:'🌸',t:"Is this allergy weather?",p:8});
+  if(isSummer&&isCoastal) P.push({e:'🏖️',t:"Is it a good beach day?",p:9});
+  if(!isRaining&&!isStormy) P.push({e:'🌅',t:"Best time to be outside today?",p:7});
+  if(!isRaining&&!isCold&&!isHot) P.push({e:'🚗',t:"Good day to wash my car?",p:5});
+  if(!isRaining&&!isStormy) P.push({e:'⚡',t:"Any storms in the forecast this week?",p:6});
+
+  // ── Educational ─────────────────────────────────────────────────────────
+  // Location-specific (highest priority edu)
+  if(isCA){
+    E.push({e:'🔥',t:"What causes California wildfires?",p:10});
+    E.push({e:'💨',t:"What are Santa Ana winds?",p:9});
+    if(isSummer||isSpring) E.push({e:'🌫️',t:"Why is it so foggy in California mornings?",p:9});
+    E.push({e:'🏔️',t:"How does California's geography create such varied weather?",p:7});
+  }
+  if(isFL&&isHurricaneSeason){
+    E.push({e:'🌀',t:"How do hurricanes form?",p:13});
+    E.push({e:'🏠',t:"How should I prepare for hurricane season?",p:11});
+    E.push({e:'📡',t:"How far ahead can forecasters predict hurricanes?",p:8});
+    E.push({e:'💧',t:"What's a storm surge and why is it so dangerous?",p:9});
+  }else if(isGulf&&isHurricaneSeason){
+    E.push({e:'🌀',t:"How do hurricanes form?",p:11});
+    E.push({e:'🏠',t:"How should I prepare for hurricane season?",p:9});
+  }
+  if(isTornadoAlley||isTexas){
+    E.push({e:'🌪️',t:"How do tornadoes form?",p:12});
+    E.push({e:'⚠️',t:"What's the difference between a tornado watch and warning?",p:10});
+  }
+  if(isMountain){
+    E.push({e:'⛰️',t:"Why does mountain weather change so fast?",p:10});
+    E.push({e:'🌡️',t:"How does elevation affect temperature?",p:8});
+  }
+  if(isCoastal&&!isFL) E.push({e:'🌊',t:"How do sea breezes affect coastal weather?",p:8});
+
+  // Condition-triggered educational
+  if(isStormy||wc>=60) E.push({e:'⚡',t:"How do thunderstorms form?",p:9});
+  if(isRaining) E.push({e:'🌧️',t:"What causes heavy rain events?",p:7});
+  if(isCold&&isWinter) E.push({e:'🌡️',t:"How does a polar vortex work?",p:8});
+  if(highUV) E.push({e:'☀️',t:"What UV levels are actually dangerous?",p:8});
+  if(isWindy) E.push({e:'🌬️',t:"What actually causes wind?",p:7});
+  if(isCold) E.push({e:'🧊',t:"How does wind chill work?",p:7});
+
+  // Season educational
+  if(isWinter) E.push({e:'❄️',t:"What's the difference between sleet, snow, and freezing rain?",p:7});
+  if(isSpring) E.push({e:'🌪️',t:"Why is spring tornado season?",p:7});
+  if(isSummer) E.push({e:'⚡',t:"Why do summer storms pop up so fast?",p:7});
+  if(isFall) E.push({e:'🍂',t:"What makes fall weather so unpredictable?",p:6});
+
+  // Always-available fallback edu (low priority — ensures we always have options)
+  const fallbackEdu=[
+    {e:'🌪️',t:"How do tornadoes form?"},
+    {e:'⚡',t:"What causes lightning?"},
+    {e:'❄️',t:"How does snow form?"},
+    {e:'🌈',t:"What causes rainbows?"},
+    {e:'🌫️',t:"What causes fog?"},
+    {e:'📡',t:"How do weather forecasts work?"},
+    {e:'🌊',t:"How do hurricanes form?"},
+    {e:'🌡️',t:"What is the dew point?"},
+    {e:'💨',t:"What's a derecho?"},
+    {e:'🌤️',t:"How does the jet stream affect weather?"},
+    {e:'⛈️',t:"What's the difference between a watch and warning?"},
+    {e:'🌀',t:"What causes a waterspout?"},
+  ];
+  fallbackEdu.forEach(c=>E.push({...c,p:3}));
+
+  // Sort each pool by priority
+  const dedup=(arr)=>{const s=new Set();return arr.filter(c=>{if(s.has(c.t))return false;s.add(c.t);return true;});};
+  const PS=dedup(P).sort((a,b)=>b.p-a.p);
+  const ES=dedup(E).sort((a,b)=>b.p-a.p);
+
+  // Pick 5 practical + 3 educational, then interleave so they mix visually
+  const picked=[...PS.slice(0,5),...ES.slice(0,3)];
+  // Light deterministic shuffle based on current hour so chips change through the day
+  const seed=(new Date().getHours()*37+new Date().getDate()*13)%31;
+  for(let i=picked.length-1;i>0;i--){const j=(seed+i*7)%(i+1);[picked[i],picked[j]]=[picked[j],picked[i]];}
+
+  return picked.slice(0,8);
+}
+
 function renderAskView(){
   const el=document.getElementById('askView');
   if(!el)return;
   const hasWeather=!!state.data;
   const cityName=state.name||'your area';
   const iconUrl=document.getElementById('appIcon')?.href||'';
-  const chips=[
-    {e:'👔',t:"What should I wear today?"},
-    {e:'🏃',t:"Good for a run outside?"},
-    {e:'🌧️',t:"Will it rain later?"},
-    {e:'🚗',t:"Good day to wash my car?"},
-    {e:'☀️',t:"What's the UV like today?"},
-    {e:'⚡',t:"Any storms this week?"},
-    {e:'🌡️',t:"Why does it feel so hot?"},
-    {e:'🌅',t:"Best time to be outside?"},
-  ];
+  const chips=buildAskChips();
   const introHtml=hasWeather?`
     <div class="ask-intro" id="askIntro">
       <div class="ask-intro-icon"><img src="${iconUrl}" alt="Cirrus"></div>
