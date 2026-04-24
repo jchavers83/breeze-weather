@@ -859,7 +859,7 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .ask-intro-icon{width:86px;height:86px;border-radius:22px;overflow:hidden;margin-bottom:12px;border:2px solid rgba(255,255,255,0.55);box-shadow:0 10px 44px rgba(74,184,248,0.32),0 0 0 5px rgba(255,255,255,0.07),0 3px 14px rgba(0,0,0,0.22)}
 .ask-intro-icon img{width:100%;height:100%;display:block}
 .ask-intro-temp{font-size:28px;font-weight:700;letter-spacing:-0.5px;line-height:1;margin-bottom:8px;color:var(--text-secondary)}
-.ask-intro-sub{font-size:15px;color:var(--text-secondary);line-height:1.45;max-width:210px;font-weight:600;letter-spacing:-0.1px;margin-bottom:0}
+.ask-intro-sub{font-size:15px;color:var(--text-secondary);line-height:1.5;max-width:320px;font-weight:600;letter-spacing:-0.1px;margin-bottom:0}
 /* Chips grid */
 .ask-chips{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:14px 0 0;width:100%}
 /* Light mode chips: stronger white bg so they pop against the teal */
@@ -5562,7 +5562,7 @@ function renderAskView(){
   const iconUrl=document.getElementById('appIcon')?.href||'';
   const chips=buildAskChips();
   // Dynamic greeting — condition-based personality + current temp
-  let _askGreeting=`Ask me anything about ${cityName}'s weather.`;
+  let _askGreeting=`Ask me anything about<br>${cityName}'s weather.`;
   let _askTemp='';
   if(state.data){
     const _c=state.data.current;
@@ -5573,14 +5573,14 @@ function renderAskView(){
     const _disp=_unit==='C'?Math.round(_c.temperature_2m):_tF;
     _askTemp=`${_disp}°${_unit}`;
     const _rain=state.data.daily?.precipitation_probability_max?.[0]??0;
-    if(_wc>=95) _askGreeting="Wild weather out there — ask me anything.";
-    else if(_wc>=60) _askGreeting="Storms on the radar. Ask me what you need to know.";
-    else if(_wc>=51) _askGreeting="It's raining. Ask me anything.";
-    else if(_tF>=95) _askGreeting=`It's a hot one in ${cityName}. Ask me anything.`;
-    else if(_tF<=28) _askGreeting=`Frigid out there. Ask me anything about ${cityName}'s weather.`;
-    else if(_rain>=60) _askGreeting="Rain's likely today. Ask me what to expect.";
-    else if(_h>=5&&_h<10) _askGreeting=`Good morning. Ask me anything about ${cityName}'s weather.`;
-    else if(_h>=17&&_h<20) _askGreeting=`Good evening. Ask me anything about ${cityName}'s weather.`;
+    if(_wc>=95) _askGreeting=`Wild weather out there.<br>Ask me anything.`;
+    else if(_wc>=60) _askGreeting=`Storms on the radar.<br>Ask me what you need to know.`;
+    else if(_wc>=51) _askGreeting=`It's raining.<br>Ask me anything.`;
+    else if(_tF>=95) _askGreeting=`It's a hot one in ${cityName}.<br>Ask me anything.`;
+    else if(_tF<=28) _askGreeting=`Frigid out there.<br>Ask me anything about ${cityName}'s weather.`;
+    else if(_rain>=60) _askGreeting=`Rain's likely today.<br>Ask me what to expect.`;
+    else if(_h>=5&&_h<10) _askGreeting=`Good morning.<br>Ask me anything about ${cityName}'s weather.`;
+    else if(_h>=17&&_h<20) _askGreeting=`Good evening.<br>Ask me anything about ${cityName}'s weather.`;
     else if(_h>=20||_h<5) _askGreeting=`Ask me anything about ${cityName}'s weather.`;
   }
   const introHtml=hasWeather?`
