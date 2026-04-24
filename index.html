@@ -3658,6 +3658,14 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       `Storms rolling through. This is the weather app telling you to charge your phone and find a couch.`,
       `Real storm energy ${timeframe}. Not a drill. Inside is the correct location.`,
       isNight?`Pouring and stormy out there tonight. The bed wins.`:`Thunderstorms ${timeframe}. The weather made your decision for you — you're welcome.`,
+      isNight?`The thunder is doing its thing tonight. Best seat in the house is your couch.`:`Lightning in the forecast means the outdoors is temporarily closed. Plan accordingly.`,
+      isNight?`Storms overnight. Sleep through it if you can — it's actually excellent sleeping weather.`:`There's a reason they invented indoor activities. Today is that reason.`,
+      `${stormHours.length>1?'Multiple hours of':'Some serious'} storm activity ${timeframe}. Power might flicker — just saying.`,
+      isNight?`Rain and lightning out there right now. The bed is the correct call.`:`Thunderstorms today. The air smells incredible before a storm. That's the only upside. Go back inside.`,
+      city?`${city} is getting a proper storm ${timeframe}. Charge everything now while you can.`:`Storms incoming. The universe is not accepting outdoor reservations ${timeframe}.`,
+      isNight?`Storms overnight — that rolling thunder is objectively good sleep ambiance if you let it be.`:`Today the weather wins. Respect the storm and stay in.`,
+      `Storm system moving through. Being inside during a proper thunderstorm is underrated. Commit to it.`,
+      isNight?`The sky is fully committed to its bit tonight. Sleep, or watch it from a window — both valid.`:`Lightning is not the time for hero behavior. Inside. Now. You know this.`,
     ]));
   }else if(nowIsSnow||snowHours.length>2){
     parts.push(pick([
@@ -3667,6 +3675,13 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       city?`${city}'s getting snow today. The roads will separate the prepared from everyone else.`:`Snow moving through. Beautiful to look at, inconvenient to drive in.`,
       `It's snowing. Your schedule would like a word with the weather, but the weather isn't listening.`,
       `${minTDisp}\u00b0 and snow. The kind of day that makes your commute an adventure nobody signed up for.`,
+      isNight?`Snow overnight at ${minTDisp}\u00b0. Wake up 20 minutes earlier than you think you need to.`:`Snowing out there right now. Everything sounds quieter. Looks great. Drives terribly.`,
+      `${minTDisp}\u00b0 and actively snowing. The gap between how this looks and how it drives is enormous.`,
+      isNight?`Snow falling overnight. Tomorrow morning is a whole situation. Set the alarm early.`:`Snow today. Nature's way of rescheduling everyone's plans without asking.`,
+      city?`${city}'s getting snow at ${minTDisp}\u00b0. It's pretty until it's a commute problem.`:`Snow moving through at ${minTDisp}\u00b0. The world goes quieter — enjoy that part at least.`,
+      `Snowing. The gap between what snow looks like from a window and what it does to your day is the whole story.`,
+      isNight?`${minTDisp}\u00b0 and snow overnight. The morning commute is a whole thing you can start thinking about now.`:`Snow at ${minTDisp}\u00b0. Your morning timeline just got a buffer requirement it didn't ask for.`,
+      `${minTDisp}\u00b0 and snowfall. Your commute is fine. Your timeline is not. Those are different things.`,
     ]));
   }else if(nowIsHeavyRain&&clearingAfterRain){
     // Raining hard RIGHT NOW but clearing later — lead with reality, end with hope
@@ -3674,11 +3689,17 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       `It's really coming down right now — but it clears out before morning.`,
       `Pouring at the moment. The good news: it improves overnight.`,
       `Heavy rain right now, lighter conditions moving in later.`,
+      `Pouring right now, but it moves through overnight. Morning looks better.`,
+      `Full-send rain at the moment. Clears before dawn — hang tight.`,
     ]):pick([
       `It's raining hard right now. Should start clearing out later — patience is the whole strategy.`,
       `Coming down out there at the moment. The back half of the day looks much better.`,
       city?`${city} is soaked right now. Better conditions moving in later.`:`Heavy rain right now, but it clears up later.`,
       `Currently a full-send rainstorm. Clears out later — hold tight.`,
+      `The good news leads, but barely: it's pouring right now. The better news is it improves later.`,
+      `Heavy rain at the moment — the kind that earns the improvement coming later. Patience.`,
+      `It's coming down hard right now. Stick it out. The second half is worth it.`,
+      `Soaked out there right now. But it clears later, which is the whole point.`,
     ]));
   }else if(nowIsRain&&clearingAfterRain){
     // Raining now but clearing later
@@ -3687,6 +3708,11 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       `Wet at the moment — better conditions moving in later on.`,
       city?`${city} is damp right now. It dries out later.`:`Rain right now, clearing later. The second half wins.`,
       `Drizzling at the moment. Hang tight — it improves.`,
+      `Raining now, but the back half of the window looks much better. Worth the wait.`,
+      `The morning is wet. The afternoon makes up for it.`,
+      city?`${city} is working through some rain right now. Clear skies are earning their entrance.`:`A wet start, a dry finish. The day rights itself.`,
+      `It's damp out there right now. That clears. Don't rearrange your whole day over this.`,
+      `Right now it's rain. Later it's not. Sometimes patience is the whole forecast.`,
     ]));
   }else if(nowIsHeavyRain||heavyRain.length>2){
     parts.push(isNight?pick([
@@ -3695,6 +3721,11 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       `Heavy rain all night. The weather made your plans for you. Embrace it.`,
       `Full-send rain tonight. The couch and something to watch are the only correct answers.`,
       `Pouring out there tonight. Genuinely excellent sleeping weather if you let it be.`,
+      `Heavy rain tonight. The universe is handing you permission to do nothing. Accept it gracefully.`,
+      `It's coming down hard out there. Rain on the roof is nature's white noise. Use it.`,
+      `Serious rain overnight. Being inside right now isn't laziness — it's situational awareness.`,
+      `Pouring all night. The rain handles the ambiance. You just have to show up with a blanket.`,
+      `Heavy rain through the night. Your only job is to not be outside.`,
     ]):pick([
       `Heavy rain ${timeframe}. The umbrella is structural today, not decorative.`,
       `It's coming down out there. Everything outside is getting wet, including your confidence.`,
@@ -3702,6 +3733,12 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       `The kind of rain that laughs at a hood. Umbrella or stay in. Those are the options.`,
       `Heavy rain on the way. Waterproof your plans or cancel them.`,
       city?`${city}'s getting a proper soaking ${timeframe}. The umbrella earns its keep today.`:`Heavy rain incoming. The umbrella earns its keep today.`,
+      `Significant rain ${timeframe}. This is a full umbrella situation, not a hood situation.`,
+      `Coming down in sheets out there. Your outdoor plans have been cancelled by a higher authority.`,
+      `Heavy rain today. Plans that were outside are now inside. The weather made this call, not you.`,
+      `The kind of rain where being dry feels like an achievement. Umbrella. Real one.`,
+      `It's raining with conviction ${timeframe}. A light jacket is not a weather strategy right now.`,
+      `Hard rain ${timeframe}. The outdoor plans had a good run. Let them go.`,
     ]));
   }else if(nowIsRain||rainHours.length>0){
     const rainStart=nowIsRain?null:(rainHours[0]?.h??null);
@@ -3711,6 +3748,10 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       `Rain is coming down at the moment. That umbrella in your bag earns its keep today.`,
       `Currently raining outside. Plan accordingly.`,
       city?`It's raining in ${city} right now. The umbrella wins.`:`Rain right now — the outdoor plans are on hold.`,
+      `It's wet out there right now. Not dramatically, not zero — just enough to matter.`,
+      `Raining at the moment. The umbrella is not optional right now.`,
+      city?`${city} is getting some rain right now. Check before you head out.`:`Rain coming down right now. Dress for reality, not the forecast you wanted.`,
+      `Currently raining. Not a lot of ambiguity here — get the umbrella.`,
     ]):pick([
       `Showers possible ${when}. Classic "should I bring the umbrella" weather. Yes. Bring the umbrella.`,
       `Rain moving in around ${when}. That umbrella in your car? Now's the time.`,
@@ -3718,36 +3759,67 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       `The radar has ${when} circled. Pack accordingly.`,
       `Showers sliding in ${when}. Not catastrophic. Just the universe testing you a little.`,
       `Umbrella situation ${when}. The weather app is nudging you. Take the hint.`,
+      `Rain arriving ${when}. It's the kind of thing you'll wish you'd prepared for.`,
+      `Light rain ${when}. Not a disaster. Still enough to ruin a bag you left outside.`,
+      city?`${city} picks up some rain ${when}. The umbrella is the right call.`:`Showers ${when}. The "should I bring it" answer is yes. It's always yes.`,
+      `Rain expected ${when}. This is the forecast doing you a favor. Listen to it.`,
+      `Some rain ${when} — the specific kind where you'll regret not having an umbrella by about two minutes in.`,
     ]));
   }else if(isGoldenHour&&_clearNow&&!nowIsRain&&!nowIsStorm&&!nowIsSnow){
     parts.push(pick([
-      `Golden hour right now — about ${minsToSunset} minutes of this light left at ${actualDisp}°.`,
-      `The sky is putting on a show right now. ${minsToSunset} minutes until sunset at ${actualDisp}°.`,
+      `Golden hour right now — about ${minsToSunset} minutes of this light left at ${actualDisp}\u00b0.`,
+      `The sky is putting on a show right now. ${minsToSunset} minutes until sunset at ${actualDisp}\u00b0.`,
       `Sunset in ${minsToSunset} minutes. Whatever you're doing, step outside for a sec — the light is worth it.`,
-      `About ${minsToSunset} minutes until sunset at ${actualDisp}°. That's not a lot of daylight — use it.`,
+      `About ${minsToSunset} minutes until sunset at ${actualDisp}\u00b0. That's not a lot of daylight — use it.`,
+      `The light out there right now is the good stuff. ${minsToSunset} minutes left. Go look at something.`,
+      `Golden hour at ${actualDisp}\u00b0 — the kind of light that makes everything look like it was photographed on purpose.`,
+      `${minsToSunset} minutes to sunset. The sky is actively trying right now. Return the favor.`,
+      `Right now the light is doing something special. It lasts about ${minsToSunset} more minutes.`,
+      city?`${city} looks its best right now. ${minsToSunset} minutes of golden hour left at ${actualDisp}\u00b0.`:`Everything looks better in this light. You've got ${minsToSunset} minutes before it's gone.`,
+      `Sunset in ${minsToSunset} minutes at ${actualDisp}\u00b0. This is not a drill — go stand outside.`,
+      `The light is putting in work right now. ${minsToSunset} minutes of this. Don't miss it from a window.`,
+      `Golden hour: ${minsToSunset} minutes, ${actualDisp}\u00b0. The sky earned this. You should go see it.`,
     ]));
   }else if(clearHours.length>hours.length*0.7&&!nowIsRain&&!nowIsStorm&&!nowIsSnow){
     if(isPredomNight){
       if(minT>65){
         parts.push(pick([
-          moon.techName==='Full Moon'?`Clear outside right now at ${minTDisp}° — full moon tonight. Bright enough to cast a shadow.`:`Clear skies and ${minTDisp}° out there right now. Warm night — sleep with the windows open.`,
-          `${minTDisp}° and clear out there. The stars are out. Open the windows.`,
-          `Clear and ${minTDisp}° tonight. That's windows-open, ceiling-fan-on weather. Don't overthink it.`,
-          `${minTDisp}° and clear overnight. Open the windows. You'll sleep better.`,
+          moon.techName==='Full Moon'?`Clear outside right now at ${minTDisp}\u00b0 — full moon tonight. Bright enough to cast a shadow.`:`Clear skies and ${minTDisp}\u00b0 out there right now. Warm night — sleep with the windows open.`,
+          `${minTDisp}\u00b0 and clear out there. The stars are out. Open the windows.`,
+          `Clear and ${minTDisp}\u00b0 tonight. That's windows-open, ceiling-fan-on weather. Don't overthink it.`,
+          `${minTDisp}\u00b0 and clear overnight. Open the windows. You'll sleep better.`,
+          moon.techName==='Full Moon'?`Full moon, clear sky, ${minTDisp}\u00b0. The kind of night worth staying up for.`:`${minTDisp}\u00b0 and clear — the stars are doing their best work right now.`,
+          `Warm clear night at ${minTDisp}\u00b0. The windows-open choice is obvious. Make it.`,
+          city?`${city} has a genuinely nice night going — ${minTDisp}\u00b0 and clear. Enjoy it.`:`${minTDisp}\u00b0 and open sky. Summer nights don't always look like this.`,
+          `${minTDisp}\u00b0 overnight with clear skies. That's a ceiling fan, open window, good sleep situation.`,
+          `Clear and warm at ${minTDisp}\u00b0. Rare enough to notice. Open the windows.`,
+          `Warm night, no clouds. The kind of night that feels like it was designed for you specifically.`,
         ]));
       }else if(minT>45){
         parts.push(pick([
-          moon.techName==='Full Moon'?`Clear and ${minTDisp}° out there right now — full moon tonight. It's actually quite bright.`:`Clear skies and ${minTDisp}° right now. The stars are out if you want a look.`,
-          `${minTDisp}° and clear out there. Crisp, quiet, and exactly what a night should be.`,
-          `Cool, clear, and calm tonight at ${minTDisp}°. Perfect do-nothing weather.`,
-          `Clear night ahead. ${minTDisp}° — crisp enough to sleep great.`,
+          moon.techName==='Full Moon'?`Clear and ${minTDisp}\u00b0 out there right now — full moon tonight. It's actually quite bright.`:`Clear skies and ${minTDisp}\u00b0 right now. The stars are out if you want a look.`,
+          `${minTDisp}\u00b0 and clear out there. Crisp, quiet, and exactly what a night should be.`,
+          `Cool, clear, and calm tonight at ${minTDisp}\u00b0. Perfect do-nothing weather.`,
+          `Clear night ahead. ${minTDisp}\u00b0 — crisp enough to sleep great.`,
+          moon.techName==='Full Moon'?`${minTDisp}\u00b0 and full moon — the outside world is genuinely worth a look tonight.`:`${minTDisp}\u00b0 and crystal clear. The stars are sharp tonight. Worth a look if you step out.`,
+          `Mild and clear at ${minTDisp}\u00b0. The kind of night where you step outside and just stand there for a minute.`,
+          `${minTDisp}\u00b0 with open skies tonight. Crisp air, quiet, good stars. That's a win.`,
+          city?`${city} has a crisp clear night going at ${minTDisp}\u00b0. Perfect sleep weather.`:`Clear and ${minTDisp}\u00b0 out there. The air is doing its best work right now.`,
+          `${minTDisp}\u00b0 and cloudless. Exceptional sleep conditions if you let yourself wind down.`,
+          `Cool, clear night. The kind of stillness that makes a city feel small.`,
         ]));
       }else{
         parts.push(pick([
-          moon.techName==='Full Moon'?`Full moon and ${minTDisp}° tonight. Gorgeous from inside. Extra blanket is mandatory.`:`Clear but cold out there right now — ${minTDisp}°. The stars are brilliant tonight.`,
-          `Clear and ${minTDisp}° tonight. The stars are out. So is the cold.`,
-          `${minTDisp}° and crystal clear. Beautiful to look at, cold to be in.`,
+          moon.techName==='Full Moon'?`Full moon and ${minTDisp}\u00b0 tonight. Gorgeous from inside. Extra blanket is mandatory.`:`Clear but cold out there right now — ${minTDisp}\u00b0. The stars are brilliant tonight.`,
+          `Clear and ${minTDisp}\u00b0 tonight. The stars are out. So is the cold.`,
+          `${minTDisp}\u00b0 and crystal clear. Beautiful to look at, cold to be in.`,
           `Cold night, clear skies. Your bed just became the best seat in the house.`,
+          moon.techName==='Full Moon'?`${minTDisp}\u00b0 and a full moon. The view is worth the cold, briefly.`:`${minTDisp}\u00b0 and clear — the stars are doing something special tonight. Coat required to see them.`,
+          `Cold and clear at ${minTDisp}\u00b0. The sky is showing off. You'll need a real jacket to appreciate it.`,
+          `${minTDisp}\u00b0 overnight, clear skies. Outstanding from a window with a blanket.`,
+          city?`${city} is cold and clear tonight at ${minTDisp}\u00b0. Gorgeous out there. Stay warm in here.`:`${minTDisp}\u00b0 and open skies. The cold doesn't lie. Neither do the stars.`,
+          `Clear and ${minTDisp}\u00b0. That's a heavy blanket and a window kind of night.`,
+          `Cold, clear, quiet. The stars are doing their thing. Observe from indoors.`,
         ]));
       }
     }else if(maxT>92){
@@ -3758,6 +3830,14 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Hot enough that stepping outside for a minute counts as a commitment. ${maxTDisp}\u00b0.`,
         `${maxTDisp}\u00b0 with full sun. Your body would like water, shade, and a serious conversation about your outdoor plans.`,
         `${maxTDisp}\u00b0 today. The sun came to work and brought everything.`,
+        `${actualDisp}\u00b0 right now. The car interior is a bad place to be. The shade is a good one.`,
+        `${maxTDisp}\u00b0 and relentless sun. Your car's steering wheel is its own warning system today.`,
+        city?`${city} is baking at ${maxTDisp}\u00b0. The shade is your best friend today.`:`Hot, sunny, and not apologizing about it. ${maxTDisp}\u00b0 of full commitment.`,
+        `The sun is showing off today at ${maxTDisp}\u00b0. It doesn't care how you feel about that.`,
+        `${maxTDisp}\u00b0 and no mercy from the sky. Outdoor plans need a shade plan attached.`,
+        `Full sun, ${maxTDisp}\u00b0. This is not beach weather — this is heat-with-consequences weather.`,
+        `${actualDisp}\u00b0 and clear. It's hot. The water bottle is the whole strategy.`,
+        `${maxTDisp}\u00b0 today. Ten minutes outside is fine. Forty minutes outside is a commitment you should have planned for.`,
       ]));
     }else if(maxT>80){
       parts.push(pick([
@@ -3767,6 +3847,14 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Beautiful day — ${maxTDisp}\u00b0 and cloudless. Your indoor plans just became negotiable.`,
         `The sun showed up today. ${maxTDisp}\u00b0 and clear. Go get some of it.`,
         `${maxTDisp}\u00b0 with nothing in the way. Days like this are why people check the weather.`,
+        `${actualDisp}\u00b0 and sunny right now. This is the kind of day that justifies living here.`,
+        city?`${maxTDisp}\u00b0 in ${city} with full sun. This one is genuinely good.`:`${maxTDisp}\u00b0 and clear. The weather app would like to remind you to go outside.`,
+        `Warm, sunny, low drama. ${maxTDisp}\u00b0 — the forecast doing exactly what you wanted.`,
+        `${maxTDisp}\u00b0 and clear skies. The weather is asking you to go outside. You should probably go outside.`,
+        `This is a good one. ${maxTDisp}\u00b0, full sun, no excuses. Do something with it.`,
+        `Clear and ${maxTDisp}\u00b0. The kind of weather that feels like it was scheduled just for you.`,
+        `${maxTDisp}\u00b0 with open sky. Sunglasses are structural today.`,
+        `Sunny and warm at ${maxTDisp}\u00b0. Your outdoor plans are officially a good idea.`,
       ]));
     }else if(maxT>65){
       parts.push(pick([
@@ -3776,6 +3864,14 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Clear and ${maxTDisp}\u00b0. The kind of day that makes you feel irrationally optimistic about everything.`,
         `Textbook perfect weather. ${maxTDisp}\u00b0, no clouds, no drama, no complaints.`,
         `${maxTDisp}\u00b0 and gorgeous in ${month}. Feels almost too good. Enjoy it before you overthink it.`,
+        `${actualDisp}\u00b0 and clear right now. People move cities for days like this and still don't appreciate them enough.`,
+        `Perfect day. ${maxTDisp}\u00b0, full sun, nowhere to be. The forecast delivered.`,
+        city?`${city} is showing off today — ${maxTDisp}\u00b0 and clear. Hard to argue with.`:`${maxTDisp}\u00b0 and cloudless. The weather gave you no excuse to stay inside.`,
+        `Clear and ${maxTDisp}\u00b0. Not too hot, not too cold, not a cloud with opinions. Just a perfect day.`,
+        `${maxTDisp}\u00b0 with open sky. The window view looks nice but the actual outdoors is better.`,
+        `This is what "nice day" actually means. ${maxTDisp}\u00b0, clear, light breeze if you're lucky.`,
+        `${actualDisp}\u00b0 and beautiful. The slightly guilty feeling of not going outside is valid information.`,
+        `${maxTDisp}\u00b0 in ${month} with full sun. The forecast earns a moment of appreciation.`,
       ]));
     }else if(maxT>50){
       parts.push(pick([
@@ -3784,6 +3880,13 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `${maxTDisp}\u00b0 with full sun. Technically chilly, objectively lovely.`,
         `Brisk and clear today — ${maxTDisp}\u00b0. The kind of weather that makes coffee taste better outside.`,
         `${maxTDisp}\u00b0 and sunny. Dress for it and you'll love it. Skip the layers and you'll regret it.`,
+        `${actualDisp}\u00b0 and clear. The jacket-but-worth-it situation.`,
+        city?`${city} is crisp and clear at ${maxTDisp}\u00b0. A real jacket and you're set.`:`${maxTDisp}\u00b0 with full sun. Brisk in a way that feels intentional.`,
+        `Clear and ${maxTDisp}\u00b0 — the kind of day that rewards good layering choices.`,
+        `Bright and ${maxTDisp}\u00b0. The sun is doing its part. Dress for it and you'll love it out there.`,
+        `${maxTDisp}\u00b0 and clear. Not beach weather. Still worth being outside for.`,
+        `Crisp, clear, ${maxTDisp}\u00b0. Your breath makes little clouds. The sky doesn't. Nice balance.`,
+        `${actualDisp}\u00b0 and sunny. One good layer and this is a genuinely pleasant day.`,
       ]));
     }else{
       parts.push(pick([
@@ -3791,6 +3894,13 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Clear skies, ${maxTDisp}\u00b0. Gorgeous from inside. Bundle up if you're heading out.`,
         `Sunny and ${maxTDisp}\u00b0 — the kind of cold that looks warm through the window. Don't be fooled.`,
         `${maxTDisp}\u00b0 with full sun. The light is lying to you. That's a coat situation.`,
+        `${actualDisp}\u00b0 and bright. The sun looks warm. It is not warm. The coat is mandatory.`,
+        city?`${city} is cold and sunny at ${maxTDisp}\u00b0. The sky is lying through its brightness.`:`${maxTDisp}\u00b0 and clear. The sky looks like spring. The temperature disagrees.`,
+        `Clear and ${maxTDisp}\u00b0. The sun's showing up but not helping. That's a full coat, not a jacket.`,
+        `${maxTDisp}\u00b0 with full sun — looks warmer than it is. Every time. Don't fall for it.`,
+        `Bright and cold at ${maxTDisp}\u00b0. The light is doing its thing. The warmth is not.`,
+        `${actualDisp}\u00b0 and sunny. The window makes it look like a different kind of day. It isn't.`,
+        `Cold, clear, and bright at ${maxTDisp}\u00b0. Beautiful. Absolutely requires a real coat.`,
       ]));
     }
   }else if(cloudyHours.length>hours.length*0.5){
@@ -3800,6 +3910,12 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Clouds moving through tonight at ${minTDisp}\u00b0. Nothing exciting, nothing terrible.`,
         `${minTDisp}\u00b0 and overcast tonight. A perfectly forgettable night in the best way.`,
         `Cloudy and ${minTDisp}\u00b0 tonight. Quiet out. Sleep easy.`,
+        `${minTDisp}\u00b0 with cloud cover overnight. Gray and quiet — exactly what a night should be.`,
+        `Overcast out there tonight at ${minTDisp}\u00b0. Nothing to see, nothing to worry about. Sleep.`,
+        `Clouds tonight, ${minTDisp}\u00b0. No stars, no moon, no problem. Good sleeping weather.`,
+        city?`${city} is overcast and ${minTDisp}\u00b0 overnight. Quiet, gray, and that's fine.`:`${minTDisp}\u00b0 and fully overcast. Unremarkable in the best way.`,
+        `${minTDisp}\u00b0 and cloudy overnight. The world is soft and gray and asleep.`,
+        `Solid cloud cover at ${minTDisp}\u00b0 tonight. Forgettable in a completely acceptable way.`,
       ]));
     }else{
       parts.push(pick([
@@ -3809,6 +3925,14 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Clouds are in charge today. ${maxTDisp}\u00b0, dry, moodily lit. Carry on.`,
         `${maxTDisp}\u00b0 under cloud cover. Not a postcard. Not a problem either.`,
         `Overcast today. The lighting is moody, the weather is fine.`,
+        `${maxTDisp}\u00b0 and gray. The sun called in. The day is still happening without it.`,
+        `Cloudy at ${maxTDisp}\u00b0. No sunshine, no rain — overcast is the underrated middle option.`,
+        city?`${city} is gray and ${maxTDisp}\u00b0 today. Dry though, which is the whole point.`:`Overcast and ${maxTDisp}\u00b0. Good photography lighting, bad mood lighting. Trade-offs.`,
+        `${maxTDisp}\u00b0 with full cloud cover. The kind of day that's fine and not much more than that.`,
+        `Gray skies, ${maxTDisp}\u00b0, no precipitation. The forecast is being reasonable if not exciting.`,
+        `Overcast at ${maxTDisp}\u00b0. The sun took a personal day. It'll be back. Today is fine without it.`,
+        `${actualDisp}\u00b0 and cloudy. Not a weather emergency. Not a weather highlight. That's okay.`,
+        `${maxTDisp}\u00b0 under clouds. Soft light, dry air, fully functional day.`,
       ]));
     }
   }else{
@@ -3817,6 +3941,12 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       `Mixed conditions today — ${minTDisp}\u2013${maxTDisp}\u00b0 with the sky keeping everyone guessing.`,
       `${minTDisp}\u00b0 to ${maxTDisp}\u00b0 with shifting clouds. Not dramatic, just inconsistent.`,
       `The forecast is giving "undecided" energy today. ${minTDisp}\u2013${maxTDisp}\u00b0 and kind of a mixed bag.`,
+      `${minTDisp}\u2013${maxTDisp}\u00b0 with variable sky conditions. The weather equivalent of "it depends."`,
+      city?`${city} is getting a mixed bag today — ${minTDisp}\u2013${maxTDisp}\u00b0 and no strong commitment from the sky.`:`${minTDisp}\u00b0 to ${maxTDisp}\u00b0. The forecast hedged. The day will do the same.`,
+      `${minTDisp}\u2013${maxTDisp}\u00b0 and somewhere between clouds and clear. The sky is working through some things.`,
+      `Mixed sky, ${minTDisp}\u2013${maxTDisp}\u00b0. Not a disaster, not a highlight. Solidly in between.`,
+      `${minTDisp}\u00b0 to ${maxTDisp}\u00b0 with clouds coming and going. The weather has options today and hasn't committed.`,
+      `Partly this, partly that. ${minTDisp}\u2013${maxTDisp}\u00b0 — the kind of forecast that keeps meteorologists honest.`,
     ]));
   }
 
@@ -3921,6 +4051,9 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Gets better ${laterRef} once it moves through.`,
         `It improves ${laterRef}. Hang tight.`,
         `The rain moves on ${laterRef}. Good news is coming.`,
+        `Rain exits ${laterRef}. The back half earns the front half.`,
+        `Clears ${laterRef}. Sometimes the forecast is just a schedule.`,
+        `Better conditions move in ${laterRef}. Let it happen.`,
       ]));
     }else if(firstRain===0&&secondRain>1){
       parts.push(pick([
@@ -3928,6 +4061,9 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Nice window right now — rain moves in ${laterRef}.`,
         `Good news: it's clear now. Less good news: rain ${laterRef}.`,
         `Make the most of the dry stretch. Rain arrives ${laterRef}.`,
+        `Enjoy this part. Rain shows up ${laterRef}.`,
+        `Dry window right now. Use it. Rain's committed to ${laterRef}.`,
+        `Clear for now — rain moves in ${laterRef}. The window is real. The rain is also real.`,
       ]));
     }else if(firstClear>4&&secondClear<2){
       parts.push(pick([
@@ -3935,6 +4071,9 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Sky closes up ${laterRef} — the good part is right now.`,
         `Enjoy the sunshine. Clouds move in ${laterRef}.`,
         `Clear now, clouds ${laterRef}. The math is clear: go out now.`,
+        `This is the good part. Clouds take over ${laterRef}.`,
+        `Sunny stretch right now — clouds build ${laterRef}. Front-load the outdoor time.`,
+        `Clear skies now, overcast ${laterRef}. The early hours are the right hours today.`,
       ]));
     }else if(windyHours.length>2){
       parts.push(pick([
@@ -3942,6 +4081,9 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `${maxWindDisp} ${windUnitStr} gusts today. Hold onto anything that can become a projectile.`,
         `Breezy out there — ${maxWindDisp} ${windUnitStr} gusts. Secure the patio furniture.`,
         `The wind has opinions today: ${maxWindDisp} ${windUnitStr}. Yours don't matter much.`,
+        `${maxWindDisp} ${windUnitStr} gusts. It's a hat-anchor kind of day.`,
+        `Windy out there — ${maxWindDisp} ${windUnitStr}. Anything loose is now the wind's problem.`,
+        `Gusts to ${maxWindDisp} ${windUnitStr}. The umbrella is a liability today, not an asset.`,
       ]));
     }else if(maxT-minT>20){
       parts.push(pick([
@@ -3949,6 +4091,9 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         isLateEvening?`${minTDisp}\u2013${maxTDisp}\u00b0 spread today. Whoever dressed for the morning was underprepared.`:`Big temperature range — ${minTDisp}\u00b0 to ${maxTDisp}\u00b0. What you wear now won't cut it later.`,
         `${minTDisp}\u2013${maxTDisp}\u00b0 spread. Dress in layers and feel smug when everyone else is cold.`,
         `The temperature swings ${maxT-minT}\u00b0 today. Layers or regret — pick one.`,
+        `${maxT-minT}\u00b0 swing between the low and high. The jacket you leave behind will haunt you.`,
+        `${minTDisp}\u2013${maxTDisp}\u00b0 today. That range demands a layering strategy.`,
+        `Big spread: ${minTDisp}\u00b0 to ${maxTDisp}\u00b0. What you wear this morning is wrong by afternoon.`,
       ]));
     }else if(minT<32&&!isPredomNight){
       parts.push(pick([
@@ -3956,6 +4101,9 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Sub-freezing temps today. Real coat, gloves, the whole thing.`,
         `${minTDisp}\u00b0 is below freezing. Dress like you know that.`,
         `Freezing temps in the mix. No shortcuts on the layers today.`,
+        `Below freezing at the low. The coat isn't optional — it's load-bearing.`,
+        `It dips below 32\u00b0. That's a real coat and real gloves situation.`,
+        `Freezing temperatures today. The good news is you own a coat. The bad news is you have to wear it.`,
       ]));
     }else if(isDaytime&&hoursUntilSunset>2&&uvMax>=7){
       parts.push(pick([
@@ -3976,12 +4124,19 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Weather this good doesn't come around every day. Do something with it.`,
         `Go outside. It won't always be this nice.`,
         `The forecast passed the vibe check. Now go live in it.`,
+        `The weather worked hard for this. Show up.`,
+        `Nice out there. The only thing standing between you and enjoying it is you.`,
+        `This is an outdoor day. That's just what it is.`,
+        `Good conditions don't wait around. Get out there.`,
       ]));
     }else if((isPredomNight||isNight)&&rainHours.length>3){
       parts.push(pick([
         `Rain all night. The universe is handing you permission to do nothing. Take it.`,
         `Good sleeping weather if you let it be. The rain handles the rest.`,
         `Pouring tonight — the kind where being inside feels intentional.`,
+        `Rain overnight. The best thing the weather does for sleep.`,
+        `It's raining. Being inside feels earned right now. Let it.`,
+        `Good night for rain on a roof and nothing important to do.`,
       ]));
     }
   }
@@ -3996,13 +4151,22 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Genuinely beautiful out there. Don't spend it all inside.`,
         `Days this nice are limited. The forecast told you so.`,
         `Get outside. You'll be glad you did.`,
+        `This is the part you tell people about later. Go be in it.`,
+        `The weather gave you everything. The rest is your call.`,
+        `Nice day. Go use it before it notices you didn't.`,
+        `Days like this are the whole reason you check the forecast.`,
       ]));
     }else if(stormHours.length>0){
       parts.push(pick2([
         `Stay sharp out there.`,
         `Not a day to be cavalier about the weather.`,
         `The sky is running a whole thing today. Give it space.`,
-        `Stay safe. Inside is winning today.`,
+        `Inside is winning today.`,
+        `The storm makes the call. You listen.`,
+        `Let the weather do its thing. You do yours — indoors.`,
+        `Not a day to argue with the forecast.`,
+        `Charge the phone. Settle in.`,
+        `Be somewhere safe and leave it there.`,
       ]));
     }else if(rainHours.length>3){
       parts.push(pick2([
@@ -4010,6 +4174,11 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Not all days need to be outside days. This is one of those.`,
         `Good day to lean into the cozy.`,
         `The rain is not your fault and not personal. Just be inside.`,
+        `Some days the forecast is basically a permission slip. Use it.`,
+        `Rain has always been valid justification for doing nothing.`,
+        `The cozy is non-negotiable today.`,
+        `Inside is where you're supposed to be right now.`,
+        `Wet outside, whatever you want inside. Simple.`,
       ]));
     }else if(snowHours.length>2){
       parts.push(pick2([
@@ -4017,6 +4186,11 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `At least it's pretty.`,
         `The snow looks great. The roads, less so.`,
         `Winter is doing winter things today.`,
+        `Snow day energy. Honor it.`,
+        `The world looks quiet under snow. The commute does not.`,
+        `Beautiful, slow, and inconvenient. That's snow.`,
+        `Time-buffer everything. Snow is not in a hurry.`,
+        `The snow is pretty. Drive like it isn't.`,
       ]));
     }else if(isNight||isPredomNight){
       parts.push(pick2([
@@ -4025,6 +4199,11 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `The night shift of the atmosphere is clocked in. You should be too.`,
         `Quiet night. The good kind of nothing.`,
         `Get some rest. Tomorrow has weather too.`,
+        `The night is doing its thing. You should sleep through it.`,
+        `Wind down. The forecast will still be here in the morning.`,
+        `Quiet out there. Good conditions for sleep.`,
+        `Night's covered. Get some rest.`,
+        `Good sleeping conditions. Don't waste them.`,
       ]));
     }else if(maxT>88){
       parts.push(pick2([
@@ -4032,6 +4211,11 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Hydrate aggressively and without apology.`,
         `The heat doesn't care how tough you are.`,
         `Find the shade. It's out there and it's free.`,
+        `Water early, shade often. That's the play.`,
+        `The sun is not your friend today. Neutral terms only.`,
+        `Heat like this is cumulative. Start the water now.`,
+        `Cool down when you need to. That's not weakness — it's physics.`,
+        `Shade is a resource. Treat it like one.`,
       ]));
     }else if(cloudyHours.length>hours.length*0.6&&rainHours.length===0){
       parts.push(pick2([
@@ -4039,6 +4223,11 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `The sun took a day off. Match its energy if you need to.`,
         `Somewhere the sun is shining. Not here. But somewhere.`,
         `Overcast has a certain calm to it. Work with it.`,
+        `Gray is underrated as a vibe. Embrace it.`,
+        `Clouds but no rain. Honestly fine.`,
+        `Moody out there. Doesn't mean bad.`,
+        `The sky is subdued. You don't have to be.`,
+        `Low-stakes weather. That's a compliment.`,
       ]));
     }else{
       parts.push(pick2([
@@ -4048,6 +4237,10 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Sometimes "fine" is exactly what the day ordered.`,
         `A perfectly adequate day, meteorologically speaking.`,
         `The forecast kept it simple today. You're welcome.`,
+        `Not every day needs to be a weather event. This one isn't.`,
+        `Solid, forgettable conditions. The good kind.`,
+        `No weather drama today. Rest of the day is yours.`,
+        `The atmosphere is being professional today. Respect it.`,
       ]));
     }
   }
@@ -4113,35 +4306,58 @@ function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,is
   // === Late Night ===
   if(lateNight){
     if(moon.techName==='Full Moon'&&clearCount>2)quips.push(moon.emoji+' Full moon out tonight\u2014worth stepping outside just to look up.');
+    if(moon.techName==='Full Moon'&&clearCount>2)quips.push(moon.emoji+' The full moon is genuinely bright tonight. Step outside and you\'ll see your shadow.');
     if(moon.techName==='New Moon'&&clearCount>3)quips.push('\u2728 New moon and clear skies\u2014stargazing doesn\'t get much better than this.');
+    if(moon.techName==='New Moon'&&clearCount>3)quips.push('\u2728 Darkest sky of the month tonight. If you can find dark enough, the stars are extraordinary.');
     if(clearCount>4&&minT>45)quips.push('\u2728 Stars are out. Step outside for 60 seconds\u2014you won\'t regret it.');
+    if(clearCount>4&&minT>45)quips.push('\u2728 Clear night out there. The kind where you step outside for one minute and stay for ten.');
+    if(clearCount>3&&minT>50)quips.push('\uD83C\uDF0C Quiet and clear out there. The sky is worth a look before you sleep.');
     if(minT>62&&clearCount>2)quips.push('\uD83C\uDF19 Sleep with the windows cracked tonight\u2014the air is going to feel amazing.');
+    if(minT>62&&clearCount>2)quips.push('\uD83C\uDF19 Warm and clear tonight. Open the windows. You\'ll wake up better.');
     if(rainCount>2)quips.push('\uD83C\uDF27\uFE0F Rain on the roof tonight\u2014nature\'s white noise machine.');
+    if(rainCount>2)quips.push('\uD83C\uDF27\uFE0F The rain is doing the work tonight. You just have to sleep through it.');
+    if(rainCount>3)quips.push('\uD83C\uDF27\uFE0F Pouring out there. Outstanding conditions for doing absolutely nothing.');
     if(maxT<38)quips.push('\uD83E\uDDE3 Genuinely cold out there. The couch is not just an option\u2014it\'s the right call.');
+    if(maxT<32)quips.push('\uD83E\uDD76 Below freezing tonight. The blanket is the only correct decision you have left to make.');
     quips.push('\uD83C\uDF19 Not a bad night to wind down. You\'ve earned the rest.');
+    quips.push('\uD83C\uDF19 The night is doing its thing. You should probably be asleep.');
   }
 
   // === Evening (sun still up, after 5pm) ===
   if(evening){
     if(isGoldenHour&&clearCount>3&&maxT>60)quips.push('\uD83C\uDF05 Golden hour right now\u2014grab your camera or just go stand in it.');
+    if(isGoldenHour&&clearCount>3&&maxT>60)quips.push('\uD83C\uDF05 The light right now is doing something exceptional. Look up.');
     if(!isGoldenHour&&clearCount>3&&maxT>60)quips.push('\uD83C\uDF05 Beautiful evening light out there\u2014worth stepping outside before sunset.');
+    if(!isGoldenHour&&clearCount>3&&maxT>65)quips.push('\u2728 Nice evening. The kind worth sitting in, not just passing through.');
     if(maxT>68&&rainCount===0&&minT>50)quips.push('\uD83C\uDF7D\uFE0F Honestly, tonight\u2019s a great one for dinner on the patio before it gets dark.');
+    if(maxT>65&&rainCount===0&&minT>48)quips.push('\uD83C\uDF7D\uFE0F Open-window evening at minimum. Patio dinner if you can swing it.');
     if(niceOutdoor&&minsToSunset>30)quips.push('\uD83D\uDEB6 Great evening for a walk before it gets dark. Genuinely.');
+    if(niceOutdoor&&minsToSunset>45)quips.push('\uD83D\uDEB6 You\'ve got time for a walk before sunset. The weather is asking nicely.');
     if(maxT>72&&clearCount>3)quips.push('\uD83C\uDF66 Evening ice cream run? The weather is basically asking you to.');
+    if(maxT>68&&clearCount>2)quips.push('\uD83C\uDF34 Good evening to end the day outside. The temperature is cooperating.');
     if(maxT<42)quips.push('\uD83E\uDDE5 Bundle up before stepping out\u2014it gets cold fast once the sun goes down.');
+    if(maxT<50)quips.push('\uD83E\uDDE5 It drops fast once the sun\'s gone. Real jacket for anything outside tonight.');
     if(rainCount>2)quips.push('\uD83C\uDFAC Rainy evening in\u2014pick something good and don\u2019t feel bad about it.');
+    if(rainCount>2)quips.push('\uD83C\uDF75 Rainy evening. Tea, something to watch, no guilt whatsoever.');
     quips.push('\uD83C\uDF05 Wind down and enjoy what\u2019s left of the evening\u2014you earned it.');
+    quips.push('\uD83C\uDF05 Good evening out there. Take a breath before the day fully closes.');
   }
 
   // === Morning ===
   if(morning){
     if(clearCount>3&&maxT>58)quips.push('\u2615 Perfect morning to take your coffee outside. Don\'t waste it.');
-    if(niceOutdoor)quips.push('\uD83C\uDF05 Get out there early\u2014the morning air right now is *chef\'s kiss*.');
+    if(clearCount>3&&maxT>62)quips.push('\u2615 Morning air is doing its best work right now. Take your coffee out there.');
+    if(clearCount>2&&maxT>55)quips.push('\u2600\uFE0F Clean morning. The kind worth stepping into before it gets busy.');
+    if(niceOutdoor)quips.push('\uD83C\uDF05 Get out there early\u2014the morning air right now is genuinely something.');
     if(niceOutdoor&&maxT>75)quips.push('\uD83C\uDF05 Enjoy it before it heats up\u2014your future self will thank you.');
+    if(niceOutdoor&&maxT>68)quips.push('\uD83C\uDF05 Great morning for anything outside. The air is doing its part.');
     if(outdoorWorthy&&rainCount===0&&maxT>52)quips.push('\uD83D\uDEB6 Morning walk energy is real today. Just saying.');
+    if(outdoorWorthy&&rainCount===0&&maxT>58)quips.push('\uD83D\uDEB6 The morning is actively inviting you outside. It\'s polite to accept.');
     if(maxT<45&&maxT>=35)quips.push('\u2615 Hot coffee and a real jacket\u2014that\'s the morning starter pack today.');
+    if(maxT<50&&maxT>=38)quips.push('\u2615 Cold start. Coffee first, coat second, out the door third.');
     if(maxT<35)quips.push('\uD83E\uDD76 It is actually cold out there. Hat, gloves, the whole kit.');
     if(rainCount>2)quips.push('\u2614 Umbrella in one hand, coffee in the other\u2014you\'ve got this.');
+    if(rainCount>0&&maxT>55)quips.push('\uD83C\uDF27\uFE0F Wet start to the day. Coffee is the right response to this.');
   }
 
   // === Afternoon ===
@@ -4150,12 +4366,19 @@ function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,is
     if(niceOutdoor)quips.push('\uD83D\uDCAA Get up and do something\u2014the weather isn\'t going to enjoy itself.');
     if(niceOutdoor)quips.push('\uD83D\uDCF5 You\'re not going to remember that Netflix episode. Get outside.');
     if(niceOutdoor)quips.push('\uD83D\uDE4C Stop scrolling. Get up. Go outside. Thank me later.');
+    if(niceOutdoor&&maxT>68)quips.push('\uD83C\uDFDE\uFE0F Afternoon this nice comes with a mild obligation to not waste it.');
+    if(niceOutdoor&&maxT>72)quips.push('\uD83E\uDDD8 The afternoon is genuinely beautiful. Go be somewhere that isn\'t inside.');
     if(maxT>90)quips.push('\uD83E\uDDCA Frozen drink o\'clock. That\'s not a suggestion.');
+    if(maxT>90)quips.push('\uD83D\uDCA7 Afternoon hydration is a non-negotiable commitment today.');
     if(maxT>84&&maxT<=90)quips.push('\uD83C\uDF4A Lemonade weather. No debate.');
+    if(maxT>78&&maxT<=90&&rainCount===0)quips.push('\uD83C\uDF68 Ice cream is a completely reasonable afternoon decision right now.');
     if(rainCount>2)quips.push('\uD83C\uDFAC Afternoon rain = guilt-free movie time. Enjoy every minute of it.');
+    if(rainCount>2)quips.push('\uD83D\uDCDA Rainy afternoon. The book you\'ve been putting off is literally waiting for this.');
+    if(rainCount>3)quips.push('\uD83C\uDF75 Afternoon rain calls for something hot to drink and zero productivity guilt.');
     if(cloudyCount>4&&rainCount===0&&maxT>52)quips.push('\u2601\uFE0F Cloudy but calm\u2014solid afternoon for a drive with the windows down.');
+    if(cloudyCount>4&&rainCount===0&&maxT>60)quips.push('\u2601\uFE0F Overcast afternoon. Surprisingly good for a long walk if you\'re into not squinting.');
     if(maxT<45)quips.push('\uD83E\uDDE5 Nobody is judging you for staying in on a day like this. Nobody.');
-    if(maxT<35)quips.push('\uD83E\uDD76 It\'s ${maxT}\u00b0 and the forecast isn\'t helping. The couch wins today.');
+    if(maxT<35)quips.push('\uD83E\uDD76 It\'s cold and the forecast isn\'t helping. The couch wins today.');
   }
 
   // === Weather-specific (any time) — all guarded ===
