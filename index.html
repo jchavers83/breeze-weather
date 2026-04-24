@@ -5286,12 +5286,13 @@ let _askMessages=[];
 
 function buildAskContext(){
   if(!state.data)return null;
-  const d=state.data,curr=d.current,today=d.daily?.data?.[0];
+  const d=state.data,curr=d.current;
   const tempF=Math.round(toF(curr.temperature_2m));
   const feelsF=Math.round(toF(curr.apparent_temperature));
-  const hiF=today?Math.round(toF(today.temperatureHigh??today.temperatureMax??curr.temperature_2m)):tempF;
-  const loF=today?Math.round(toF(today.temperatureLow??today.temperatureMin??curr.temperature_2m)):tempF;
-  const rainChance=today?Math.round((today.precipProbability??0)*100):0;
+  // Open-Meteo format: d.daily has parallel arrays, not d.daily.data[]
+  const hiF=d.daily?.temperature_2m_max?.[0]!=null?Math.round(toF(d.daily.temperature_2m_max[0])):tempF;
+  const loF=d.daily?.temperature_2m_min?.[0]!=null?Math.round(toF(d.daily.temperature_2m_min[0])):tempF;
+  const rainChance=d.daily?.precipitation_probability_max?.[0]??0;
   const wCode=curr.weather_code??0;
   const wInfo=getWeatherInfo(wCode,curr.is_day===0);
   const windKph=curr.wind_speed_10m??0;
@@ -5299,11 +5300,11 @@ function buildAskContext(){
   const dirs=['N','NE','E','SE','S','SW','W','NW'];
   const windDir=dirs[Math.round((curr.wind_direction_10m??0)/45)%8];
   const WDAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const forecastStr=(d.daily?.data??[]).slice(0,7).map((day,i)=>{
-    const label=i===0?'Today':i===1?'Tomorrow':WDAYS[new Date(day.time*1000).getDay()];
-    const hi=Math.round(toF(day.temperatureHigh??day.temperatureMax??20));
-    const lo=Math.round(toF(day.temperatureLow??day.temperatureMin??10));
-    const dInfo=getWeatherInfo(pirateIconToWMO(day.icon,0),false);
+  const forecastStr=(d.daily?.time??[]).slice(0,7).map((t,i)=>{
+    const label=i===0?'Today':i===1?'Tomorrow':WDAYS[new Date(t+'T12:00:00').getDay()];
+    const hi=Math.round(toF(d.daily.temperature_2m_max[i]??20));
+    const lo=Math.round(toF(d.daily.temperature_2m_min[i]??10));
+    const dInfo=getWeatherInfo(d.daily.weather_code?.[i]??0,false);
     return`${label}: ${hi}°/${lo}° ${dInfo.desc}`;
   }).join('; ');
   const alertNames=(state.activeAlerts??[]).map(a=>a.properties?.event).filter(Boolean);
@@ -5419,12 +5420,13 @@ async function sendAskQuestion(question){
     });
     const data=await resp.json();
     document.getElementById(tid)?.remove();
-    const answer=data.answer||"Sorry, I couldn't get an answer. Try again?";
+    const answer=data.answer||(resp.ok?null:"Something went wrong on my end. Try again in a moment.");
+    if(!answer){_askMessages.pop();_renderAskMessages();return;}
     _askMessages.push({role:'cirrus',text:answer});
     _renderAskMessages();
   }catch(e){
     document.getElementById(tid)?.remove();
-    _askMessages.push({role:'cirrus',text:"I had trouble connecting. Please try again."});
+    _askMessages.push({role:'cirrus',text:"Couldn't reach the server. Check your connection and try again."});
     _renderAskMessages();
   }finally{
     if(inp){inp.disabled=false;setTimeout(()=>inp.focus(),50);}
