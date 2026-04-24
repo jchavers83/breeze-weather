@@ -3607,6 +3607,104 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
   const pick=(arr)=>arr[seed%arr.length];
   const pick2=(arr)=>arr[(seed+5)%arr.length];
 
+  // ── City-specific observations — only fire when the observation is genuinely TRUE ─
+  // Guard: condition must match reality, not just the city name
+  const _monthNum=now.getMonth();
+  const _isSpringM=_monthNum>=2&&_monthNum<5;
+  const _isSummerM=_monthNum>=5&&_monthNum<8;
+  const _isFallM=_monthNum>=8&&_monthNum<11;
+  const _isWinterM=_monthNum===11||_monthNum<2;
+  const _cityLower=city.toLowerCase();
+  let _cityObs=null;
+  if(_cityLower.includes('san francisco')){
+    if(cloudyHours.length>hours.length*0.5&&isMorning&&clearingLater){
+      _cityObs=pick([`The marine layer is still doing its thing — it'll burn off.`,`Classic SF morning: fog until the marine layer decides to move on. Give it time.`,`Karl the Fog is holding on right now. It'll let go eventually. It always does.`]);
+    }else if(cloudyHours.length>hours.length*0.7&&!clearingLater&&isMorning){
+      _cityObs=pick([`The fog isn't burning off today. This is what SF calls summer.`,`Marine layer with full commitment today. The jacket stays.`,`The fog decided to make a whole day of it. Very San Francisco.`]);
+    }else if(clearHours.length>hours.length*0.7&&_isSummerM&&maxT>65){
+      _cityObs=pick([`Clear and warm in SF — the city's best-kept secret, active right now.`,`The fog took a day off. Use it.`,`One of those rare SF days where summer actually shows up. This is it.`]);
+    }
+  }else if(_cityLower.includes('seattle')){
+    const _lightDrizzle=nowIsRain&&!nowIsHeavyRain&&!nowIsStorm;
+    if(_lightDrizzle&&!heavyRain.length){
+      _cityObs=pick([`This is Seattle drizzle, not rain. Locals don't even reach for an umbrella.`,`Classic Seattle: the sky leaking steadily, not dramatically. Very on brand.`,`Seattle rain is its own category — misting with commitment, not actually pouring.`]);
+    }else if(_isSummerM&&clearHours.length>hours.length*0.7&&maxT>68){
+      _cityObs=pick([`Seattle summer revealed itself. This is why people stay.`,`This is what Seattle summers are actually like — the payoff for surviving February.`,`Clear and warm in Seattle. The city's annual best-kept secret.`]);
+    }else if(rainWeek){
+      _cityObs=pick([`Seattle is in its home element this week. This is not unusual. This is just the city.`,`A full week of Seattle rain. The locals call this "normal." They are correct.`]);
+    }
+  }else if(_cityLower.includes('phoenix')){
+    if(maxT>=108&&!isHumid){
+      _cityObs=pick([`${maxTDisp}° and dry. Phoenix doesn't do summer quietly.`,`The pavement earns its reputation on days like this. Stay off it after noon.`,`This is the part of Phoenix summer that makes people forget why they moved here.`]);
+    }else if(maxT>=100&&!isHumid){
+      _cityObs=pick([`"But it's a dry heat" actually means something at ${maxTDisp}° — the shade genuinely helps here.`,`${maxTDisp}° without humidity is survivable in ways humid climates aren't. Find shade.`,`${maxTDisp}° and dry. Your sweat actually evaporates. That's Phoenix's only heat advantage.`]);
+    }else if(_isSummerM&&(nowIsStorm||stormHours.length>0)){
+      _cityObs=pick([`Phoenix monsoon season. The smell of desert rain on hot pavement is genuinely one of nature's best moments.`,`Monsoon in the Sonoran Desert — nothing like watching a storm build over the mountains.`,`Phoenix monsoon doing its thing. The petrichor out there right now is worth stepping outside for.`]);
+    }
+  }else if(_cityLower.includes('houston')){
+    if(isSoup||isOppressive){
+      _cityObs=pick([`Houston humidity makes ${actualDisp}° feel like the worst version of itself.`,`The air in Houston has its own weight today. This is the humidity people warn you about.`,`Houston summer is not about the heat. It's about the air that refuses to move.`]);
+    }else if(bigFeelsHot&&feelsGap>=8&&isDaytime){
+      _cityObs=pick([`The heat index is the real number in Houston — the thermometer is being polite.`,`${actualDisp}° is what instruments say. ${feelsLikeDisp}° is what Houston says. Trust Houston.`,`Houston heat index makes the actual temperature almost irrelevant. Dress for ${feelsLikeDisp}°.`]);
+    }
+  }else if(_cityLower.includes('chicago')){
+    if(bigFeeelsCold&&feelsGap<=-10){
+      _cityObs=pick([`Chicago wind isn't a detail — it's the whole weather story today. ${feelsLikeDisp}° is the real number.`,`The wind off the lake changes everything. Dress for ${feelsLikeDisp}°, not ${actualDisp}°.`,`This is what the Windy City actually earns its name for. The gauge says ${actualDisp}°. Your face says ${feelsLikeDisp}°.`]);
+    }else if(_monthNum===1&&maxT<32){
+      _cityObs=pick([`February in Chicago. The city tests you every year. You'll make it.`,`Chicago February is its own category of winter. Just get through it.`,`This is peak Chicago winter. The city has survived worse. So will you.`]);
+    }else if(maxT<20){
+      _cityObs=pick([`Chicago is in full Midwest winter mode today. The underground Pedway exists for exactly this.`,`This is Chicago cold — not "cold for here." Actual cold. The tunnels are your friend today.`]);
+    }
+  }else if(_cityLower.includes('miami')){
+    if(isAfternoon&&(nowIsStorm||stormHours.length>0)){
+      _cityObs=pick([`Miami afternoon thunderstorm right on schedule. It'll pass. It always passes.`,`The afternoon storm is Miami's daily punctuation — right on time, every summer.`,`Miami summers: morning clear, afternoon storm, evening perfect. You're in the middle part.`]);
+    }else if(isSoup||isOppressive){
+      _cityObs=pick([`Miami humidity is not background noise — it's the whole atmosphere today.`,`The air in Miami has weight and heat and a complete agenda of its own.`,`Miami humidity: a physical presence, not a weather detail.`]);
+    }
+  }else if(_cityLower.includes('denver')){
+    if(maxT-minT>20){
+      _cityObs=pick([`That ${maxT-minT}° swing is classic Denver. Layers in the car, always.`,`Denver temperature swings don't ask permission. The jacket you leave behind will matter by tonight.`,`The altitude makes temperature swings dramatic here. Whatever you're wearing now is wrong by evening.`]);
+    }else if(nowIsSnow&&_isSpringM){
+      _cityObs=pick([`Denver spring snow. Melted by afternoon. That's just Colorado.`,`Snow in ${month} in Denver is not unusual — it'll be gone before you adjust your expectations.`,`Colorado spring: snow in the morning, potentially shorts weather by afternoon. Layers.`]);
+    }else if(isDaytime&&(daily.uv_index_max&&daily.uv_index_max[0]||0)>=9){
+      _cityObs=pick([`Altitude UV in Denver is genuinely different. At elevation, a burn comes faster than you expect.`,`The elevation makes UV significantly more intense here. Sunscreen is structural today.`,`Denver UV at altitude doesn't play around. Sunscreen before you step outside, not after.`]);
+    }
+  }else if(_cityLower.includes('new orleans')){
+    if(isSoup||isOppressive){
+      _cityObs=pick([`New Orleans humidity in summer is a physical presence. You walk into it, not through it.`,`NOLA humidity isn't weather — it's ambiance. Thick, warm, and completely inescapable.`,`The humidity in New Orleans has texture. This is what people mean when they say the city is alive.`]);
+    }else if(_isSummerM&&(nowIsStorm||stormHours.length>0)){
+      _cityObs=pick([`Summer storm in New Orleans. The city was built for exactly this kind of dramatic weather.`,`NOLA takes its storms in stride. This is just atmosphere — and it is completely normal.`]);
+    }
+  }else if(_cityLower.includes('new york')||_cityLower.includes('new york city')){
+    if(maxT>88&&isDaytime){
+      _cityObs=pick([`NYC in the heat: the subway platforms add their own layer. The streets are only marginally better.`,`Hot day in New York means the city runs hotter than anywhere else — the concrete has no mercy.`,`The subway heat on a day like this is its own category. Street level isn't much better.`]);
+    }else if(windyHours.length>2&&maxT<50){
+      _cityObs=pick([`Wind channels between the buildings in New York today. It's colder than it looks from any window.`,`NYC wind between buildings makes ${actualDisp}° feel like ${feelsLikeDisp}°. Real coat — not just layers.`,`The canyon effect is real today. Those streets have their own wind physics.`]);
+    }
+  }else if(_cityLower.includes('los angeles')){
+    const _isMayGray=_monthNum===4&&cloudyHours.length>hours.length*0.6&&isMorning;
+    const _isJuneGloom=_monthNum===5&&cloudyHours.length>hours.length*0.6&&isMorning;
+    if(_isMayGray){
+      _cityObs=pick([`May Gray in LA — overcast mornings are a feature of the season, not a malfunction.`,`The marine layer is doing its May Gray thing. Clears by afternoon. Every year, same story.`,`This is what LA May looks like before noon. The city shows up later. It always does.`]);
+    }else if(_isJuneGloom){
+      _cityObs=pick([`June Gloom is the most real weather phenomenon that nobody outside LA believes exists.`,`Classic June Gloom. The overcast burns off by afternoon — every single year.`,`LA June Gloom: gray until noon, then the version of the city everyone else imagines shows up.`]);
+    }else if(clearHours.length>hours.length*0.7&&_isSummerM&&maxT>75){
+      _cityObs=pick([`No marine layer today — just the LA everyone pictures when they think of LA.`,`Clear, warm, effortless. The version of LA the rest of the country imagines year-round.`,`This is the LA postcard. It shows up. You're in it right now.`]);
+    }
+  }else if(_cityLower.includes('boston')){
+    if(_isSpringM&&(nowIsSnow||snowHours.length>1)){
+      _cityObs=pick([`Boston spring is not a real season. This is still winter with better marketing.`,`March in Boston: snow as a formality. It doesn't last, but it insists on happening.`,`New England spring is a myth. This is still winter. It will end. Not today.`]);
+    }else if(maxT<15&&_isWinterM){
+      _cityObs=pick([`Boston winter at its most honest today. The wind off the harbor is doing the heavy lifting.`,`This is the part of Boston winter that makes February feel like a personal attack.`,`The cold in Boston has a different character when the harbor wind joins in. Today it joined in.`]);
+    }
+  }else if(_cityLower.includes('portland')){
+    if(rainHours.length>3){
+      _cityObs=pick([`Portland rain is just Portland weather. Nobody here is surprised. Nobody will ever be surprised.`,`This is what Portland built its coffee culture around. Lean into it.`,`Real Portland energy: persistent drizzle, no umbrella, somehow still completely fine with all of it.`]);
+    }else if(_isSummerM&&clearHours.length>hours.length*0.7&&maxT>72){
+      _cityObs=pick([`Portland summer delivered. This is why people survive November through March.`,`The payoff for eleven months of gray has arrived. Enjoy every minute.`,`Clear and warm in Portland — the city's annual gift to itself.`]);
+    }
+  }
+
   // ── Surprise/contrast opener — leads with the weirdest thing ─
   // Only fires when something is genuinely weird/notable enough to be the hook
   let contrastOpener=null;
@@ -4143,6 +4241,9 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Good night for rain on a roof and nothing important to do.`,
       ]));
     }
+    // City-specific truth — fires as Part 2 fallback when nothing else pushed
+    // Only injects when the weather condition genuinely matches the city observation
+    if(parts.length<3&&_cityObs){parts.push(_cityObs);}
   }
 
   // ── PART 3: Sign-off ─────────────────────────────────────────
