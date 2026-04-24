@@ -2171,7 +2171,11 @@ function _updateSummaryCard(){
   card.className='summary-card glass';
   const _vm=vibeTag.match(/^([^A-Za-z]+)/);
   const _ve=_vm?_vm[1].trimEnd():'';const _vt=vibeTag.slice(_vm?_vm[1].length:0);
-  card.innerHTML=`<div class="summary-label">Next 12 Hours</div><div class="vibe-tag">${_ve}${_ve?' ':''}<span class="vibe-text">${_vt}</span></div><div class="summary-text">${summary}</div>`;
+  const _nowH=now.getHours()+now.getMinutes()/60;
+  const _fhx=s=>{if(!s)return null;const p=(s.split('T')[1]||'');const[h,m]=p.split(':');return parseInt(h)+(parseInt(m)||0)/60;};
+  const _srH=_fhx(d.daily.sunrise[0])||6;const _ssH=_fhx(d.daily.sunset[0])||20;
+  const _lbl=_nowH<_srH?'Overnight':_nowH<12?'This Morning':_nowH<17?'This Afternoon':_nowH<_ssH?'This Evening':'Tonight';
+  card.innerHTML=`<div class="summary-label">${_lbl}</div><div class="vibe-tag">${_ve}${_ve?' ':''}<span class="vibe-text">${_vt}</span></div><div class="summary-text">${summary}</div>`;
 }
 
 function _alertCfg(event,severity){
@@ -2407,7 +2411,7 @@ function render(){
       <div class="hero-feels">Feels like ${formatTemp(c.apparent_temperature)}&deg;${state.unit}</div>
     </div>
     <div class="summary-card glass" id="summaryCard">
-      <div class="summary-label">Next 12 Hours</div>
+      <div class="summary-label">Right Now</div>
       <div class="vibe-tag"><span class="vibe-wi">${wi.icon}</span><span class="vibe-text">${vibeTag.replace(/^[^A-Za-z]+/,'')}</span></div>
       <div class="summary-text">${summary}</div>
     </div>
@@ -4801,7 +4805,7 @@ function buildSparkline(hourly,daily,now){
   const dots=sp.slice(1).map(p=>`<circle cx="${p.x}" cy="${p.y}" r="2.5" fill="var(--accent)" opacity="0.45"/>`).join('');
   const nowDot=`<circle cx="${sp[0].x}" cy="${sp[0].y}" r="5" fill="var(--accent)"/><circle cx="${sp[0].x}" cy="${sp[0].y}" r="2.5" fill="#fff"/>`;
   return`<div class="spark-card glass">
-    <div class="spark-label">Temperature Next 12 Hours</div>
+    <div class="spark-label">Temperature Trend</div>
     <svg viewBox="0 0 ${W} ${H+20}" width="100%" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block">
       <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.28"/>
