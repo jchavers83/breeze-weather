@@ -3503,7 +3503,7 @@ function getForwardLookLede(hourly,now,sunrise,sunset){
     // Describe the clear window usefully
     const endH=hrs[hrs.length-1].h;
     const clearCount=hrs.filter(h=>[0,1].includes(h.code)).length;
-    if(clearCount>=hrs.length*0.6)return`Clear skies through ${period(endH)}.`;
+    if(clearCount>=hrs.length*0.6)return null; // main summary covers current+ahead for clear conditions
     return null; // let the main summary handle unremarkable windows
   }
   const w=windows[0];
@@ -4304,7 +4304,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
         `Quiet night. The good kind of nothing.`,
         `Get some rest. Tomorrow has weather too.`,
         `The night is doing its thing. You should sleep through it.`,
-        `Wind down. The forecast will still be here in the morning.`,
+        `Quiet out there. The morning will come regardless.`,
         `Quiet out there. Good conditions for sleep.`,
         `Night's covered. Get some rest.`,
         `Good sleeping conditions. Don't waste them.`,
@@ -4361,7 +4361,10 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
   const _body=parts.slice(0,4).map(s=>s.replace(/^(?:[\u2600-\u27BF]|[\uD800-\uDBFF][\uDC00-\uDFFF])[\uFE0F\u20E3]?\s*/,'')).join(' ');
   // Contrast opener prepends only when there's no lede (avoids triple-stacking)
   const _hook=(!_lede&&contrastOpener)?contrastOpener+' ':''
-  return _lede?_lede+' '+_body:_hook+_body;
+  // Dedup safety net: if the first two words of the lede appear verbatim in the body, drop the lede
+  const _ledeStart=_lede?_lede.split(' ').slice(0,2).join(' ').toLowerCase():'';
+  const _ledeSafe=_lede&&_ledeStart&&_body.toLowerCase().includes(_ledeStart)?null:_lede;
+  return _ledeSafe?_ledeSafe+' '+_body:_hook+_body;
 }
 
 function getMoonPhase(date){
@@ -4423,7 +4426,7 @@ function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,is
     if(rainCount>3)quips.push('\uD83C\uDF27\uFE0F Pouring out there. Outstanding conditions for doing absolutely nothing.');
     if(maxT<38)quips.push('\uD83E\uDDE3 Genuinely cold out there. The couch is not just an option\u2014it\'s the right call.');
     if(maxT<32)quips.push('\uD83E\uDD76 Below freezing tonight. The blanket is the only correct decision you have left to make.');
-    quips.push('\uD83C\uDF19 Not a bad night to wind down. You\'ve earned the rest.');
+    quips.push('\uD83C\uDF19 Not a bad night out there. You\'ve earned the rest.');
     quips.push('\uD83C\uDF19 The night is doing its thing. You should probably be asleep.');
   }
 
