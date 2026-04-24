@@ -3522,10 +3522,15 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
   const hoursUntilSunset=Math.max(0,sunsetH-nowHour);
 
   const now=getCityNow();
+  const moon=getMoonPhase(now);
+  const minsToSunset=isDaytime?Math.round(Math.max(0,sunsetH-nowHour)*60):0;
+  const isGoldenHour=isDaytime&&minsToSunset>0&&minsToSunset<=70;
+  const _clearNow=[0,1].includes(currentCode);
+  const _cloudyNow=[2,3].includes(currentCode);
   const hours=[];
   hourly.time.forEach((t,i)=>{
     const d=new Date(t);const diff=(d-now)/3600000;
-    if(diff>=-0.5&&diff<12)hours.push({h:d.getHours(),temp:hourly.temperature_2m[i],code:hourly.weather_code[i],precip:hourly.precipitation_probability[i],wind:hourly.wind_speed_10m[i]});
+    if(diff>=-0.5&&diff<8)hours.push({h:d.getHours(),temp:hourly.temperature_2m[i],code:hourly.weather_code[i],precip:hourly.precipitation_probability[i],wind:hourly.wind_speed_10m[i]});
   });
   if(!hours.length)return 'Weather data loading...';
 
@@ -3714,33 +3719,40 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       `Showers sliding in ${when}. Not catastrophic. Just the universe testing you a little.`,
       `Umbrella situation ${when}. The weather app is nudging you. Take the hint.`,
     ]));
+  }else if(isGoldenHour&&_clearNow&&!nowIsRain&&!nowIsStorm&&!nowIsSnow){
+    parts.push(pick([
+      `Golden hour right now — about ${minsToSunset} minutes of this light left at ${actualDisp}°.`,
+      `The sky is putting on a show right now. ${minsToSunset} minutes until sunset at ${actualDisp}°.`,
+      `Sunset in ${minsToSunset} minutes. Whatever you're doing, step outside for a sec — the light is worth it.`,
+      `About ${minsToSunset} minutes until sunset at ${actualDisp}°. That's not a lot of daylight — use it.`,
+    ]));
   }else if(clearHours.length>hours.length*0.7&&!nowIsRain&&!nowIsStorm&&!nowIsSnow){
     if(isPredomNight){
       if(minT>65){
         parts.push(pick([
-          `Clear and ${minTDisp}\u00b0 tonight. That's windows-open, ceiling-fan-on weather. Don't overthink it.`,
-          `${minTDisp}\u00b0 and clear overnight. Open the windows. You'll sleep better.`,
-          `Mild, clear night at ${minTDisp}\u00b0. The kind of night that makes you glad you're exactly where you are.`,
-          `${minTDisp}\u00b0 with clear skies overnight. Windows open, good sleep, no notes.`,
+          moon.techName==='Full Moon'?`Clear outside right now at ${minTDisp}° — full moon tonight. Bright enough to cast a shadow.`:`Clear skies and ${minTDisp}° out there right now. Warm night — sleep with the windows open.`,
+          `${minTDisp}° and clear out there. The stars are out. Open the windows.`,
+          `Clear and ${minTDisp}° tonight. That's windows-open, ceiling-fan-on weather. Don't overthink it.`,
+          `${minTDisp}° and clear overnight. Open the windows. You'll sleep better.`,
         ]));
       }else if(minT>45){
         parts.push(pick([
-          `Clear and ${minTDisp}\u00b0 tonight. Crisp, quiet, and exactly what a night should be.`,
-          `${minTDisp}\u00b0 and clear out there. The good kind of still.`,
-          `Cool, clear, and calm tonight at ${minTDisp}\u00b0. Perfect do-nothing weather.`,
-          `Clear night ahead. ${minTDisp}\u00b0 — crisp enough to sleep great.`,
+          moon.techName==='Full Moon'?`Clear and ${minTDisp}° out there right now — full moon tonight. It's actually quite bright.`:`Clear skies and ${minTDisp}° right now. The stars are out if you want a look.`,
+          `${minTDisp}° and clear out there. Crisp, quiet, and exactly what a night should be.`,
+          `Cool, clear, and calm tonight at ${minTDisp}°. Perfect do-nothing weather.`,
+          `Clear night ahead. ${minTDisp}° — crisp enough to sleep great.`,
         ]));
       }else{
         parts.push(pick([
-          `Clear but ${minTDisp}\u00b0 tonight. Gorgeous from inside. Extra blanket is mandatory.`,
-          `${minTDisp}\u00b0 and crystal clear. Beautiful to look at, cold to be in.`,
+          moon.techName==='Full Moon'?`Full moon and ${minTDisp}° tonight. Gorgeous from inside. Extra blanket is mandatory.`:`Clear but cold out there right now — ${minTDisp}°. The stars are brilliant tonight.`,
+          `Clear and ${minTDisp}° tonight. The stars are out. So is the cold.`,
+          `${minTDisp}° and crystal clear. Beautiful to look at, cold to be in.`,
           `Cold night, clear skies. Your bed just became the best seat in the house.`,
-          `Clear and ${minTDisp}\u00b0 tonight. The stars are out. So is the cold.`,
         ]));
       }
     }else if(maxT>92){
       parts.push(pick([
-        `${maxTDisp}\u00b0 and full sun. The water bottle is load-bearing today. Non-negotiable.`,
+        `${actualDisp}\u00b0 and full sun right now. The water bottle is load-bearing today. Non-negotiable.`,
         `The sun is fully committed at ${maxTDisp}\u00b0. Shade isn't a luxury — it's a strategy.`,
         city?`${maxTDisp}\u00b0 in ${city} today. Didn't ask for an outdoor sauna, but here it is.`:`${maxTDisp}\u00b0 and not a cloud helping you out. Hydrate or regret it.`,
         `Hot enough that stepping outside for a minute counts as a commitment. ${maxTDisp}\u00b0.`,
@@ -3749,7 +3761,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       ]));
     }else if(maxT>80){
       parts.push(pick([
-        `${maxTDisp}\u00b0 and gorgeous out there. Whatever you did to deserve this — keep doing it.`,
+        `${actualDisp}\u00b0 and gorgeous out there right now. Whatever you did to deserve this — keep doing it.`,
         `Clear skies, ${maxTDisp}\u00b0. The weather did its part. The rest is up to you.`,
         city?`${maxTDisp}\u00b0 and sunny in ${city} today. Hard to complain.`:`${maxTDisp}\u00b0 with clear skies. The forecast equivalent of a high five.`,
         `Beautiful day — ${maxTDisp}\u00b0 and cloudless. Your indoor plans just became negotiable.`,
@@ -3758,7 +3770,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       ]));
     }else if(maxT>65){
       parts.push(pick([
-        `${maxTDisp}\u00b0 and clear. Honestly perfect. Don't waste it.`,
+        `${actualDisp}\u00b0 and clear right now. Honestly perfect. Don't waste it.`,
         `This is the weather people move to new cities chasing. ${maxTDisp}\u00b0 and sunny.`,
         city?`${city}'s having a really nice one today — ${maxTDisp}\u00b0 and clear.`:`${maxTDisp}\u00b0 with clear skies. The weather app is genuinely happy about this one.`,
         `Clear and ${maxTDisp}\u00b0. The kind of day that makes you feel irrationally optimistic about everything.`,
@@ -3767,7 +3779,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       ]));
     }else if(maxT>50){
       parts.push(pick([
-        `${maxTDisp}\u00b0 and bright. Crisp enough to feel alive, warm enough not to complain.`,
+        `${actualDisp}\u00b0 and bright out there right now. Crisp enough to feel alive, warm enough not to complain.`,
         `Cool and clear at ${maxTDisp}\u00b0. The jacket earns its keep, but the sun makes it worth it.`,
         `${maxTDisp}\u00b0 with full sun. Technically chilly, objectively lovely.`,
         `Brisk and clear today — ${maxTDisp}\u00b0. The kind of weather that makes coffee taste better outside.`,
@@ -3775,7 +3787,7 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
       ]));
     }else{
       parts.push(pick([
-        `${maxTDisp}\u00b0 and sunny. The sun is purely decorative today — beautiful, zero warmth.`,
+        `${actualDisp}\u00b0 and sunny right now. The sun is purely decorative today — beautiful, zero warmth.`,
         `Clear skies, ${maxTDisp}\u00b0. Gorgeous from inside. Bundle up if you're heading out.`,
         `Sunny and ${maxTDisp}\u00b0 — the kind of cold that looks warm through the window. Don't be fooled.`,
         `${maxTDisp}\u00b0 with full sun. The light is lying to you. That's a coat situation.`,
