@@ -2431,7 +2431,7 @@ function render(){
   const html=`
     <div class="landing-title" style="text-align:center;margin:12px 0 0;padding-bottom:2px">CIRRUS</div>
     <div class="location-bar">
-      <div><h2>${state.name}</h2><p>${state.region}</p></div>
+      <div><h2>${state.name}</h2><p>${state.countryCode==='US'?state.region.split(', ')[0]:state.region}</p></div>
       <button class="btn-save ${isSaved()?'saved':''}" id="btnSave" onclick="toggleSaveLocation()" title="Save location">${isSaved()?'★':'☆'}</button>
     </div>
     <div id="alertBanner" style="display:none"></div>
