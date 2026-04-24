@@ -835,53 +835,61 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 /* ── Ask Cirrus chat view ──────────────────────────────────────────────── */
 #askView{display:none;position:fixed;inset:0;z-index:50;flex-direction:column;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 62px)}
 #askView.active{display:flex}
-.ask-header{padding:calc(env(safe-area-inset-top,16px) + 10px) 18px 12px;background:var(--card-bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-bottom:1px solid var(--card-border);flex-shrink:0;display:flex;align-items:center;gap:12px}
-.ask-back-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background 0.15s}
-.ask-back-btn:active{background:rgba(255,255,255,0.18)}
+/* Header */
+.ask-header{padding:calc(env(safe-area-inset-top,16px) + 12px) 16px 14px;background:var(--card-bg);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-bottom:1px solid var(--card-border);flex-shrink:0;display:flex;align-items:center;gap:12px}
+.ask-back-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.14);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
+.ask-back-btn:active{background:rgba(255,255,255,0.2);transform:scale(0.9)}
 .ask-back-btn svg{color:var(--text)}
-.ask-header-icon{width:36px;height:36px;border-radius:10px;overflow:hidden;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.4);box-shadow:0 2px 10px rgba(0,0,0,0.18)}
+.ask-header-icon{width:38px;height:38px;border-radius:11px;overflow:hidden;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.5);box-shadow:0 3px 14px rgba(0,0,0,0.2),0 0 0 3px rgba(255,255,255,0.07)}
 .ask-header-icon img{width:100%;height:100%;display:block}
-.ask-header-title{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-0.2px}
-.ask-header-sub{font-size:12px;color:var(--text-secondary);margin-top:1px}
-.ask-messages{flex:1;overflow-y:auto;padding:0 14px 12px;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
-/* Intro / suggestion state */
-.ask-intro{display:flex;flex-direction:column;align-items:center;padding:28px 0 16px;text-align:center}
-.ask-intro-icon{width:72px;height:72px;border-radius:18px;overflow:hidden;margin-bottom:14px;border:2px solid rgba(255,255,255,0.5);box-shadow:0 6px 28px rgba(0,0,0,0.22),0 0 0 3px rgba(255,255,255,0.1)}
+.ask-header-title{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-0.3px}
+.ask-header-sub{font-size:12px;color:var(--text-secondary);margin-top:1px;font-weight:500}
+/* Scroll area */
+.ask-messages{flex:1;overflow-y:auto;padding:0 15px 14px;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.ask-messages::-webkit-scrollbar{display:none}
+/* Intro / home screen */
+.ask-intro{display:flex;flex-direction:column;align-items:center;padding:30px 0 10px;text-align:center}
+.ask-intro-icon{width:82px;height:82px;border-radius:22px;overflow:hidden;margin-bottom:16px;border:2px solid rgba(255,255,255,0.55);box-shadow:0 10px 44px rgba(74,184,248,0.32),0 0 0 5px rgba(255,255,255,0.07),0 3px 14px rgba(0,0,0,0.22)}
 .ask-intro-icon img{width:100%;height:100%;display:block}
-.ask-intro-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.4px;margin-bottom:5px}
-.ask-intro-sub{font-size:14px;color:var(--text-secondary);line-height:1.5;max-width:270px;font-weight:500;margin-bottom:4px}
-.ask-chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px 0 4px;width:100%}
-.ask-chip{padding:14px 12px 13px;border-radius:16px;background:var(--card-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--card-border);text-align:left;cursor:pointer;transition:all 0.15s;font-family:inherit;display:flex;flex-direction:column;gap:6px;width:100%}
-.ask-chip:active{transform:scale(0.94);opacity:0.8}
-.ask-chip-emoji{font-size:22px;line-height:1}
-.ask-chip-text{font-size:13px;font-weight:600;color:var(--text);line-height:1.3}
+.ask-intro-title{font-size:26px;font-weight:900;letter-spacing:-0.6px;margin-bottom:7px;background:linear-gradient(130deg,var(--text) 0%,var(--accent) 120%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ask-intro-sub{font-size:14px;color:var(--text-secondary);line-height:1.55;max-width:256px;font-weight:500}
+/* Chips grid */
+.ask-chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:20px 0 4px;width:100%}
+.ask-chip{padding:15px 14px 14px;border-radius:20px;background:var(--card-bg);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);border:1px solid var(--card-border);text-align:left;cursor:pointer;transition:transform 0.15s,opacity 0.15s;font-family:inherit;display:flex;flex-direction:column;gap:9px;width:100%;box-shadow:0 2px 14px rgba(0,0,0,0.07),inset 0 1px 0 rgba(255,255,255,0.45);position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
+.ask-chip::before{content:'';position:absolute;inset:0;background:linear-gradient(148deg,rgba(255,255,255,0.11) 0%,transparent 55%);pointer-events:none}
+.ask-chip:active{transform:scale(0.92);opacity:0.8}
+.ask-chip-emoji{width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;font-size:22px;line-height:1;flex-shrink:0}
+.ask-chip-text{font-size:13px;font-weight:700;color:var(--text);line-height:1.35;letter-spacing:-0.1px}
 /* Messages */
-.ask-msgs-list{display:flex;flex-direction:column;gap:10px;padding-top:14px}
-.ask-msg{display:flex;align-items:flex-start;gap:8px;animation:cardIn 0.3s ease forwards}
+.ask-msgs-list{display:flex;flex-direction:column;gap:12px;padding-top:16px}
+.ask-msg{display:flex;align-items:flex-start;gap:8px;animation:askMsgIn 0.26s cubic-bezier(.4,0,.2,1) forwards;opacity:0}
+@keyframes askMsgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .ask-msg.user{flex-direction:row-reverse}
-.ask-msg-icon{width:28px;height:28px;border-radius:8px;overflow:hidden;flex-shrink:0;margin-top:2px;border:1px solid rgba(255,255,255,0.3);box-shadow:0 1px 6px rgba(0,0,0,0.18)}
+.ask-msg-icon{width:30px;height:30px;border-radius:9px;overflow:hidden;flex-shrink:0;margin-top:2px;border:1px solid rgba(255,255,255,0.35);box-shadow:0 2px 8px rgba(0,0,0,0.18)}
 .ask-msg-icon img{width:100%;height:100%;display:block}
-.ask-bubble{max-width:86%;padding:11px 14px;font-size:15px;line-height:1.55;font-weight:500;word-break:break-word}
-.ask-bubble.cirrus{background:var(--card-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--card-border);color:var(--text);border-radius:4px 16px 16px 16px}
-.ask-bubble.user{background:var(--accent);color:#fff;border-radius:16px 4px 16px 16px}
-.ask-typing-wrap{display:flex;gap:5px;padding:3px 0;align-items:center}
-.ask-typing-dot{width:7px;height:7px;border-radius:50%;background:var(--text-tertiary);animation:askDot 1.3s ease infinite}
-.ask-typing-dot:nth-child(2){animation-delay:0.18s}
-.ask-typing-dot:nth-child(3){animation-delay:0.36s}
-@keyframes askDot{0%,60%,100%{transform:translateY(0);opacity:0.35}30%{transform:translateY(-5px);opacity:1}}
-/* Input bar */
-.ask-input-bar{padding:10px 12px;background:var(--card-bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-top:1px solid var(--card-border);display:flex;gap:8px;align-items:center;flex-shrink:0}
-.ask-input{flex:1;padding:11px 16px;border:1.5px solid var(--card-border);border-radius:22px;background:rgba(128,128,128,0.08);color:var(--text);font-size:15px;font-family:inherit;outline:none;transition:border-color 0.2s;-webkit-appearance:none}
-.ask-input:focus{border-color:var(--accent)}
-.ask-input:disabled{opacity:0.5}
-.ask-send{width:44px;height:44px;border-radius:22px;background:var(--accent);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.15s;box-shadow:0 2px 10px rgba(26,144,228,0.35)}
-.ask-send:active{transform:scale(0.9)}
-.ask-send:disabled{opacity:0.4;cursor:default;box-shadow:none}
+.ask-bubble{max-width:84%;padding:12px 16px;font-size:15px;line-height:1.6;font-weight:500;word-break:break-word}
+.ask-bubble.cirrus{background:var(--card-bg);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);border:1px solid var(--card-border);color:var(--text);border-radius:6px 20px 20px 20px;box-shadow:0 2px 14px rgba(0,0,0,0.07),inset 0 1px 0 rgba(255,255,255,0.4)}
+.ask-bubble.user{background:linear-gradient(135deg,var(--accent) 0%,#1272cc 100%);color:#fff;border-radius:20px 6px 20px 20px;box-shadow:0 4px 16px rgba(26,144,228,0.42)}
+/* Typing dots */
+.ask-typing-wrap{display:flex;gap:5px;padding:4px 2px;align-items:center}
+.ask-typing-dot{width:7px;height:7px;border-radius:50%;background:var(--text-tertiary);animation:askDot 1.4s ease infinite}
+.ask-typing-dot:nth-child(2){animation-delay:0.2s}
+.ask-typing-dot:nth-child(3){animation-delay:0.4s}
+@keyframes askDot{0%,60%,100%{transform:translateY(0);opacity:0.3}30%{transform:translateY(-6px);opacity:1}}
+/* Input bar — floating, no hard top border */
+.ask-input-bar{padding:10px 14px 10px;background:var(--card-bg);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);box-shadow:0 -1px 0 var(--card-border),0 -10px 28px rgba(0,0,0,0.06);display:flex;gap:10px;align-items:center;flex-shrink:0}
+.ask-input{flex:1;padding:13px 18px;border:1.5px solid var(--card-border);border-radius:26px;background:rgba(255,255,255,0.07);color:var(--text);font-size:15px;font-family:inherit;outline:none;transition:border-color 0.2s,box-shadow 0.2s;-webkit-appearance:none}
+.ask-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,184,248,0.16)}
+.ask-input:disabled{opacity:0.4}
+.ask-input::placeholder{color:var(--text-tertiary)}
+.ask-send{width:46px;height:46px;border-radius:23px;background:linear-gradient(135deg,var(--accent) 0%,#1272cc 100%);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.15s;box-shadow:0 4px 16px rgba(26,144,228,0.45),inset 0 1px 0 rgba(255,255,255,0.22)}
+.ask-send:active{transform:scale(0.88);box-shadow:0 1px 6px rgba(26,144,228,0.2)}
+.ask-send:disabled{opacity:0.35;cursor:default;box-shadow:none;background:var(--text-tertiary)}
 /* No weather state */
 .ask-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;padding:40px 24px}
-.ask-empty-icon{font-size:48px;margin-bottom:14px;opacity:0.55}
-.ask-empty-title{font-size:16px;font-weight:700;color:var(--text-secondary);margin-bottom:6px}
-.ask-empty-sub{font-size:13px;line-height:1.55;color:var(--text-tertiary);max-width:260px}
+.ask-empty-icon{font-size:52px;margin-bottom:16px;opacity:0.5}
+.ask-empty-title{font-size:17px;font-weight:700;color:var(--text-secondary);margin-bottom:8px}
+.ask-empty-sub{font-size:13px;line-height:1.6;color:var(--text-tertiary);max-width:260px}
 /* Wear card Ask shortcut */
 .wear-ask-btn{display:inline-flex;align-items:center;gap:7px;margin-top:12px;padding:9px 14px;border-radius:20px;background:rgba(26,144,228,0.09);border:1px solid rgba(26,144,228,0.2);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:inherit;-webkit-tap-highlight-color:transparent}
 .wear-ask-btn:active{transform:scale(0.96);background:rgba(26,144,228,0.15)}
