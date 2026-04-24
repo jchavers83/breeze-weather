@@ -5413,15 +5413,18 @@ function renderAskView(){
       </button>
     </div>`;
   if(_askMessages.length>0)_renderAskMessages();
-  // Swipe-right to go back
-  let _swipeX=null;
-  el.addEventListener('touchstart',e=>{_swipeX=e.touches[0].clientX;},{passive:true});
-  el.addEventListener('touchend',e=>{
-    if(_swipeX===null)return;
-    const dx=e.changedTouches[0].clientX-_swipeX;
-    _swipeX=null;
-    if(dx>60)handleAskBack();
-  },{passive:true});
+  // Swipe-right to go back — attach once only to avoid stacking listeners on re-render
+  if(!el._askSwipeReady){
+    el._askSwipeReady=true;
+    let _swipeX=null;
+    el.addEventListener('touchstart',e=>{_swipeX=e.touches[0].clientX;},{passive:true});
+    el.addEventListener('touchend',e=>{
+      if(_swipeX===null)return;
+      const dx=e.changedTouches[0].clientX-_swipeX;
+      _swipeX=null;
+      if(dx>60)handleAskBack();
+    },{passive:true});
+  }
 }
 
 function _renderAskMessages(){
