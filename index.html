@@ -4435,6 +4435,7 @@ function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,is
   // Evening = after 5pm but still before sunset
   const evening=!sunAlreadyDown&&hour>=17&&hour<sh;
   const lateNight=sunAlreadyDown||hour<6;
+  const actuallyLate=hour>=22||hour<5; // late enough to say "go to sleep"
 
   // === Late Night ===
   if(lateNight){
@@ -4444,16 +4445,22 @@ function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,is
     if(moon.techName==='New Moon'&&clearCount>3)quips.push('\u2728 Darkest sky of the month tonight. If you can find dark enough, the stars are extraordinary.');
     if(clearCount>4&&minT>45)quips.push('\u2728 Stars are out. Step outside for 60 seconds\u2014you won\'t regret it.');
     if(clearCount>4&&minT>45)quips.push('\u2728 Clear night out there. The kind where you step outside for one minute and stay for ten.');
-    if(clearCount>3&&minT>50)quips.push('\uD83C\uDF0C Quiet and clear out there. The sky is worth a look before you sleep.');
-    if(minT>62&&clearCount>2)quips.push('\uD83C\uDF19 Sleep with the windows cracked tonight\u2014the air is going to feel amazing.');
+    if(clearCount>3&&minT>50)quips.push('\uD83C\uDF0C Quiet and clear out there. The sky is worth a look.');
     if(minT>62&&clearCount>2)quips.push('\uD83C\uDF19 Warm and clear tonight. Open the windows. You\'ll wake up better.');
+    if(minT>62&&clearCount>2&&actuallyLate)quips.push('\uD83C\uDF19 Sleep with the windows cracked tonight\u2014the air is going to feel amazing.');
     if(rainCount>2)quips.push('\uD83C\uDF27\uFE0F Rain on the roof tonight\u2014nature\'s white noise machine.');
-    if(rainCount>2)quips.push('\uD83C\uDF27\uFE0F The rain is doing the work tonight. You just have to sleep through it.');
+    if(rainCount>2&&actuallyLate)quips.push('\uD83C\uDF27\uFE0F The rain is doing the work tonight. You just have to sleep through it.');
     if(rainCount>3)quips.push('\uD83C\uDF27\uFE0F Pouring out there. Outstanding conditions for doing absolutely nothing.');
     if(maxT<38)quips.push('\uD83E\uDDE3 Genuinely cold out there. The couch is not just an option\u2014it\'s the right call.');
     if(maxT<32)quips.push('\uD83E\uDD76 Below freezing tonight. The blanket is the only correct decision you have left to make.');
-    quips.push('\uD83C\uDF19 Not a bad night. You\'ve earned the rest.');
-    quips.push('\uD83C\uDF19 The night is doing its thing. You should probably be asleep.');
+    // Fallback lines — tone-matched to how late it actually is
+    if(actuallyLate){
+      quips.push('\uD83C\uDF19 The night is doing its thing. You should probably be asleep.');
+      quips.push('\uD83C\uDF19 Late enough. Rest up.');
+    }else{
+      quips.push('\uD83C\uDF19 Not a bad night. You\'ve earned the rest.');
+      quips.push('\uD83C\uDF19 Good evening to wind down. The day is done.');
+    }
   }
 
   // === Evening (sun still up, after 5pm) ===
