@@ -4,7 +4,7 @@ compatibility_date = "2024-01-01"
 
 [[kv_namespaces]]
 binding = "CIRRUS_SUBSCRIPTIONS"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "f1e082d006d9418e96fb4e6bd4f3c817"
 
 [triggers]
 crons = ["*/5 * * * *", "0 * * * *"]
