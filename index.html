@@ -848,13 +848,13 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .ask-messages{flex:1;overflow-y:auto;padding:0 15px 14px;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .ask-messages::-webkit-scrollbar{display:none}
 /* Intro / home screen */
-.ask-intro{display:flex;flex-direction:column;align-items:center;padding:30px 0 10px;text-align:center}
-.ask-intro-icon{width:82px;height:82px;border-radius:22px;overflow:hidden;margin-bottom:16px;border:2px solid rgba(255,255,255,0.55);box-shadow:0 10px 44px rgba(74,184,248,0.32),0 0 0 5px rgba(255,255,255,0.07),0 3px 14px rgba(0,0,0,0.22)}
+.ask-intro{display:flex;flex-direction:column;align-items:center;padding:22px 0 8px;text-align:center}
+.ask-intro-icon{width:76px;height:76px;border-radius:20px;overflow:hidden;margin-bottom:13px;border:2px solid rgba(255,255,255,0.55);box-shadow:0 10px 44px rgba(74,184,248,0.32),0 0 0 5px rgba(255,255,255,0.07),0 3px 14px rgba(0,0,0,0.22)}
 .ask-intro-icon img{width:100%;height:100%;display:block}
-.ask-intro-title{font-size:26px;font-weight:900;letter-spacing:-0.6px;margin-bottom:7px;background:linear-gradient(130deg,var(--text) 0%,var(--accent) 120%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.ask-intro-sub{font-size:14px;color:var(--text-secondary);line-height:1.55;max-width:256px;font-weight:500}
+.ask-intro-title{font-size:26px;font-weight:900;letter-spacing:-0.6px;margin-bottom:6px;background:linear-gradient(130deg,var(--text) 0%,var(--accent) 120%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ask-intro-sub{font-size:14px;color:var(--text-secondary);line-height:1.55;max-width:240px;font-weight:500}
 /* Chips grid */
-.ask-chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:20px 0 4px;width:100%}
+.ask-chips{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:16px 0 4px;width:100%}
 .ask-chip{padding:15px 14px 14px;border-radius:20px;background:var(--card-bg);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);border:1px solid var(--card-border);text-align:left;cursor:pointer;transition:transform 0.15s,opacity 0.15s;font-family:inherit;display:flex;flex-direction:column;gap:9px;width:100%;box-shadow:0 2px 14px rgba(0,0,0,0.07),inset 0 1px 0 rgba(255,255,255,0.45);position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
 .ask-chip::before{content:'';position:absolute;inset:0;background:linear-gradient(148deg,rgba(255,255,255,0.11) 0%,transparent 55%);pointer-events:none}
 .ask-chip:active{transform:scale(0.92);opacity:0.8}
@@ -5371,15 +5371,13 @@ function buildAskContext(){
 }
 
 function buildAskChips(){
-  // No weather loaded — show pure educational chips
+  // No weather loaded — show pure educational chips (6 = 3 rows, always fits)
   if(!state.data){return[
     {e:'🌪️',t:"How do tornadoes form?"},
     {e:'⚡',t:"What causes lightning?"},
     {e:'🌊',t:"How do hurricanes form?"},
     {e:'❄️',t:"How does snow form?"},
-    {e:'🌫️',t:"What causes fog?"},
     {e:'📡',t:"How do weather forecasts work?"},
-    {e:'🌡️',t:"What is the dew point?"},
     {e:'🌈',t:"What causes rainbows?"},
   ];}
   const d=state.data,curr=d.current;
@@ -5537,13 +5535,13 @@ function buildAskChips(){
   const PS=dedup(P).sort((a,b)=>b.p-a.p);
   const ES=dedup(E).sort((a,b)=>b.p-a.p);
 
-  // Pick 5 practical + 3 educational, then interleave so they mix visually
-  const picked=[...PS.slice(0,5),...ES.slice(0,3)];
+  // Pick 4 practical + 2 educational = 6 chips (3 rows, always fits on screen)
+  const picked=[...PS.slice(0,4),...ES.slice(0,2)];
   // Light deterministic shuffle based on current hour so chips change through the day
   const seed=(new Date().getHours()*37+new Date().getDate()*13)%31;
   for(let i=picked.length-1;i>0;i--){const j=(seed+i*7)%(i+1);[picked[i],picked[j]]=[picked[j],picked[i]];}
 
-  return picked.slice(0,8);
+  return picked.slice(0,6);
 }
 
 function renderAskView(){
@@ -5557,7 +5555,7 @@ function renderAskView(){
     <div class="ask-intro" id="askIntro">
       <div class="ask-intro-icon"><img src="${iconUrl}" alt="Cirrus"></div>
       <div class="ask-intro-title">Ask Cirrus</div>
-      <div class="ask-intro-sub">Your weather advisor for ${cityName}. Ask anything about today's conditions.</div>
+      <div class="ask-intro-sub">Your weather advisor for ${cityName}.<br>Ask anything about today's conditions.</div>
       <div class="ask-chips">
         ${chips.map(c=>`<button class="ask-chip" onclick="handleAskChip(this,'${c.t.replace(/'/g,"\\'")}')"><span class="ask-chip-emoji">${c.e}</span><span class="ask-chip-text">${c.t}</span></button>`).join('')}
       </div>
