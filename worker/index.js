@@ -113,10 +113,20 @@ async function handleSetTags(request, env) {
       updated: Date.now(),
     };
     if (userPrefs.lat && env.CIRRUS_SUBSCRIPTIONS) {
+      // Store lat/lon/notif_severe in metadata so list() can filter without extra GET calls
       await env.CIRRUS_SUBSCRIPTIONS.put(
         `user_prefs:${onesignalId}`,
         JSON.stringify(userPrefs),
-        { expirationTtl: 7776000 } // 90 days
+        {
+          expirationTtl: 7776000, // 90 days
+          metadata: {
+            lat: userPrefs.lat,
+            lon: userPrefs.lon,
+            notif_severe: userPrefs.notif_severe,
+            notif_morning: userPrefs.notif_morning,
+            notif_evening: userPrefs.notif_evening,
+          },
+        }
       );
     }
     return json({ ok: true });
@@ -158,9 +168,11 @@ async function handleAsk(request, env) {
     });
 
     if (!resp.ok) {
-      const errText = await resp.text();
-      console.error('Anthropic error:', resp.status, errText);
-      return err('AI temporarily unavailable', 502);
+      const errBody = await resp.json().catch(() => ({}));
+      const errMsg = errBody?.error?.message || `HTTP ${resp.status}`;
+      console.error('Anthropic error:', resp.status, errBody);
+      // Surface the real error so it's visible in the chat during debugging
+      return json({ answer: `Ask Cirrus ran into a problem (${resp.status}: ${errMsg}). Try again in a moment.` });
     }
 
     const data = await resp.json();
@@ -267,26 +279,10 @@ async function checkSevereWeather(env) {
     const center = getAlertCenter(f);
     if (!center) continue; // No usable geometry — skip
 
-    // Build OneSignal tag filters for ~50mi radius + severe pref
-    // lat/lon existence checks prevent users with unset location tags from
-    // matching every geo-targeted alert.
-    const latDelta = 0.7;
-    const lonDelta = 0.7 / Math.cos(center.lat * Math.PI / 180);
-    const filters = [
-      { field: 'tag', key: 'notif_severe', relation: '=', value: '1' },
-      { operator: 'AND' },
-      { field: 'tag', key: 'lat', relation: 'exists' },
-      { operator: 'AND' },
-      { field: 'tag', key: 'lat', relation: '>=', value: String((center.lat - latDelta).toFixed(4)) },
-      { operator: 'AND' },
-      { field: 'tag', key: 'lat', relation: '<=', value: String((center.lat + latDelta).toFixed(4)) },
-      { operator: 'AND' },
-      { field: 'tag', key: 'lon', relation: 'exists' },
-      { operator: 'AND' },
-      { field: 'tag', key: 'lon', relation: '>=', value: String((center.lon - lonDelta).toFixed(4)) },
-      { operator: 'AND' },
-      { field: 'tag', key: 'lon', relation: '<=', value: String((center.lon + lonDelta).toFixed(4)) },
-    ];
+    // Find users near this alert entirely from KV — do NOT rely on OneSignal
+    // tag filters, which are unreliable (exists checks can silently broadcast
+    // to all subscribers when tags haven't synced correctly).
+    const matchingIds = await findUsersNearAlert(env, center);
 
     const icon = ALERT_ICONS[p.event] || '⚠️';
 
@@ -320,18 +316,24 @@ async function checkSevereWeather(env) {
     const urgency = urgencyMap[p.event] || 'Take precautions immediately.';
     const body = `${urgency}${expiresStr ? ` Active until ${expiresStr}.` : ''}`;
 
+    // Always mark as sent to prevent refire every 5 min regardless of user count
+    await env.CIRRUS_SUBSCRIPTIONS.put(dedupKey, '1', { expirationTtl: 86400 });
+
+    if (matchingIds.length === 0) {
+      console.log(`Alert ${alertId}: no users in area, skipping push`);
+      continue;
+    }
+
     await sendOneSignalNotification(env, {
       app_id: env.ONESIGNAL_APP_ID,
-      filters,
+      include_aliases: { onesignal_id: matchingIds },
+      target_channel: 'push',
       headings: { en: `${icon} ${p.event}${location}` },
       contents: { en: body },
       url: 'https://cirrusweather.app',
       priority: 10,
       ttl: 7200,
     });
-
-    // Mark as sent with 24hr TTL
-    await env.CIRRUS_SUBSCRIPTIONS.put(dedupKey, '1', { expirationTtl: 86400 });
     sent++;
   }
 }
@@ -351,6 +353,43 @@ function getAlertCenter(feature) {
     return { lat: latSum / ring.length, lon: lonSum / ring.length };
   }
   return null; // No geometry — can't target
+}
+
+// ── KV-based geo-user lookup ───────────────────────────────────────────────
+// ~50 mile radius = 0.7° lat delta. We read lat/lon from KV metadata so we
+// never need extra GET calls — just one list() pass over all user_prefs keys.
+async function findUsersNearAlert(env, center) {
+  const latDelta = 0.7;
+  const lonDelta = latDelta / Math.cos(center.lat * Math.PI / 180);
+  const latMin = center.lat - latDelta, latMax = center.lat + latDelta;
+  const lonMin = center.lon - lonDelta, lonMax = center.lon + lonDelta;
+  const matchingIds = [];
+
+  try {
+    let cursor;
+    do {
+      const page = await env.CIRRUS_SUBSCRIPTIONS.list({
+        prefix: 'user_prefs:',
+        limit: 1000,
+        cursor,
+      });
+      for (const key of page.keys) {
+        const meta = key.metadata;
+        if (!meta) continue; // old entry without metadata — skip
+        if (meta.notif_severe !== '1') continue;
+        const userLat = parseFloat(meta.lat);
+        const userLon = parseFloat(meta.lon);
+        if (!userLat || !userLon || isNaN(userLat) || isNaN(userLon)) continue;
+        if (userLat >= latMin && userLat <= latMax && userLon >= lonMin && userLon <= lonMax) {
+          matchingIds.push(key.name.replace('user_prefs:', ''));
+        }
+      }
+      cursor = page.list_complete ? undefined : page.cursor;
+    } while (cursor);
+  } catch (e) {
+    console.error('findUsersNearAlert error:', e.message);
+  }
+  return matchingIds;
 }
 
 // ── Timezone Helpers ───────────────────────────────────────────────────────

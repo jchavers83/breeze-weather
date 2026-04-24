@@ -836,6 +836,9 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 #askView{display:none;position:fixed;inset:0;z-index:50;flex-direction:column;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 62px)}
 #askView.active{display:flex}
 .ask-header{padding:calc(env(safe-area-inset-top,16px) + 10px) 18px 12px;background:var(--card-bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-bottom:1px solid var(--card-border);flex-shrink:0;display:flex;align-items:center;gap:12px}
+.ask-back-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background 0.15s}
+.ask-back-btn:active{background:rgba(255,255,255,0.18)}
+.ask-back-btn svg{color:var(--text)}
 .ask-header-icon{width:36px;height:36px;border-radius:10px;overflow:hidden;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.4);box-shadow:0 2px 10px rgba(0,0,0,0.18)}
 .ask-header-icon img{width:100%;height:100%;display:block}
 .ask-header-title{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-0.2px}
@@ -5391,6 +5394,9 @@ function renderAskView(){
     </div>`;
   el.innerHTML=`
     <div class="ask-header">
+      <button class="ask-back-btn" onclick="handleAskBack()" aria-label="Back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      </button>
       <div class="ask-header-icon"><img src="${iconUrl}" alt="Cirrus"></div>
       <div>
         <div class="ask-header-title">Ask Cirrus</div>
@@ -5407,6 +5413,15 @@ function renderAskView(){
       </button>
     </div>`;
   if(_askMessages.length>0)_renderAskMessages();
+  // Swipe-right to go back
+  let _swipeX=null;
+  el.addEventListener('touchstart',e=>{_swipeX=e.touches[0].clientX;},{passive:true});
+  el.addEventListener('touchend',e=>{
+    if(_swipeX===null)return;
+    const dx=e.changedTouches[0].clientX-_swipeX;
+    _swipeX=null;
+    if(dx>60)handleAskBack();
+  },{passive:true});
 }
 
 function _renderAskMessages(){
@@ -5464,6 +5479,20 @@ async function sendAskQuestion(question){
   }finally{
     if(inp){inp.disabled=false;setTimeout(()=>inp.focus(),50);}
     if(btn)btn.disabled=false;
+  }
+}
+
+function handleAskBack(){
+  if(_askMessages.length>0){
+    // First back: clear conversation, return to intro screen
+    _askMessages=[];
+    renderAskView();
+  }else{
+    // Second back (or back from intro): exit ask view, return to main app
+    $$('.nav-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelector('[data-tab="now"]')?.classList.add('active');
+    document.getElementById('askView')?.classList.remove('active');
+    if($('#app'))$('#app').style.display='';
   }
 }
 
