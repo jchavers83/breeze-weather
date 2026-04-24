@@ -847,12 +847,15 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 /* Scroll area */
 .ask-messages{flex:1;overflow-y:auto;padding:0 15px 14px;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .ask-messages::-webkit-scrollbar{display:none}
+/* Bare header — home screen, back arrow only */
+.ask-header-bare{padding:calc(env(safe-area-inset-top,16px) + 10px) 16px 0;flex-shrink:0;display:flex;align-items:center}
 /* Intro / home screen */
-.ask-intro{display:flex;flex-direction:column;align-items:center;padding:24px 0 8px;text-align:center}
-.ask-intro-icon{width:82px;height:82px;border-radius:22px;overflow:hidden;margin-bottom:14px;border:2px solid rgba(255,255,255,0.55);box-shadow:0 10px 44px rgba(74,184,248,0.32),0 0 0 5px rgba(255,255,255,0.07),0 3px 14px rgba(0,0,0,0.22)}
+.ask-intro{display:flex;flex-direction:column;align-items:center;padding:10px 0 8px;text-align:center}
+.ask-intro-brand{font-size:13px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:14px;opacity:0.7}
+.ask-intro-icon{width:86px;height:86px;border-radius:22px;overflow:hidden;margin-bottom:14px;border:2px solid rgba(255,255,255,0.55);box-shadow:0 10px 44px rgba(74,184,248,0.32),0 0 0 5px rgba(255,255,255,0.07),0 3px 14px rgba(0,0,0,0.22)}
 .ask-intro-icon img{width:100%;height:100%;display:block}
-.ask-intro-temp{font-size:52px;font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:6px;background:linear-gradient(160deg,var(--text) 20%,var(--accent) 110%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 2px 12px rgba(0,0,0,0.18))}
-.ask-intro-sub{font-size:15px;color:var(--text-secondary);line-height:1.4;max-width:240px;font-weight:600;letter-spacing:-0.1px}
+.ask-intro-temp{font-size:54px;font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:8px;background:linear-gradient(160deg,var(--text) 20%,var(--accent) 110%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 2px 12px rgba(0,0,0,0.15))}
+.ask-intro-sub{font-size:15px;color:var(--text-secondary);line-height:1.45;max-width:240px;font-weight:600;letter-spacing:-0.1px;margin-bottom:2px}
 /* Chips grid */
 .ask-chips{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:16px 0 4px;width:100%}
 .ask-chip{padding:15px 14px 14px;border-radius:20px;background:var(--card-bg);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);border:1px solid var(--card-border);text-align:left;cursor:pointer;transition:transform 0.15s,opacity 0.15s;font-family:inherit;display:flex;flex-direction:column;gap:9px;width:100%;box-shadow:0 2px 14px rgba(0,0,0,0.07),inset 0 1px 0 rgba(255,255,255,0.45);position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
@@ -5575,6 +5578,7 @@ function renderAskView(){
   }
   const introHtml=hasWeather?`
     <div class="ask-intro" id="askIntro">
+      <div class="ask-intro-brand">Ask Cirrus</div>
       <div class="ask-intro-icon"><img src="${iconUrl}" alt="Cirrus"></div>
       ${_askTemp?`<div class="ask-intro-temp">${_askTemp}</div>`:''}
       <div class="ask-intro-sub">${_askGreeting}</div>
@@ -5587,7 +5591,10 @@ function renderAskView(){
       <div class="ask-empty-title">No weather loaded</div>
       <div class="ask-empty-sub">Search for a city or tap the location button, then come back here to ask anything.</div>
     </div>`;
+  // Header: minimal (back arrow only) on home screen, full chrome in chat
+  const inChat=_askMessages.length>0;
   el.innerHTML=`
+    ${inChat?`
     <div class="ask-header">
       <button class="ask-back-btn" onclick="handleAskBack()" aria-label="Back">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
@@ -5597,7 +5604,12 @@ function renderAskView(){
         <div class="ask-header-title">Ask Cirrus</div>
         <div class="ask-header-sub">${hasWeather?`Weather advisor for ${cityName}`:'Search a location to get started'}</div>
       </div>
-    </div>
+    </div>`:`
+    <div class="ask-header-bare">
+      <button class="ask-back-btn" onclick="handleAskBack()" aria-label="Back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      </button>
+    </div>`}
     <div class="ask-messages" id="askMsgList">
       ${_askMessages.length===0?introHtml:''}
     </div>
