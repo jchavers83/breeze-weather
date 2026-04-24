@@ -4199,7 +4199,6 @@ function generateSummary(hourly,daily,currentCode,nowHour,sunrise,sunset,cond){
     }else if(isNight||isPredomNight){
       parts.push(pick2([
         `Rest up.`,
-        `Good night out there.`,
         `The night shift of the atmosphere is clocked in. You should be too.`,
         `Quiet night. The good kind of nothing.`,
         `Get some rest. Tomorrow has weather too.`,
@@ -4344,7 +4343,7 @@ function getWeatherQuip(maxT,minT,rainCount,clearCount,cloudyCount,windyCount,is
     if(rainCount>2)quips.push('\uD83C\uDFAC Rainy evening in\u2014pick something good and don\u2019t feel bad about it.');
     if(rainCount>2)quips.push('\uD83C\uDF75 Rainy evening. Tea, something to watch, no guilt whatsoever.');
     quips.push('\uD83C\uDF05 Wind down and enjoy what\u2019s left of the evening\u2014you earned it.');
-    quips.push('\uD83C\uDF05 Good evening out there. Take a breath before the day fully closes.');
+    quips.push('\uD83C\uDF05 Almost done for the day. Finish strong.');
   }
 
   // === Morning ===
