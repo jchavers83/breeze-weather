@@ -848,11 +848,10 @@ body{min-height:100vh;min-height:100dvh;color:var(--text);transition:color var(-
 .ask-messages{flex:1;overflow-y:auto;padding:0 15px 14px;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .ask-messages::-webkit-scrollbar{display:none}
 /* Intro / home screen */
-.ask-intro{display:flex;flex-direction:column;align-items:center;padding:22px 0 8px;text-align:center}
-.ask-intro-icon{width:76px;height:76px;border-radius:20px;overflow:hidden;margin-bottom:13px;border:2px solid rgba(255,255,255,0.55);box-shadow:0 10px 44px rgba(74,184,248,0.32),0 0 0 5px rgba(255,255,255,0.07),0 3px 14px rgba(0,0,0,0.22)}
+.ask-intro{display:flex;flex-direction:column;align-items:center;padding:24px 0 8px;text-align:center}
+.ask-intro-icon{width:82px;height:82px;border-radius:22px;overflow:hidden;margin-bottom:14px;border:2px solid rgba(255,255,255,0.55);box-shadow:0 10px 44px rgba(74,184,248,0.32),0 0 0 5px rgba(255,255,255,0.07),0 3px 14px rgba(0,0,0,0.22)}
 .ask-intro-icon img{width:100%;height:100%;display:block}
-.ask-intro-title{font-size:26px;font-weight:900;letter-spacing:-0.6px;margin-bottom:6px;background:linear-gradient(130deg,var(--text) 0%,var(--accent) 120%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.ask-intro-sub{font-size:14px;color:var(--text-secondary);line-height:1.55;max-width:240px;font-weight:500}
+.ask-intro-sub{font-size:17px;color:var(--text);line-height:1.4;max-width:240px;font-weight:700;letter-spacing:-0.2px}
 /* Chips grid */
 .ask-chips{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:16px 0 4px;width:100%}
 .ask-chip{padding:15px 14px 14px;border-radius:20px;background:var(--card-bg);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);border:1px solid var(--card-border);text-align:left;cursor:pointer;transition:transform 0.15s,opacity 0.15s;font-family:inherit;display:flex;flex-direction:column;gap:9px;width:100%;box-shadow:0 2px 14px rgba(0,0,0,0.07),inset 0 1px 0 rgba(255,255,255,0.45);position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
@@ -5551,11 +5550,28 @@ function renderAskView(){
   const cityName=state.name||'your area';
   const iconUrl=document.getElementById('appIcon')?.href||'';
   const chips=buildAskChips();
+  // Dynamic one-liner — no repeated title, just personality
+  let _askGreeting="What would you like to know?";
+  if(state.data){
+    const _c=state.data.current;
+    const _h=new Date().getHours();
+    const _wc=_c.weather_code??0;
+    const _tF=Math.round(toF(_c.temperature_2m));
+    const _rain=state.data.daily?.precipitation_probability_max?.[0]??0;
+    if(_wc>=95) _askGreeting="Wild weather out there. Ask me anything.";
+    else if(_wc>=60) _askGreeting="Storms on the radar — ask me what you need to know.";
+    else if(_wc>=51) _askGreeting="It's raining. Ask me anything.";
+    else if(_tF>=95) _askGreeting="It's a hot one. What do you want to know?";
+    else if(_tF<=28) _askGreeting="Frigid out there. Ask me anything.";
+    else if(_rain>=60) _askGreeting="Rain's likely today — ask me what to expect.";
+    else if(_h>=5&&_h<10) _askGreeting="Good morning. What would you like to know?";
+    else if(_h>=17&&_h<20) _askGreeting="Good evening. What's on your mind?";
+    else if(_h>=20||_h<5) _askGreeting="Checking in late. Ask me anything.";
+  }
   const introHtml=hasWeather?`
     <div class="ask-intro" id="askIntro">
       <div class="ask-intro-icon"><img src="${iconUrl}" alt="Cirrus"></div>
-      <div class="ask-intro-title">Ask Cirrus</div>
-      <div class="ask-intro-sub">Your weather advisor for ${cityName}.<br>Ask anything about today's conditions.</div>
+      <div class="ask-intro-sub">${_askGreeting}</div>
       <div class="ask-chips">
         ${chips.map(c=>`<button class="ask-chip" onclick="handleAskChip(this,'${c.t.replace(/'/g,"\\'")}')"><span class="ask-chip-emoji">${c.e}</span><span class="ask-chip-text">${c.t}</span></button>`).join('')}
       </div>
